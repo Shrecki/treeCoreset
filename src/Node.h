@@ -19,21 +19,33 @@ private:
     unsigned int size;
     double cost;
 public:
-    bool isLeaf() const;
-    unsigned int getSize() const;
-    double getCost() const;
-
-    void setPointSet(std::vector<Point*> &newPoints);
-    void setLeftChild(Node* newChild);
-
-    void setRightChild(Node* newChild);
-
-    void setRepresentative(Point* newPoint);
-    void setParent(Node* newParent);
-
     explicit Node(unsigned int setInitialCapacity);
 
+    bool isLeaf() const;
+
+    // Getter methods
+    unsigned int getSize() const;
+    double getCost() const;
     const std::vector<Point*>* getPointSet() const{ return &this->pointSet; }
+    Point* getRepresentative() const;
+
+    // Various setters, to update inner states of the Node
+    void setCost(double newCost);
+    void setAsChild(Node* targetNode, bool isLeftChild);
+    void setPointSet(std::vector<Point*> &newPoints);
+    void setRepresentative(Point* newPoint, Distance distance);
+    void setParent(Node* newParent);
+
+    // Adding a point to a Node's point set
+    void addPoint(Point* newPoint, Distance distance);
+
+    // Methods related to specific algorithms of the tree coreset paper
+    // (random child selection, cluster rep selection, cost propagation, node splitting)
+    Node* getRandomChild();
+    void propagateUpCostsParentOneSided();
+    void updateCostBasedOnChildren();
+    Point* selectNewClusterRep(Distance distance);
+    Point* splitNode(Distance distance);
 
 };
 
