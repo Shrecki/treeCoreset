@@ -99,15 +99,24 @@ void Node::propagateUpCostsParentOneSided() {
     Node* leftC = nullptr;
     Node* rightC = nullptr;
     // Walk all the way to the root
+    double otherChildCost;
     while(currTarget->parent != nullptr){
         // To update cost, instead of calling computeCost() which will walk all the way down the tree, the parent node
         // will need to look at which child is "calling" for a change.
         leftC = currTarget->parent->leftChild;
         rightC = currTarget->parent->rightChild;
         if(leftC == currTarget){
-            currTarget->parent->setCost(currTarget->cost + rightC->getCost());
+            otherChildCost = rightC->getCost();
+            if(otherChildCost == -1){
+                throw std::logic_error("Cost of right child is not initialized. Should call this method once costs are set.");
+            }
+            currTarget->parent->setCost(currTarget->cost + otherChildCost);
         } else {
-            currTarget->parent->setCost(currTarget->cost + leftC->getCost());
+            otherChildCost = leftC->getCost();
+            if(otherChildCost == -1){
+                throw std::logic_error("Cost of left child is not initialized. Should call this method once costs are set.");
+            }
+            currTarget->parent->setCost(currTarget->cost + otherChildCost);
         }
         // Move up the tree
         currTarget = currTarget->parent;
@@ -122,6 +131,14 @@ void Node::updateCostBasedOnChildren() {
     }
     if(rightChild == nullptr){
         throw std::logic_error("Cannot have a null pointer child for right children cost computation");
+    }
+
+    if(leftChild->getCost() == -1){
+        throw std::logic_error("Left child cost not initialized!");
+    }
+
+    if(rightChild->getCost() == -1){
+        throw std::logic_error("Right child cost not initialized!");
     }
 
     setCost(leftChild->getCost()+rightChild->getCost());

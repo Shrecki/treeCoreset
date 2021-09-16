@@ -351,6 +351,218 @@ TEST_F(NodeTest, selectingRandomChildOnLeaf){
     EXPECT_EQ(&root, root.getRandomChild());
 }
 
+TEST_F(NodeTest, costPropagationWorksOK){
+
+    Node root(10);
+
+    /*
+     * We will now create a bunch of nodes, setting them as a tree. For each, we will set up a cost manually.
+     */
+    Node children[8];
+    root.setAsChild(&children[0], true);
+    root.setAsChild(&children[1], false);
+    children[0].setAsChild(&children[2], true);
+    children[0].setAsChild(&children[3], false);
+
+    children[1].setAsChild(&children[4], true);
+    children[1].setAsChild(&children[5], false);
+
+    children[5].setAsChild(&children[6], true);
+    children[5].setAsChild(&children[7], false);
+
+    root.setCost(1.0);
+    children[0].setCost(0.2);
+    children[1].setCost(0.8);
+    children[2].setCost(0.05);
+    children[3].setCost(0.15);
+    children[4].setCost(0.3);
+    children[5].setCost(0.5);
+    children[6].setCost(0.2);
+    children[7].setCost(0.3);
+
+    // Now, we will modify children 7's cost to be instead 0.6.
+    // We expect to see costs as follow:
+    // 5 : 0.5 -> 0.8
+    // 1: 0.8 -> 1.1
+    // 0: 1 -> 1.3
+    // Other costs should remain unaffected
+    children[7].setCost(0.6);
+    children[7].propagateUpCostsParentOneSided();
+    double expectedCosts[8] = {0.2, 1.1, 0.05, 0.15, 0.3, 0.8, 0.2, 0.6};
+    EXPECT_FLOAT_EQ(root.getCost(), 1.3);
+    for(int i=0;i<8;++i){
+        EXPECT_FLOAT_EQ(children[i].getCost(), expectedCosts[i]);
+    }
+
+}
+
+
+TEST_F(NodeTest, costPropagationCalledFromNeighborNodeStillYieldsCorrectValues){
+
+    Node root(10);
+
+    /*
+     * We will now create a bunch of nodes, setting them as a tree. For each, we will set up a cost manually.
+     */
+    Node children[8];
+    root.setAsChild(&children[0], true);
+    root.setAsChild(&children[1], false);
+    children[0].setAsChild(&children[2], true);
+    children[0].setAsChild(&children[3], false);
+
+    children[1].setAsChild(&children[4], true);
+    children[1].setAsChild(&children[5], false);
+
+    children[5].setAsChild(&children[6], true);
+    children[5].setAsChild(&children[7], false);
+
+    root.setCost(1.0);
+    children[0].setCost(0.2);
+    children[1].setCost(0.8);
+    children[2].setCost(0.05);
+    children[3].setCost(0.15);
+    children[4].setCost(0.3);
+    children[5].setCost(0.5);
+    children[6].setCost(0.2);
+    children[7].setCost(0.3);
+
+    // Now, we will modify children 7's cost to be instead 0.6.
+    // We expect to see costs as follow:
+    // 5 : 0.5 -> 0.8
+    // 1: 0.8 -> 1.1
+    // 0: 1 -> 1.3
+    // Other costs should remain unaffected
+    children[7].setCost(0.6);
+    children[6].propagateUpCostsParentOneSided();
+    double expectedCosts[8] = {0.2, 1.1, 0.05, 0.15, 0.3, 0.8, 0.2, 0.6};
+    EXPECT_FLOAT_EQ(root.getCost(), 1.3);
+    for(int i=0;i<8;++i){
+        EXPECT_FLOAT_EQ(children[i].getCost(), expectedCosts[i]);
+    }
+
+}
+
+TEST_F(NodeTest, costPropagationOnRootNodeShouldDoNothing){
+    Node root(10);
+    root.setCost(1.0);
+    root.propagateUpCostsParentOneSided();
+    EXPECT_FLOAT_EQ(root.getCost(), 1.0);
+}
+
+TEST_F(NodeTest, costPropagationOnNodeWithNoInitializedCostThrowsException){
+    Node root(10);
+    EXPECT_ANY_THROW(root.propagateUpCostsParentOneSided());
+}
+
+TEST_F(NodeTest, costPropagationThrowsExceptionIfACostIsNotInitialized){
+    Node root(10);
+
+    /*
+     * We will now create a bunch of nodes, setting them as a tree. For each, we will set up a cost manually.
+     */
+    Node children[8];
+    root.setAsChild(&children[0], true);
+    root.setAsChild(&children[1], false);
+    children[0].setAsChild(&children[2], true);
+    children[0].setAsChild(&children[3], false);
+
+    children[1].setAsChild(&children[4], true);
+    children[1].setAsChild(&children[5], false);
+
+    children[5].setAsChild(&children[6], true);
+    children[5].setAsChild(&children[7], false);
+
+    root.setCost(1.0);
+    children[0].setCost(0.2);
+    children[1].setCost(0.8);
+    children[2].setCost(0.05);
+    children[4].setCost(0.3);
+    children[5].setCost(0.5);
+    children[7].setCost(0.3);
+
+    // Now, we will modify children 7's cost to be instead 0.6.
+    // We expect to see costs as follow:
+    // 5 : 0.5 -> 0.8
+    // 1: 0.8 -> 1.1
+    // 0: 1 -> 1.3
+    // Other costs should remain unaffected
+    children[7].setCost(0.6);
+    EXPECT_ANY_THROW(children[7].propagateUpCostsParentOneSided());
+    EXPECT_ANY_THROW(children[2].propagateUpCostsParentOneSided());
+}
+
+TEST_F(NodeTest, updatingNodeCostBasedOnChildrenWorksWell){
+
+    Node root(10);
+
+    /*
+     * We will now create a bunch of nodes, setting them as a tree. For each, we will set up a cost manually.
+     */
+    Node children[2];
+    root.setAsChild(&children[0], true);
+    root.setAsChild(&children[1], false);
+    children[0].setCost(0.2);
+    children[1].setCost(0.8);
+
+
+    EXPECT_FLOAT_EQ(root.getCost(), -1.0);
+    root.updateCostBasedOnChildren();
+    EXPECT_FLOAT_EQ(root.getCost(), 1.0);
+}
+
+
+TEST_F(NodeTest, updatingCostWithLeftChildCostNotInitThrowsException){
+
+    Node root(10);
+
+    /*
+     * We will now create a bunch of nodes, setting them as a tree. For each, we will set up a cost manually.
+     */
+    Node children[2];
+    root.setAsChild(&children[0], true);
+    root.setAsChild(&children[1], false);
+    children[1].setCost(0.8);
+    EXPECT_ANY_THROW(root.updateCostBasedOnChildren());
+}
+
+
+TEST_F(NodeTest, updatingCostWithRightChildCostNotInitThrowsException){
+
+    Node root(10);
+
+    /*
+     * We will now create a bunch of nodes, setting them as a tree. For each, we will set up a cost manually.
+     */
+    Node children[2];
+    root.setAsChild(&children[0], true);
+    root.setAsChild(&children[1], false);
+    children[0].setCost(0.8);
+    EXPECT_ANY_THROW(root.updateCostBasedOnChildren());
+}
+
+TEST_F(NodeTest, updatingNodeCostThrowsExceptionIfLeftChildIsNullPtr){
+    Node root(10);
+    /*
+     * We will now create a bunch of nodes, setting them as a tree. For each, we will set up a cost manually.
+     */
+    Node children[1];
+    root.setAsChild(&children[0], true);
+    children[0].setCost(0.2);
+    EXPECT_ANY_THROW(root.updateCostBasedOnChildren());
+}
+
+
+TEST_F(NodeTest, updatingNodeCostThrowsExceptionIfRightChildIsNullPtr){
+    Node root(10);
+    /*
+     * We will now create a bunch of nodes, setting them as a tree. For each, we will set up a cost manually.
+     */
+    Node children[1];
+    root.setAsChild(&children[0], false);
+    children[0].setCost(0.2);
+    EXPECT_ANY_THROW(root.updateCostBasedOnChildren());
+}
+
 TEST_F(NodeTest, selectingRandomChildWorksAsIntended){
     /*
      * This will test that, provided a random choice which we know a priori thanks to mocking, we can indeed get to the expected child node.
@@ -440,3 +652,4 @@ TEST_F(NodeTest, selectingRandomChildWorksAsIntended){
     randChild = root.getRandomChild();
     EXPECT_EQ(randChild, &children[3]);
 }
+
