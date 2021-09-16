@@ -7,6 +7,7 @@
 
 #include "Point.h"
 #include <vector>
+#include "RandomGenerator.h"
 
 class Node {
 private:
@@ -15,10 +16,12 @@ private:
     Node* leftChild;
     Node* rightChild;
     Node* parent;
+    RandomGenerator * rng;
 
     unsigned int size;
     double cost;
 public:
+    Node();
     explicit Node(unsigned int setInitialCapacity);
 
     bool isLeaf() const;
@@ -38,6 +41,7 @@ public:
     void setPointSet(std::vector<Point*> &newPoints);
     void setRepresentative(Point* newPoint, Distance distance);
     void setParent(Node* newParent);
+    void setRng(RandomGenerator* newRng){ rng = newRng;}
 
     // Adding a point to a Node's point set
     void addPoint(Point* newPoint, Distance distance);
@@ -50,6 +54,9 @@ public:
     Point* selectNewClusterRep(Distance distance);
     Point* splitNode(Distance distance);
 
+    static bool isInInterval(double x, double min, double max, bool inclusive);
+
+    double getRandomSample();
 };
 
 

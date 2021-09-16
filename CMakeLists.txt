@@ -12,6 +12,7 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+
 set(SOURCES src/Node.cpp src/Node.h src/Point.cpp src/Point.h)
 
 # For main program
@@ -19,8 +20,9 @@ add_executable(untitled main.cpp ${SOURCES})
 target_include_directories(untitled PRIVATE eigen)
 
 # For unit tests
-add_executable(unit_test test/node_test.cpp ${SOURCES} test/point_test.cpp test/main_test.cpp)
+add_executable(unit_test test/node_test.cpp ${SOURCES} test/point_test.cpp test/main_test.cpp test/mock_RandomGenerator.cpp test/mock_RandomGenerator.h src/RandomGenerator.cpp src/RandomGenerator.h)
 target_link_libraries(unit_test gtest_main)
+target_link_libraries(unit_test gmock_main)
 target_include_directories(unit_test PRIVATE src)
 target_include_directories(unit_test PRIVATE eigen)
 

@@ -7,6 +7,7 @@
 
 Node::Node(unsigned int setInitialCapacity):
 leftChild(nullptr), rightChild(nullptr), parent(nullptr), representative(nullptr), size(0), cost(-1.0){
+    rng = new RandomGenerator(0, 1);
     pointSet.reserve(setInitialCapacity);
 }
 
@@ -54,6 +55,9 @@ void Node::setRepresentative(Point *newPoint, Distance distance) {
 }
 
 void Node::setParent(Node *newParent) {
+    if(newParent == nullptr){
+        throw std::invalid_argument("Parent cannot be a null pointer.");
+    }
     parent = newParent;
 }
 
@@ -64,9 +68,6 @@ bool Node::isLeaf() const{
 Node *Node::getRandomChild() {
     // This is the iterative version
     Node* currTarget = this;
-    std::random_device rd;  // Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dist(0, 1);
     double proba = 0.0;
     while(!currTarget->isLeaf()){
         // Because the tree is binary and because the cost of a node is the sum of costs of its children,
@@ -77,7 +78,7 @@ Node *Node::getRandomChild() {
         // Otherwise pick the right child and continue.
         // The process stops once we reach a leaf node, which is then returned.
         double leftChildProba = currTarget->leftChild->getCost()/currTarget->getCost();
-        proba = dist(gen); // Generate a random number between 0 and 1
+        proba = currTarget->rng->getRandom(); // Generate a random number between 0 and 1
         if(proba <= leftChildProba){
             currTarget = currTarget->leftChild;
         } else {
@@ -126,7 +127,10 @@ void Node::updateCostBasedOnChildren() {
     setCost(leftChild->getCost()+rightChild->getCost());
 }
 
-static bool isInInterval(double x, double min, double max, bool inclusive){
+bool Node::isInInterval(double x, double min, double max, bool inclusive){
+    if(max < min){
+        throw std::invalid_argument("Max should be greater or equal than min");
+    }
     double res= (x-min)*(max-x);
     return inclusive? res >=0 : res > 0;
 }
@@ -142,10 +146,7 @@ Point *Node::selectNewClusterRep(Distance distance) {
         throw std::logic_error("Selecting a new cluster representative only makes sense on a leaf node!");
     }
     // First, get a random number
-    std::random_device rd;  // Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dist(0, 1);
-    double proba = dist(gen);
+    double proba = rng->getRandom();
 
     // Now, we will check in which interval it falls.
     double startP = 0.0;
@@ -255,5 +256,13 @@ void Node::addPoint(Point *newPoint, Distance distance) {
 
 Point *Node::getRepresentative() const {
     return representative;
+}
+
+double Node::getRandomSample() {
+    return rng->getRandom();
+}
+
+Node::Node():Node(10) {
+
 }
 
