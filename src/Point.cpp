@@ -27,14 +27,17 @@ static double computeCorrelationDistance(Eigen::VectorXd *v1, Eigen::VectorXd *v
     return computeCosineDistance(&centeredV1, &centeredV2);
 }
 
+static double computeEuclideanDistance(Eigen::VectorXd *v1, Eigen::VectorXd *v2){
+    return (*v1-*v2).norm();
+}
+
 double Point::computeDistance(Point &otherPoint, Distance distance) const{
     double d = 0;
     Eigen::VectorXd *p1 = this->getData();
     Eigen::VectorXd *p2 = otherPoint.getData();
     switch (distance) {
         case Distance::Euclidean: {
-            Eigen::VectorXd diff = (*p1-*p2);
-            d = diff.norm();
+            d = computeEuclideanDistance(p1, p2);
             break;
         }
         case Distance::Cosine:

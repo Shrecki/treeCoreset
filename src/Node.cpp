@@ -29,6 +29,9 @@ void Node::setPointSet(std::vector<Point *> &newPoints) {
 
 
 void Node::setCost(double newCost) {
+    if(newCost < 0.0){
+        throw std::invalid_argument("Cost cannot be negative");
+    }
     cost = newCost;
 }
 
@@ -36,7 +39,17 @@ void Node::setRepresentative(Point *newPoint, Distance distance) {
     if(!isLeaf()){
         throw std::logic_error("Setting a representative on a non leaf node does not make sense.");
     }
+    if(newPoint == nullptr){
+        throw std::invalid_argument("Cannot set null pointer as representative");
+    }
+    if(representative == newPoint){
+        throw std::logic_error("This point is already representative of this node");
+    }
+    if(representative != nullptr){
+        throw std::logic_error("Cannot set a new point as representative: this node already has one");
+    }
     representative = newPoint;
+    cost = 0;
     addPoint(representative, distance);
 }
 
@@ -227,12 +240,16 @@ void Node::addPoint(Point *newPoint, Distance distance) {
     }
 
     pointSet.push_back(newPoint);
-    if(cost == -1){
-        cost = 0;
+    if(cost < 0){
+        throw std::runtime_error("Cost should not be negative if representative was set");
     }
 
-    // Update cost and size
-    cost += newPoint->computeDistance(*representative, distance);
+    // Update cost
+    if(newPoint != representative){
+        cost += newPoint->computeDistance(*representative, distance);
+    }
+
+    // Update size
     size += 1;
  }
 

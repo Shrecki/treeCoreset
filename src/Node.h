@@ -28,6 +28,9 @@ public:
     double getCost() const;
     const std::vector<Point*>* getPointSet() const{ return &this->pointSet; }
     Point* getRepresentative() const;
+    Node* getLeftChild() const { return leftChild; }
+    Node* getRightChild() const { return rightChild; }
+    Node* getParent() const { return parent; }
 
     // Various setters, to update inner states of the Node
     void setCost(double newCost);
