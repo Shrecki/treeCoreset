@@ -199,14 +199,13 @@ Point* Node::splitNode(Distance distance) {
      * 5- Update the costs
      * 6- Return the new representative
      */
+    Point * newRep = selectNewClusterRep(distance);
 
     unsigned int n_elems = pointSet.size();
     Node * left = new Node(n_elems);
     Node * right = new Node(n_elems);
     setAsChild(left, true);
     setAsChild(right, false);
-
-    Point * newRep = selectNewClusterRep(distance);
     left->setRepresentative(newRep, distance);
     right->setRepresentative(representative, distance);
 
@@ -217,9 +216,13 @@ Point* Node::splitNode(Distance distance) {
         leftD = p->computeDistance(*left->getRepresentative(), distance);
         rightD = p->computeDistance(*right->getRepresentative(), distance);
         if(leftD < rightD){
-            left->addPoint(p, distance);
+            if(p != newRep){
+                left->addPoint(p, distance);
+            }
         } else {
-            right->addPoint(p, distance);
+            if(p != representative){
+                right->addPoint(p, distance);
+            }
         }
     }
 

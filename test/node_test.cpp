@@ -762,4 +762,244 @@ TEST_F(NodeTest, selectClusterConformsToMoreComplexDistributions){
     EXPECT_TRUE( pval > 0.05);
 }
 
+TEST_F(NodeTest, splittingNodeCreatesChildren){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+    EXPECT_TRUE(testNode.getLeftChild() != nullptr);
+    EXPECT_TRUE(testNode.getRightChild() != nullptr);
+}
+
+
+TEST_F(NodeTest, splittingNodeRemovesRepresentativeOfParentNode){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+    EXPECT_EQ(testNode.getRepresentative(), nullptr);
+}
+
+
+TEST_F(NodeTest, splittingNodeEmptiesPointSetOfNode){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    EXPECT_TRUE(testNode.isLeaf());
+    EXPECT_EQ(testNode.getPointSet()->size(), 4);
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+    EXPECT_EQ(testNode.getPointSet()->size(),0);
+}
+
+
+TEST_F(NodeTest, splittingNodeSetsRepresentativeDependingOnSelectedPoint){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    // We know that total cost is 25+16+100 = 141.
+    // Therefore we know the expected probabilities, as 25/141=0.1773, 16/141=0.113475177, 100/141=0.709219858
+    // Hence, intervals would be [0, 25/141], [25/141, (16+25)/141], [(16+25)/141, 1]
+
+    // Setup our random number mock, to select exactly the probability we want
+    mock_RandomGenerator dist_mock(0.0, 1.0);
+
+    // We select p1
+    ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.01));
+    testNode.setRng(&dist_mock);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+
+    EXPECT_EQ(testNode.getLeftChild()->getRepresentative(), &p1);
+    EXPECT_EQ(testNode.getRightChild()->getRepresentative(), &p0);
+
+    // We select p2
+    ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.2));
+    testNode = Node(10);
+    testNode.setRng(&dist_mock);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    newRep = testNode.splitNode(Distance::Euclidean);
+
+    EXPECT_EQ(testNode.getLeftChild()->getRepresentative(), &p2);
+    EXPECT_EQ(testNode.getRightChild()->getRepresentative(), &p0);
+
+    // We select p3
+    ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.4));
+    testNode = Node(10);
+    testNode.setRng(&dist_mock);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    newRep = testNode.splitNode(Distance::Euclidean);
+
+    EXPECT_EQ(testNode.getLeftChild()->getRepresentative(), &p3);
+    EXPECT_EQ(testNode.getRightChild()->getRepresentative(), &p0);
+}
+
+TEST_F(NodeTest, splitNodeReturnsLeftChildRepresentative){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+
+    EXPECT_EQ(newRep,testNode.getLeftChild()->getRepresentative());
+    EXPECT_TRUE(newRep != testNode.getRightChild()->getRepresentative());
+}
+
+TEST_F(NodeTest, splitNodeUpdatesParentCostCorrectly){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    mock_RandomGenerator dist_mock(0.0, 1.0);
+
+    // We select p1
+    ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.01));
+    testNode.setRng(&dist_mock);
+
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+
+    EXPECT_EQ(&testNode, testNode.getLeftChild()->getParent());
+    EXPECT_EQ(&testNode, testNode.getRightChild()->getParent());
+
+    EXPECT_EQ(testNode.getCost(), 116);
+}
+
+TEST_F(NodeTest, splitNodeThrowsExceptionIfCalledOnNodeWithASinglePoint){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+
+    EXPECT_ANY_THROW(testNode.splitNode(Distance::Euclidean));
+}
+
+TEST_F(NodeTest, splitNodeSetsUpNodeAsParentOfChildren){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+
+    EXPECT_EQ(&testNode, testNode.getLeftChild()->getParent());
+    EXPECT_EQ(&testNode, testNode.getRightChild()->getParent());
+}
+
+TEST_F(NodeTest, splitNodeClustersPointsInChildrenAsItShould){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    mock_RandomGenerator dist_mock(0.0, 1.0);
+
+    // We select p1
+    ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.01));
+    testNode.setRng(&dist_mock);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+
+    EXPECT_EQ(testNode.getLeftChild()->getPointSet()->size(), 1);
+    EXPECT_EQ(testNode.getLeftChild()->getPointSet()->at(0), &p1);
+
+    EXPECT_EQ(testNode.getRightChild()->getPointSet()->size(), 3);
+    EXPECT_EQ(testNode.getRightChild()->getPointSet()->at(0), &p0);
+    EXPECT_EQ(testNode.getRightChild()->getPointSet()->at(1), &p2);
+    EXPECT_EQ(testNode.getRightChild()->getPointSet()->at(2), &p3);
+}
+
 
