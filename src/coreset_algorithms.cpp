@@ -32,7 +32,7 @@ std::set<Point*> coreset::treeCoresetReduce(std::vector<Point *> *points, unsign
     // 4. Main loop
     for(int i=1;i<m;++i){
         // select new child node randomly
-        Node *electedChild = root.getRandomChild();
+        Node* electedChild = root.getRandomChild();
         // elect new qi from root using splitNode
         Point *newRep = electedChild->splitNode(Distance::Euclidean);
         // Add newRep into S only if not already present (hence the set)

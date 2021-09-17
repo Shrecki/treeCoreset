@@ -1016,6 +1016,23 @@ TEST_F(NodeTest, splitNodeCalledTwiceSplitsPointsAsExpectedAndImprovingCosts){
 
 }
 
+
+
+TEST_F(NodeTest, splitNodeOnNodeWithSinglePoint){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << -4,2,0;
+    v1 << 0, 5, 0; // Distance squared to v0 would be 25
+    v2 << 4,0,0; // Distance squared to v0 would be 68
+    v3 << 0,0, 10; // Distance squared to v0 would be 120
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+
+    EXPECT_ANY_THROW(testNode.splitNode(Distance::Euclidean));
+}
+
 TEST_F(NodeTest, splitNodeUpdatesParentCostCorrectlyWithZeroOrigin){
     Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
     v0 << 0,0,0;
