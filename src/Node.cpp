@@ -159,7 +159,7 @@ Point *Node::selectNewClusterRep(Distance distance) {
      * (it is in fact dist^2(p, Ql)/cost(this), where p is a given point).
      */
     // Can only be called on leaf nodes
-    if(!this->isLeaf()){
+    if(!isLeaf()){
         throw std::logic_error("Selecting a new cluster representative only makes sense on a leaf node!");
     }
     if(pointSet.size()<=1){
@@ -186,7 +186,7 @@ Point *Node::selectNewClusterRep(Distance distance) {
 }
 
 Point* Node::splitNode(Distance distance) {
-    if(!this->isLeaf()){
+    if(!isLeaf()){
         throw std::logic_error("Splitting node only makes sense on leaf nodes!");
     }
 
@@ -206,7 +206,7 @@ Point* Node::splitNode(Distance distance) {
     setAsChild(left, true);
     setAsChild(right, false);
 
-    Point * newRep = this->selectNewClusterRep(distance);
+    Point * newRep = selectNewClusterRep(distance);
     left->setRepresentative(newRep, distance);
     right->setRepresentative(representative, distance);
 
