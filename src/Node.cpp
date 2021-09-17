@@ -172,7 +172,8 @@ Point *Node::selectNewClusterRep(Distance distance) {
     double startP = 0.0;
     double endP = 0.0;
     for(Point* p: pointSet){
-        endP += p->computeDistance(*representative,distance)/cost;
+        double dist(p->computeDistance(*representative,distance));
+        endP += (dist*dist)/cost;
         if(isInInterval(proba, startP, endP, true)){
             // We have selected a point! Return it immediately
             return p;
@@ -267,7 +268,8 @@ void Node::addPoint(Point *newPoint, Distance distance) {
 
     // Update cost
     if(newPoint != representative){
-        cost += newPoint->computeDistance(*representative, distance);
+        double dist(newPoint->computeDistance(*representative, distance));
+        cost += dist*dist;
     }
 
     // Update size

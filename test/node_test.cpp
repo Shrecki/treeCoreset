@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 #include "math_framework.h"
-
+#include <cmath>
 using ::testing::Return;
 
 class NodeTest : public ::testing::Test {
@@ -66,7 +66,7 @@ TEST_F(NodeTest, addPointCorrectlyUpdatesCostWithSingleVector){
     node->setRepresentative(&p1, Distance::Euclidean);
     double distance = p2.computeDistance(p1, Distance::Euclidean);
     node->addPoint(&p2, Distance::Euclidean);
-    EXPECT_FLOAT_EQ(node->getCost(), distance);
+    EXPECT_FLOAT_EQ(node->getCost(), distance*distance);
 }
 
 TEST_F(NodeTest, addPointCorrectlyUpdatesSizeWithSingleVector){
@@ -99,6 +99,24 @@ TEST_F(NodeTest, addPointCorrectlyAppendsPointToPointSet){
     double distance = p2.computeDistance(p1, Distance::Euclidean);
     node->addPoint(&p2, Distance::Euclidean);
     EXPECT_EQ(&p2, node->getPointSet()->at(1));
+}
+
+TEST_F(NodeTest, costOfNodeIsSumOfSquaredCosts){
+
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << -3,6,1;
+    v1 << 1, 1, 3;
+    v2 << 1,0,0;
+    v3 << 4,100, 28;
+
+    Node testNode(10);
+    Point p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(new Point(&v0), Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    EXPECT_FLOAT_EQ(testNode.getCost(), pow((v0-v0).norm(),2) + pow((v1-v0).norm(),2)+pow((v2-v0).norm(),2)+pow((v3-v0).norm(),2));
 }
 
 TEST_F(NodeTest, addPointThrowsExceptOnNullPtr){
@@ -696,4 +714,52 @@ TEST_F(NodeTest, selectClusterRepHasUniformDistribWithEvenlySpacedPoints){
     int expectedFreq[3] = {n_samples/3, n_samples/3, n_samples/3};
     EXPECT_TRUE(statistics::chiSquareTest(count, expectedFreq, 3, 3-1) > 0.05);
 }
+
+
+
+TEST_F(NodeTest, selectClusterConformsToMoreComplexDistributions){
+    /*
+     * The probability to select a point as representative is basically nothing but the distance to the current point.
+     * The higher the distance, the better.
+     * The intervals are ordered in order of points, meaning if we know the distance of the point and its order of insertion,
+     * we can deduce probability of it being chosen (as in: the exact interval).
+     * However, since we're interested in probabilities, we will instead adopt this time another approach.
+     * Namely, we will check that the amount of times a given point is selected as
+     */
+
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+    // As a consequence, we know that total cost is 25+16+100 = 141.
+    // Therefore we know the expected probabilities, as 25/141=0.1773, 16/141=0.113475177, 100/141=0.709219858
+
+    Node testNode(10);
+    Point p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(new Point(&v0), Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    int count[3] = {0,0,0};
+    int n_samples = 3.0*10e4;
+    int decimal_places = 2;
+    double factor = pow(10, decimal_places);
+    for(int i=0; i < n_samples; ++i){
+        Point * rep = testNode.selectNewClusterRep(Distance::Euclidean);
+        if(rep == &p1){ count[0]++;}
+        if(rep == &p2){ count[1]++;}
+        if(rep == &p3){ count[2]++;}
+    }
+
+    int f1 = ceil(n_samples*25.0/141.0);
+    int f2 = ceil(n_samples*16.0/141.0);
+    int f3 = n_samples - f1 - f2;
+    int expectedFreq[3] = {f1, f2, f3};
+    double pval = statistics::chiSquareTest(count, expectedFreq, 3, 3-1);
+    EXPECT_TRUE( pval > 0.05);
+}
+
 

@@ -33,11 +33,24 @@ namespace statistics {
          return primes;
     }
 
+    /**
+     * Returns p-value of chi-square test between observed frequencies and expected frequencies.
+     * Starts with an initial number of DOF, and remove one DOF for each bin that has an expected frequency of 0.
+     * @param observedFrequencies
+     * @param expectedFrequencies
+     * @param nBins
+     * @param degreesFreedom
+     * @return
+     */
     double chiSquareTest(int observedFrequencies[], int expectedFrequencies[], int nBins, int degreesFreedom){
         double count(0.0), diff(0.0);
         for (int i=0; i < nBins; ++i){
-            diff=observedFrequencies[i]-expectedFrequencies[i];
-            count += 1.0*(diff*diff)/expectedFrequencies[i];
+            if(expectedFrequencies[i] != 0.0){
+                diff=observedFrequencies[i]-expectedFrequencies[i];
+                count += 1.0*(diff*diff)/expectedFrequencies[i];
+            } else {
+                degreesFreedom -=1;
+            }
         }
 
         boost::math::chi_squared_distribution<double> dist(degreesFreedom);
