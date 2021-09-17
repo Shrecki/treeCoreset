@@ -31,7 +31,7 @@ target_include_directories(untitled PRIVATE eigen)
 # For unit tests
 add_executable(unit_test ${SOURCES} ${Boost_LIBRARIES}
         test/point_test.cpp test/main_test.cpp test/node_test.cpp
-        test/mock_RandomGenerator.cpp test/mock_RandomGenerator.h src/RandomGenerator.cpp src/RandomGenerator.h
+        test/mocks/mock_RandomGenerator.cpp test/mocks/mock_RandomGenerator.h src/RandomGenerator.cpp src/RandomGenerator.h
         test/math_framework.cpp test/math_framework.h src/coreset_algorithms.h src/coreset_algorithms.cpp)
 target_link_libraries(unit_test gtest_main)
 target_link_libraries(unit_test gmock_main)
