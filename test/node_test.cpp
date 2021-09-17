@@ -6,6 +6,7 @@
 #include "mock_RandomGenerator.h"
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
+#include "math_framework.h"
 
 using ::testing::Return;
 
@@ -653,8 +654,12 @@ TEST_F(NodeTest, selectingRandomChildWorksAsIntended){
     EXPECT_EQ(randChild, &children[3]);
 }
 
+TEST_F(NodeTest, selectClusterThrowsErrorIfNoPointAvailable){
+    Node testNode(10);
+    EXPECT_ANY_THROW(testNode.selectNewClusterRep(Distance::Euclidean));
+}
 
-TEST_F(NodeTest, selectClusterRepHasCorrectProbDistrib){
+TEST_F(NodeTest, selectClusterRepHasUniformDistribWithEvenlySpacedPoints){
     /*
      * The probability to select a point as representative is basically nothing but the distance to the current point.
      * The higher the distance, the better.
@@ -678,7 +683,7 @@ TEST_F(NodeTest, selectClusterRepHasCorrectProbDistrib){
     testNode.addPoint(&p3, Distance::Euclidean);
 
     int count[3] = {0,0,0};
-    int n_samples = 10e4;
+    int n_samples = 3.0*10e4;
     int decimal_places = 2;
     double factor = pow(10, decimal_places);
     for(int i=0; i < n_samples; ++i){
@@ -687,9 +692,8 @@ TEST_F(NodeTest, selectClusterRepHasCorrectProbDistrib){
         if(rep == &p2){ count[1]++;}
         if(rep == &p3){ count[2]++;}
     }
-    for(int i=1; i<3; ++i){
-        // Replace with a proper statistical test tomorrow instead of this wacky way
-        EXPECT_EQ(floor(factor*count[0]/n_samples), floor(factor*count[i]/n_samples));
-    }
+
+    int expectedFreq[3] = {n_samples/3, n_samples/3, n_samples/3};
+    EXPECT_TRUE(statistics::chiSquareTest(count, expectedFreq, 3, 3-1) > 0.05);
 }
 

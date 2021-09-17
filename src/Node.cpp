@@ -162,6 +162,9 @@ Point *Node::selectNewClusterRep(Distance distance) {
     if(!this->isLeaf()){
         throw std::logic_error("Selecting a new cluster representative only makes sense on a leaf node!");
     }
+    if(pointSet.size()<=1){
+        throw std::logic_error("Call selectNewCluster only once at least one non representative point is available.");
+    }
     // First, get a random number
     double proba = rng->getRandom();
 
