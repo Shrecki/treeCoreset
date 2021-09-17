@@ -20,12 +20,14 @@ int main() {
     while(true){
         zmq::message_t request;
         socket.recv (&request);
-        // This code allows to read pointer addresses
         int nElems(request.size());
         char byteArray[nElems];
         memcpy(byteArray, request.data(), nElems);
         //std::string str(byteArray, nElems);
         //std::cout << str << std::endl;
+
+        // This is in the case where we receive doubles, ie a 'sendImage' request should always precede this one
+        // @todo: Create the various requests
         double* array = reinterpret_cast<double*>(byteArray);
         for(int i=0; i<100;++i){
             std::cout << array[i] << std::endl;

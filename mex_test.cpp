@@ -17,6 +17,9 @@ using matlab::mex::ArgumentList;
 class MexFunction : public matlab::mex::Function {
 public:
     void operator()(ArgumentList outputs, ArgumentList inputs) {
+        // Should put a sendImage request first here then await for an OK
+
+        // This is to pass an array
         // Now, we will try passing in an array
         TypedArray<double> doubleArray = std::move(inputs[0]);
 
