@@ -226,7 +226,7 @@ Point* Node::splitNode(Distance distance) {
         }
     }
 
-    // Clearing up current node, which is not longer leaf and hence has no more pointSet nor representative point
+    // Clearing up current node, which is no longer leaf and hence has no more pointSet nor representative point
     pointSet.clear();
     representative = nullptr;
 
