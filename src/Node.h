@@ -38,7 +38,6 @@ public:
     // Various setters, to update inner states of the Node
     void setCost(double newCost);
     void setAsChild(Node* targetNode, bool isLeftChild);
-    void setPointSet(std::vector<Point*> &newPoints);
     void setRepresentative(Point* newPoint, Distance distance);
     void setParent(Node* newParent);
     void setRng(RandomGenerator* newRng){ rng = newRng;}
@@ -56,7 +55,6 @@ public:
 
     static bool isInInterval(double x, double min, double max, bool inclusive);
 
-    double getRandomSample();
 };
 
 

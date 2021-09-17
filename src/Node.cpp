@@ -20,14 +20,6 @@ double Node::getCost() const{
     return cost;
 }
 
-void Node::setPointSet(std::vector<Point *> &newPoints) {
-    pointSet.clear();
-    for(Point*p : newPoints){
-        pointSet.push_back(p);
-    }
-    size = pointSet.size();
-}
-
 
 void Node::setCost(double newCost) {
     if(newCost < 0.0){
@@ -281,10 +273,6 @@ void Node::addPoint(Point *newPoint, Distance distance) {
 
 Point *Node::getRepresentative() const {
     return representative;
-}
-
-double Node::getRandomSample() {
-    return rng->getRandom();
 }
 
 Node::Node():Node(10) {
