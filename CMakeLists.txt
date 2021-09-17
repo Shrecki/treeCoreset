@@ -22,11 +22,14 @@ include_directories(${boost_INCLUDE_DIR})
 message("boost lib: ${boost_LIB_DIR}, inc:${boost_INCLUDE_DIR}")
 
 
-set(SOURCES src/Node.cpp src/Node.h src/Point.cpp src/Point.h)
+set(SOURCES src/Node.cpp src/Node.h src/Point.cpp src/Point.h src/RandomGenerator.cpp src/RandomGenerator.h)
 
 # For main program
 add_executable(untitled main.cpp ${SOURCES})
 target_include_directories(untitled PRIVATE eigen)
+
+find_package(cppzmq)
+target_link_libraries(untitled cppzmq)
 
 # For unit tests
 add_executable(unit_test ${SOURCES} ${Boost_LIBRARIES}
