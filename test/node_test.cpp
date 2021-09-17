@@ -3,11 +3,13 @@
 //
 #include "Node.h"
 #include <random>
-#include "mock_RandomGenerator.h"
+#include "mocks/mock_RandomGenerator.h"
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 #include "math_framework.h"
 #include <cmath>
+#include <boost/math/distributions/chi_squared.hpp>
+
 using ::testing::Return;
 
 class NodeTest : public ::testing::Test {

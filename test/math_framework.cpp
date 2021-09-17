@@ -36,11 +36,14 @@ namespace statistics {
     /**
      * Returns p-value of chi-square test between observed frequencies and expected frequencies.
      * Starts with an initial number of DOF, and remove one DOF for each bin that has an expected frequency of 0.
+     * Then, estimate the value of Pearon chi-squared test statistic, x2.
+     * Lastly, using CDF of Chi-squared distribution, compute p-value, as probability of obtaining at least x2, ie
+     * 1 - CFD(x2)
      * @param observedFrequencies
      * @param expectedFrequencies
      * @param nBins
      * @param degreesFreedom
-     * @return
+     * @return 1 minus the CDF up to the obtained chi-s
      */
     double chiSquareTest(int observedFrequencies[], int expectedFrequencies[], int nBins, int degreesFreedom){
         double count(0.0), diff(0.0);
