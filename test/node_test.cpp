@@ -904,7 +904,117 @@ TEST_F(NodeTest, splitNodeReturnsLeftChildRepresentative){
     EXPECT_TRUE(newRep != testNode.getRightChild()->getRepresentative());
 }
 
-TEST_F(NodeTest, splitNodeUpdatesParentCostCorrectly){
+TEST_F(NodeTest, splitNodeKeepsParentSizeUnchanged){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+    EXPECT_EQ(testNode.getSize(), 4);
+}
+
+TEST_F(NodeTest, splitNodeSetsChildrenSizesCorrectly){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    mock_RandomGenerator dist_mock(0.0, 1.0);
+
+    // We select p1
+    ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.01));
+    testNode.setRng(&dist_mock);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+    EXPECT_EQ(testNode.getLeftChild()->getPointSet()->size(), 1);
+    EXPECT_EQ(testNode.getRightChild()->getPointSet()->size(), 3);
+}
+
+
+TEST_F(NodeTest, splitNodeSetChildrenCostCorrectly){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    mock_RandomGenerator dist_mock(0.0, 1.0);
+
+    // We select p1
+    ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.01));
+    testNode.setRng(&dist_mock);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+    EXPECT_EQ(testNode.getLeftChild()->getCost(), 0);
+    EXPECT_EQ(testNode.getRightChild()->getCost(), 116);
+}
+
+TEST_F(NodeTest, splitNodeCalledTwiceSplitsPointsAsExpectedAndImprovingCosts){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << -4,2,0;
+    v1 << 0, 5, 0; // Distance squared to v0 would be 25
+    v2 << 4,0,0; // Distance squared to v0 would be 68
+    v3 << 0,0, 10; // Distance squared to v0 would be 120
+
+
+    Node testNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    mock_RandomGenerator dist_mock(0.0, 1.0);
+
+    // We select p1
+    ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.01));
+    testNode.setRng(&dist_mock);
+
+    Point* newRep = testNode.splitNode(Distance::Euclidean);
+
+    // Now, we will split again on left child
+    // Because of how everything is setup distance-wise, p1 should be clustered with p2 and p3 should be clustered with
+    // p0. Therefore, splitting on left child will create a node with new representative p2 and another node with only
+    // p1 as node (representative)
+    Node *left = testNode.getLeftChild();
+    Point* secondRep = left->splitNode(Distance::Euclidean);
+
+    EXPECT_EQ(secondRep, &p2);
+    EXPECT_EQ(left->getLeftChild()->getRepresentative(), secondRep);
+    EXPECT_EQ(left->getRightChild()->getRepresentative(), &p1);
+    EXPECT_EQ(left->getRightChild()->getPointSet()->size(), 1);
+    EXPECT_EQ(testNode.getRightChild()->getPointSet()->size(), 2);
+
+}
+
+TEST_F(NodeTest, splitNodeUpdatesParentCostCorrectlyWithZeroOrigin){
     Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
     v0 << 0,0,0;
     v1 << 0, 5, 0; // Norm would be 5
@@ -927,10 +1037,6 @@ TEST_F(NodeTest, splitNodeUpdatesParentCostCorrectly){
 
 
     Point* newRep = testNode.splitNode(Distance::Euclidean);
-
-    EXPECT_EQ(&testNode, testNode.getLeftChild()->getParent());
-    EXPECT_EQ(&testNode, testNode.getRightChild()->getParent());
-
     EXPECT_EQ(testNode.getCost(), 116);
 }
 
@@ -970,6 +1076,25 @@ TEST_F(NodeTest, splitNodeSetsUpNodeAsParentOfChildren){
     EXPECT_EQ(&testNode, testNode.getRightChild()->getParent());
 }
 
+TEST_F(NodeTest, splitNodeOnNonLeafNodeThrowsException){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0; // Norm would be 5
+    v2 << 4,0,0; // Norm would be 4
+    v3 << 0,0, 10; // Norm would be 10
+
+
+    Node testNode(10), childNode(10);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
+    testNode.addPoint(&p1, Distance::Euclidean);
+    testNode.addPoint(&p2, Distance::Euclidean);
+    testNode.addPoint(&p3, Distance::Euclidean);
+
+    testNode.setAsChild(&childNode, true);
+    EXPECT_ANY_THROW(testNode.splitNode(Distance::Euclidean));
+}
+
 TEST_F(NodeTest, splitNodeClustersPointsInChildrenAsItShould){
     Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
     v0 << 0,0,0;
@@ -993,10 +1118,8 @@ TEST_F(NodeTest, splitNodeClustersPointsInChildrenAsItShould){
 
     Point* newRep = testNode.splitNode(Distance::Euclidean);
 
-    EXPECT_EQ(testNode.getLeftChild()->getPointSet()->size(), 1);
     EXPECT_EQ(testNode.getLeftChild()->getPointSet()->at(0), &p1);
 
-    EXPECT_EQ(testNode.getRightChild()->getPointSet()->size(), 3);
     EXPECT_EQ(testNode.getRightChild()->getPointSet()->at(0), &p0);
     EXPECT_EQ(testNode.getRightChild()->getPointSet()->at(1), &p2);
     EXPECT_EQ(testNode.getRightChild()->getPointSet()->at(2), &p3);
