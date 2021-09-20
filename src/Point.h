@@ -16,6 +16,7 @@ public:
     Eigen::VectorXd * getData() const;
     double computeDistance(Point &otherPoint, Distance distance) const;
     explicit Point(Eigen::VectorXd *newData);
+    void cleanupData();
     ~Point();
 };
 

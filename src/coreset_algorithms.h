@@ -13,6 +13,7 @@
 
 namespace coreset{
     std::set<Point*> treeCoresetReduce(std::vector<Point*>* points, unsigned int m);
+
     Eigen::VectorXd* getMapFromArray(double* array, int arraySz);
 
     Point* convertArrayToPoint(double* array, int arraySz);

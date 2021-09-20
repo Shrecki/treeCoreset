@@ -7,8 +7,11 @@
 #include <windows.h>
 #endif
 
-#include "src/State.h"
+#include "src/coreset_algorithms.h"
+#include "src/ClusteredPoints.h"
 
+#define N_SAMPLES 728*14.0
+#define M 200*12
 
 int main() {
     zmq::context_t context(1);
@@ -18,6 +21,9 @@ int main() {
     std::string resp("World");
     zmq::const_buffer message((void*)&resp,5);
     //socket.send(message, static_cast<zmq::send_flags>(0));
+
+
+    ClusteredPoints clusteredPoints(ceil(log2(N_SAMPLES/M)+2), M);
 
     bool mustContinue(true);
     while(mustContinue){
@@ -34,13 +40,15 @@ int main() {
         double* array = reinterpret_cast<double*>(byteArray);
         switch((int)array[0]){
             case Requests::POST_REQ : {
-                std::cout << "Received a POST request. First 100 elements:" << std::endl;
+                std::cout << "Received a POST request." << std::endl;
 
-                for(int i=1; i<100;++i){
-                    std::cout << array[i] << std::endl;
-                }
+                // Convert to a point
+                Point* p = coreset::convertArrayToPoint(&array[1], nElems-1);
 
-                // Response is a simple POST_OK with nothing else
+                // Insert into the overall algorithm
+                clusteredPoints.insertPoint(p);
+
+                // Response is a simple POST_OKgit with nothing else
                 break;
             }
             case Requests::GET_REQ : {

@@ -52,3 +52,7 @@ double Point::computeDistance(Point &otherPoint, Distance distance) const{
 
 Point::~Point() {
 }
+
+void Point::cleanupData() {
+    delete (Eigen::Map<Eigen::VectorXd>*)data;
+}

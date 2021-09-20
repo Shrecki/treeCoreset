@@ -22,7 +22,7 @@ include_directories(${boost_INCLUDE_DIR})
 message("boost lib: ${boost_LIB_DIR}, inc:${boost_INCLUDE_DIR}")
 
 
-set(SOURCES src/Node.cpp src/Node.h src/Point.cpp src/Point.h src/RandomGenerator.cpp src/RandomGenerator.h)
+set(SOURCES src/Node.cpp src/Node.h src/Point.cpp src/Point.h src/RandomGenerator.cpp src/RandomGenerator.h src/coreset_algorithms.h src/coreset_algorithms.cpp src/ClusteredPoints.cpp src/ClusteredPoints.h)
 
 # For main program
 add_executable(untitled main.cpp ${SOURCES})
@@ -35,7 +35,7 @@ target_link_libraries(untitled cppzmq)
 add_executable(unit_test ${SOURCES} ${Boost_LIBRARIES}
         test/point_test.cpp test/main_test.cpp test/node_test.cpp
         test/mocks/mock_RandomGenerator.cpp test/mocks/mock_RandomGenerator.h src/RandomGenerator.cpp src/RandomGenerator.h
-        test/math_framework.cpp test/math_framework.h src/coreset_algorithms.h src/coreset_algorithms.cpp test/coreset_algorithms_test.cpp src/State.cpp src/State.h)
+        test/math_framework.cpp test/math_framework.h test/coreset_algorithms_test.cpp )
 target_link_libraries(unit_test gtest_main)
 target_link_libraries(unit_test gmock_main)
 target_include_directories(unit_test PRIVATE src)
