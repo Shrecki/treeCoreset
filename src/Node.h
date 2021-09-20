@@ -8,7 +8,7 @@
 #include "Point.h"
 #include <vector>
 #include "RandomGenerator.h"
-
+#include <memory>
 class Node {
 private:
     std::vector<Point*> pointSet;
@@ -16,13 +16,19 @@ private:
     Node* leftChild;
     Node* rightChild;
     Node* parent;
-    RandomGenerator * rng;
+    RandomGenerator *rng;
 
     unsigned int size;
     double cost;
+
+    bool shouldDeleteChildren;
+    bool shouldDeleteRng;
 public:
     Node();
     explicit Node(unsigned int setInitialCapacity);
+    ~Node();
+
+    Node(const Node&) = delete;
 
     bool isLeaf() const;
 
@@ -40,7 +46,7 @@ public:
     void setAsChild(Node* targetNode, bool isLeftChild);
     void setRepresentative(Point* newPoint, Distance distance);
     void setParent(Node* newParent);
-    void setRng(RandomGenerator* newRng){ rng = newRng;}
+    void setRng(RandomGenerator* newRng);
 
     // Adding a point to a Node's point set
     void addPoint(Point* newPoint, Distance distance);

@@ -41,18 +41,10 @@ TEST_F(NodeTest, DefaultNodeIsLeaf) {
     EXPECT_EQ(testNode.isLeaf(), true);
 }
 
-TEST_F(NodeTest, SomePointerMagic) {
-    Node* testPtr = new Node(50);
-    Node *otherPtr = testPtr;
-    testPtr = nullptr;
-
-    EXPECT_TRUE(otherPtr != nullptr);
-    EXPECT_EQ(testPtr, nullptr);
-}
-
 TEST_F(NodeTest, nodeSizeAtInit){
     Node * node = new Node(10);
     EXPECT_EQ(node->getSize(),0);
+    delete node;
 }
 
 TEST_F(NodeTest, addPointCorrectlyUpdatesCostWithSingleVector){
@@ -69,6 +61,7 @@ TEST_F(NodeTest, addPointCorrectlyUpdatesCostWithSingleVector){
     double distance = p2.computeDistance(p1, Distance::Euclidean);
     node->addPoint(&p2, Distance::Euclidean);
     EXPECT_FLOAT_EQ(node->getCost(), distance*distance);
+    delete node;
 }
 
 TEST_F(NodeTest, addPointCorrectlyUpdatesSizeWithSingleVector){
@@ -85,6 +78,7 @@ TEST_F(NodeTest, addPointCorrectlyUpdatesSizeWithSingleVector){
     double distance = p2.computeDistance(p1, Distance::Euclidean);
     node->addPoint(&p2, Distance::Euclidean);
     EXPECT_FLOAT_EQ(node->getSize(), 2);
+    delete node;
 }
 
 TEST_F(NodeTest, addPointCorrectlyAppendsPointToPointSet){
@@ -101,6 +95,7 @@ TEST_F(NodeTest, addPointCorrectlyAppendsPointToPointSet){
     double distance = p2.computeDistance(p1, Distance::Euclidean);
     node->addPoint(&p2, Distance::Euclidean);
     EXPECT_EQ(&p2, node->getPointSet()->at(1));
+    delete node;
 }
 
 TEST_F(NodeTest, costOfNodeIsSumOfSquaredCosts){
@@ -112,8 +107,8 @@ TEST_F(NodeTest, costOfNodeIsSumOfSquaredCosts){
     v3 << 4,100, 28;
 
     Node testNode(10);
-    Point p1(&v1), p2(&v2), p3(&v3);
-    testNode.setRepresentative(new Point(&v0), Distance::Euclidean);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
     testNode.addPoint(&p3, Distance::Euclidean);
@@ -128,6 +123,7 @@ TEST_F(NodeTest, addPointThrowsExceptOnNullPtr){
     Point p1(&vector);
     node->setRepresentative(&p1, Distance::Euclidean);
     EXPECT_ANY_THROW(node->addPoint(nullptr, Distance::Euclidean));
+    delete node;
 }
 
 
@@ -141,6 +137,8 @@ TEST_F(NodeTest, addPointThrowsExceptOnNonLeaf){
     vector << 1, 2, 3,  4;
     Point p1(&vector);
     EXPECT_ANY_THROW(node->addPoint(&p1, Distance::Euclidean));
+    delete node;
+    delete child;
 }
 
 
@@ -157,6 +155,7 @@ TEST_F(NodeTest, setRepresentativeShouldSetCostToZeroWithNoPointsAvailableYet){
     EXPECT_EQ(node->getCost(), -1);
     node->setRepresentative(&p1, Distance::Euclidean);
     EXPECT_EQ(node->getCost(), 0);
+    delete node;
 }
 
 TEST_F(NodeTest, setRepresentativeSetsRepresentativeToCorrectPointer){
@@ -167,11 +166,13 @@ TEST_F(NodeTest, setRepresentativeSetsRepresentativeToCorrectPointer){
     Point p1(&vector);
     node->setRepresentative(&p1, Distance::Euclidean);
     EXPECT_EQ(node->getRepresentative(), &p1);
+    delete node;
 }
 
 TEST_F(NodeTest, setReprFailsOnNullPtr){
     Node *node = new Node(10);
     EXPECT_ANY_THROW(node->setRepresentative(nullptr, Distance::Euclidean));
+    delete node;
 }
 
 TEST_F(NodeTest, SetReprMustBeBeforeAnyAddPoint){
@@ -180,6 +181,7 @@ TEST_F(NodeTest, SetReprMustBeBeforeAnyAddPoint){
     vector << 1, 2, 3,  4;
     Point p1(&vector);
     EXPECT_ANY_THROW(node->addPoint(&p1, Distance::Euclidean));
+    delete node;
 }
 
 TEST_F(NodeTest, reprCanOnlyBeSetOnce){
@@ -193,6 +195,7 @@ TEST_F(NodeTest, reprCanOnlyBeSetOnce){
     Point p2(&v2);
     node->setRepresentative(&p1, Distance::Euclidean);
     EXPECT_ANY_THROW(node->setRepresentative(&p2, Distance::Euclidean));
+    delete node;
 }
 
 TEST_F(NodeTest, settingTwiceSameReprThrowsException){
@@ -205,6 +208,7 @@ TEST_F(NodeTest, settingTwiceSameReprThrowsException){
     Point p1(&vector);
     node->setRepresentative(&p1, Distance::Euclidean);
     EXPECT_ANY_THROW(node->setRepresentative(&p1, Distance::Euclidean));
+    delete node;
 }
 
 TEST_F(NodeTest, settingReprOnNonLeafThrowsException){
@@ -215,6 +219,8 @@ TEST_F(NodeTest, settingReprOnNonLeafThrowsException){
     vector << 1, 2, 3,  4;
     Point p1(&vector);
     EXPECT_ANY_THROW(node->setRepresentative(&p1, Distance::Euclidean));
+    delete node;
+    delete child;
 }
 
 TEST_F(NodeTest, setParentWorks){
@@ -223,12 +229,14 @@ TEST_F(NodeTest, setParentWorks){
     EXPECT_EQ(node->getParent(), nullptr);
     node->setParent(p);
     EXPECT_EQ(node->getParent(), p);
+    delete node;
+    delete p;
 }
 
 TEST_F(NodeTest, setParentThrowsExceptionOnNullptr){
     Node *node = new Node(10);
     EXPECT_ANY_THROW(node->setParent(nullptr));
-
+    delete node;
 }
 
 TEST_F(NodeTest, setAsChildLeftSetsLeftChild) {
@@ -237,6 +245,8 @@ TEST_F(NodeTest, setAsChildLeftSetsLeftChild) {
     node->setAsChild(child, true);
     EXPECT_EQ(node->getLeftChild(), child);
     EXPECT_EQ(node->getRightChild(), nullptr);
+    delete node;
+    delete child;
 }
 
 TEST_F(NodeTest, setAsChildLeftSetsParent) {
@@ -244,6 +254,8 @@ TEST_F(NodeTest, setAsChildLeftSetsParent) {
     Node *child = new Node(10);
     node->setAsChild(child, true);
     EXPECT_EQ(node->getLeftChild()->getParent(), node);
+    delete node;
+    delete child;
 }
 
 TEST_F(NodeTest, setAsChildRightSetsParent) {
@@ -251,6 +263,8 @@ TEST_F(NodeTest, setAsChildRightSetsParent) {
     Node *child = new Node(10);
     node->setAsChild(child, false);
     EXPECT_EQ(node->getRightChild()->getParent(), node);
+    delete node;
+    delete child;
 }
 
 TEST_F(NodeTest, setAsChildRightSetsRightChild){
@@ -259,17 +273,22 @@ TEST_F(NodeTest, setAsChildRightSetsRightChild){
     node->setAsChild(child, false);
     EXPECT_EQ(node->getRightChild(), child);
     EXPECT_EQ(node->getLeftChild(), nullptr);
+    delete node;
+    delete child;
 }
 
 TEST_F(NodeTest, setAsChildWithNullPointer){
     Node *node = new Node(10);
     EXPECT_ANY_THROW(node->setAsChild(nullptr, true));
     EXPECT_ANY_THROW(node->setAsChild(nullptr, false));
+    delete node;
+
 }
 
 TEST_F(NodeTest, nodeWithoutChildIsLeaf){
     Node *node = new Node(10);
     EXPECT_TRUE(node->isLeaf());
+    delete node;
 }
 
 TEST_F(NodeTest, nodeWithLeftChildIsLeaf){
@@ -277,6 +296,8 @@ TEST_F(NodeTest, nodeWithLeftChildIsLeaf){
     Node *child = new Node(10);
     node->setAsChild(child, true);
     EXPECT_FALSE(node->isLeaf());
+    delete node;
+    delete child;
 }
 
 TEST_F(NodeTest, nodeWithRightChildIsLeaf){
@@ -284,6 +305,8 @@ TEST_F(NodeTest, nodeWithRightChildIsLeaf){
     Node *child = new Node(10);
     node->setAsChild(child, false);
     EXPECT_FALSE(node->isLeaf());
+    delete node;
+    delete child;
 }
 
 TEST_F(NodeTest, childNodeIsLeaf){
@@ -291,6 +314,8 @@ TEST_F(NodeTest, childNodeIsLeaf){
     Node *child = new Node(10);
     node->setAsChild(child, true);
     EXPECT_TRUE(child->isLeaf());
+    delete node;
+    delete child;
 }
 
 TEST_F(NodeTest, isInIntervalThrowsExceptionsWhenMinBiggerMax){
@@ -360,11 +385,13 @@ TEST_F(NodeTest, setCostCorrectlyUpdatesCost){
     EXPECT_FLOAT_EQ(node->getCost(), -1.0);
     node->setCost(10.2314);
     EXPECT_FLOAT_EQ(node->getCost(), 10.2314);
+    delete node;
 }
 
 TEST_F(NodeTest, setCostThrowsExcOnNegativeVal){
     Node *node = new Node(10);
     EXPECT_ANY_THROW(node->setCost(-10));
+    delete node;
 }
 
 TEST_F(NodeTest, selectingRandomChildOnLeaf){
@@ -696,8 +723,8 @@ TEST_F(NodeTest, selectClusterRepHasUniformDistribWithEvenlySpacedPoints){
     v3 << 0,0, 1;
 
     Node testNode(10);
-    Point p1(&v1), p2(&v2), p3(&v3);
-    testNode.setRepresentative(new Point(&v0), Distance::Euclidean);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
     testNode.addPoint(&p3, Distance::Euclidean);
@@ -739,8 +766,8 @@ TEST_F(NodeTest, selectClusterConformsToMoreComplexDistributions){
     // Therefore we know the expected probabilities, as 25/141=0.1773, 16/141=0.113475177, 100/141=0.709219858
 
     Node testNode(10);
-    Point p1(&v1), p2(&v2), p3(&v3);
-    testNode.setRepresentative(new Point(&v0), Distance::Euclidean);
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
     testNode.addPoint(&p3, Distance::Euclidean);
@@ -825,6 +852,12 @@ TEST_F(NodeTest, splittingNodeEmptiesPointSetOfNode){
 }
 
 
+TEST_F(NodeTest, destructorTest){
+    Node *testNode = new Node(10);
+    delete testNode;
+}
+
+
 TEST_F(NodeTest, splittingNodeSetsRepresentativeDependingOnSelectedPoint){
     Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
     v0 << 0,0,0;
@@ -833,12 +866,12 @@ TEST_F(NodeTest, splittingNodeSetsRepresentativeDependingOnSelectedPoint){
     v3 << 0,0, 10; // Norm would be 10
 
 
-    Node testNode(10);
+    Node *testNode = new Node(10);
     Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
-    testNode.setRepresentative(&p0, Distance::Euclidean);
-    testNode.addPoint(&p1, Distance::Euclidean);
-    testNode.addPoint(&p2, Distance::Euclidean);
-    testNode.addPoint(&p3, Distance::Euclidean);
+    testNode->setRepresentative(&p0, Distance::Euclidean);
+    testNode->addPoint(&p1, Distance::Euclidean);
+    testNode->addPoint(&p2, Distance::Euclidean);
+    testNode->addPoint(&p3, Distance::Euclidean);
 
     // We know that total cost is 25+16+100 = 141.
     // Therefore we know the expected probabilities, as 25/141=0.1773, 16/141=0.113475177, 100/141=0.709219858
@@ -849,40 +882,45 @@ TEST_F(NodeTest, splittingNodeSetsRepresentativeDependingOnSelectedPoint){
 
     // We select p1
     ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.01));
-    testNode.setRng(&dist_mock);
+    testNode->setRng(&dist_mock);
 
-    Point* newRep = testNode.splitNode(Distance::Euclidean);
+    Point* newRep = testNode->splitNode(Distance::Euclidean);
 
-    EXPECT_EQ(testNode.getLeftChild()->getRepresentative(), &p1);
-    EXPECT_EQ(testNode.getRightChild()->getRepresentative(), &p0);
+    EXPECT_EQ(testNode->getLeftChild()->getRepresentative(), &p1);
+    EXPECT_EQ(testNode->getRightChild()->getRepresentative(), &p0);
+
+    delete testNode;
 
     // We select p2
     ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.2));
-    testNode = Node(10);
-    testNode.setRng(&dist_mock);
-    testNode.setRepresentative(&p0, Distance::Euclidean);
-    testNode.addPoint(&p1, Distance::Euclidean);
-    testNode.addPoint(&p2, Distance::Euclidean);
-    testNode.addPoint(&p3, Distance::Euclidean);
+    testNode = new Node(10);
+    testNode->setRng(&dist_mock);
+    testNode->setRepresentative(&p0, Distance::Euclidean);
+    testNode->addPoint(&p1, Distance::Euclidean);
+    testNode->addPoint(&p2, Distance::Euclidean);
+    testNode->addPoint(&p3, Distance::Euclidean);
 
-    newRep = testNode.splitNode(Distance::Euclidean);
+    newRep = testNode->splitNode(Distance::Euclidean);
 
-    EXPECT_EQ(testNode.getLeftChild()->getRepresentative(), &p2);
-    EXPECT_EQ(testNode.getRightChild()->getRepresentative(), &p0);
+    EXPECT_EQ(testNode->getLeftChild()->getRepresentative(), &p2);
+    EXPECT_EQ(testNode->getRightChild()->getRepresentative(), &p0);
+
+    delete testNode;
 
     // We select p3
     ON_CALL(dist_mock, CallOp).WillByDefault(Return(0.4));
-    testNode = Node(10);
-    testNode.setRng(&dist_mock);
-    testNode.setRepresentative(&p0, Distance::Euclidean);
-    testNode.addPoint(&p1, Distance::Euclidean);
-    testNode.addPoint(&p2, Distance::Euclidean);
-    testNode.addPoint(&p3, Distance::Euclidean);
+    testNode = new Node(10);
+    testNode->setRng(&dist_mock);
+    testNode->setRepresentative(&p0, Distance::Euclidean);
+    testNode->addPoint(&p1, Distance::Euclidean);
+    testNode->addPoint(&p2, Distance::Euclidean);
+    testNode->addPoint(&p3, Distance::Euclidean);
 
-    newRep = testNode.splitNode(Distance::Euclidean);
+    newRep = testNode->splitNode(Distance::Euclidean);
 
-    EXPECT_EQ(testNode.getLeftChild()->getRepresentative(), &p3);
-    EXPECT_EQ(testNode.getRightChild()->getRepresentative(), &p0);
+    EXPECT_EQ(testNode->getLeftChild()->getRepresentative(), &p3);
+    EXPECT_EQ(testNode->getRightChild()->getRepresentative(), &p0);
+    delete testNode;
 }
 
 TEST_F(NodeTest, splitNodeReturnsLeftChildRepresentative){

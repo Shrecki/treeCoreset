@@ -49,3 +49,6 @@ double Point::computeDistance(Point &otherPoint, Distance distance) const{
     }
     return d;
 }
+
+Point::~Point() {
+}

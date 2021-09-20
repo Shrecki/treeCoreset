@@ -3,10 +3,13 @@
 //
 
 #include "Node.h"
+#include <memory>
 #include <random>
+#include <iostream>
 
 Node::Node(unsigned int setInitialCapacity):
-leftChild(nullptr), rightChild(nullptr), parent(nullptr), representative(nullptr), size(0), cost(-1.0){
+leftChild(nullptr), rightChild(nullptr), parent(nullptr), representative(nullptr), size(0), cost(-1.0),
+shouldDeleteChildren(false), shouldDeleteRng(true){
     rng = new RandomGenerator(0, 1);
     pointSet.reserve(setInitialCapacity);
 }
@@ -194,6 +197,8 @@ Point* Node::splitNode(Distance distance) {
     Point * newRep = selectNewClusterRep(distance);
 
     unsigned int n_elems = pointSet.size();
+    // We must remember to delete these two nodes from this Node, because they were created from this Node
+    shouldDeleteChildren = true;
     Node * left = new Node(n_elems);
     Node * right = new Node(n_elems);
     setAsChild(left, true);
@@ -279,3 +284,23 @@ Node::Node():Node(10) {
 
 }
 
+Node::~Node() {
+    parent = nullptr;
+    if(shouldDeleteChildren){
+        delete leftChild;
+        delete rightChild;
+    }
+    if(shouldDeleteRng){
+        delete rng;
+    }
+}
+
+void Node::setRng(RandomGenerator *newRng) {
+    if(newRng != rng){
+        if(shouldDeleteRng){
+            delete rng;
+            shouldDeleteRng = false;
+        }
+        rng = newRng;
+    }
+}

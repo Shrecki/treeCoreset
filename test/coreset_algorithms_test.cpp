@@ -107,3 +107,14 @@ TEST_F(CoresetTest, inTwoClusterCaseCoresetIdentifiesOutlyingPointAsCluster) {
     EXPECT_TRUE(result.find(&p5) != result.end());
     EXPECT_EQ(result.size(),2);
 }
+
+TEST_F(CoresetTest, convertingPointWorks){
+    double array[5] = {1,4,6,772.3, -10.2};
+    Eigen::VectorXd *data = coreset::getMapFromArray(array, 5);
+    std::cout << data->size() << std::endl;
+    for(int i=0; i<data->size();++i){
+        std::cout << (*data)[i] << std::endl;
+    }
+
+    delete (Eigen::Map<Eigen::VectorXd>*)data;
+}
