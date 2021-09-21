@@ -140,6 +140,33 @@ TEST_F(ClusteredPointsTest, inserting2MPointsCausesThirdBucketToBeFilledWithExac
     EXPECT_EQ(clusteredPoints.buckets.at(2)->size(), 2);
 }
 
+TEST_F(ClusteredPointsTest, insertingNullPtrRaisesException){
+    ClusteredPoints clusteredPoints(10,2);
+    EXPECT_ANY_THROW(clusteredPoints.insertPoint(nullptr));
+}
+
+TEST_F(ClusteredPointsTest, insertingEmptyArrayRaisesException){
+    ClusteredPoints clusteredPoints(10, 2);
+    Eigen::VectorXd v0(0);
+    Point p0(&v0);
+    EXPECT_ANY_THROW(clusteredPoints.insertPoint(&p0));
+}
+
+TEST_F(ClusteredPointsTest, insertingPointsShouldConformToDimensionalityOfFirstInsertedPoint){
+    std::vector<Point*> points;
+    Eigen::VectorXd v0(3), v1(3), v2(2);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0;
+    v2 << 4,0;
+
+    Point p0(&v0), p1(&v1), p2(&v2);
+
+
+    ClusteredPoints clusteredPoints(10,4);
+    clusteredPoints.insertPoint(&p0);
+    clusteredPoints.insertPoint(&p1);
+    EXPECT_ANY_THROW(clusteredPoints.insertPoint(&p2));
+}
 
 TEST_F(ClusteredPointsTest, insertingPointsDynamicallyAllocatedShouldNotCauseMemLeak){
     std::vector<Point*> points;

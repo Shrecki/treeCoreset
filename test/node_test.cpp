@@ -1168,16 +1168,3 @@ TEST_F(NodeTest, splitNodeClustersPointsInChildrenAsItShould){
     EXPECT_EQ(testNode.getRightChild()->getPointSet()->at(1), &p2);
     EXPECT_EQ(testNode.getRightChild()->getPointSet()->at(2), &p3);
 }
-
-
-TEST_F(NodeTest, convertingPointWorks){
-    double array[5] = {1,4,6,772.3, -10.2};
-    Eigen::VectorXd *data = Point::getMapFromArray(array, 5);
-    std::cout << data->size() << std::endl;
-    for(int i=0; i<data->size();++i){
-        std::cout << (*data)[i] << std::endl;
-    }
-
-    delete (Eigen::Map<Eigen::VectorXd>*)data;
-}
-

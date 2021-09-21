@@ -63,3 +63,9 @@ TEST_F(PointTest, CorrelationDistanceWorksCorrectly) {
 
     EXPECT_FLOAT_EQ(point.computeDistance(point2, Distance::Correlation),7.0/sqrt(105));
 }
+
+
+TEST_F(PointTest, convertingEmptyArrayRaisesException){
+    double array[0] = {};
+    EXPECT_ANY_THROW(Point::convertArrayToPoint(array, 0));
+}

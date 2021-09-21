@@ -7,6 +7,18 @@
 
 
 void ClusteredPoints::insertPoint(Point *newPoint) {
+    if(newPoint == nullptr){
+        throw std::logic_error("Cannot add a nullptr as point");
+    }
+    if(newPoint->getData()->size() == 0){
+        throw std::logic_error("Cannot add a point of 0 dimension");
+    }
+    if(dimension == -1){
+        dimension = newPoint->getData()->size();
+    }
+    if(newPoint->getData()->size()!=dimension){
+        throw std::logic_error("Cannot add a point with this dimension when the first point had a different dimension");
+    }
     unsigned int curr_cap(0);
     if(buckets[0]->size()== buckets[0]->capacity()){
         throw std::logic_error("Bucket 0 cannot be full before point insertion.");
@@ -75,7 +87,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
 }
 
 ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity): nBuckets(nBuckets),
-bucketCapacity(bucketCapacity), nsplits((unsigned int)pow(2, bucketCapacity-1) + 1) {
+bucketCapacity(bucketCapacity), nsplits((unsigned int)pow(2, bucketCapacity-1) + 1), dimension(-1) {
     buckets.reserve(nBuckets);
 
     for(int i=0; i<nBuckets;++i){

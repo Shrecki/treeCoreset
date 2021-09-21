@@ -60,6 +60,7 @@ void Point::cleanupData() {
 }
 
 Point* Point::convertArrayToPoint(double* array, int arraySz){
+    if(arraySz ==0) throw std::logic_error("Cannot convert an array with size 0");
     return new Point(Point::getMapFromArray(array, arraySz), true);
 }
 

@@ -44,49 +44,84 @@ int main() {
                 std::cout << "Received a POST request." << std::endl;
 
                 // Convert to a point
-                Point* p = Point::convertArrayToPoint(&array[1], nElems-1);
+                Requests response;
+                try{
+                    // Convert received data to point
+                    Point* p = Point::convertArrayToPoint(&array[1], nElems-1);
+                    // Perform insertion (this is the InsertPoint step in the stream)
+                    clusteredPoints.insertPoint(p);
 
-                // Insert into the overall algorithm
-                clusteredPoints.insertPoint(p);
+                    // Send back response: all went well
+                    response = Requests::POST_OK;
+                    zmq::message_t reply(1);
+                    memcpy((void *) reply.data(), &response, 1);
+                    socket.send(reply);
 
-                // Response is a simple POST_OKgit with nothing else
+                } catch (std::exception &e) {
+                    response = Requests::ERROR;
+
+                    // Here, send also the exception (but we will worry about it later)
+                    zmq::message_t reply(1);
+                    memcpy((void *) reply.data(), &response, 1);
+                    socket.send(reply);
+
+                    // If something went wrong, we don't need to stop the stream
+                }
                 break;
             }
             case Requests::GET_REQ : {
                 std::cout << "Received a GET request." << std::endl;
                 // Response should contain relevant elements
+
+                zmq::message_t reply(5);
+                memcpy((void *) reply.data(), "World", 5);
+                socket.send(reply);
                 break;
             }
             case Requests::LOAD_REQ: {
                 std::cout << "Received a LOAD request." << std::endl;
-                // Response should be a
+
+                zmq::message_t reply(5);
+                memcpy((void *) reply.data(), "World", 5);
+                socket.send(reply);
                 break;
             }
             case Requests::SAVE_REQ: {
                 std::cout << "Received a SAVE request." << std::endl;
+
+                zmq::message_t reply(5);
+                memcpy((void *) reply.data(), "World", 5);
+                socket.send(reply);
                 break;
             }
             case Requests::STOP_REQ: {
                 std::cout << "Received a STOP request." << std::endl;
+                // Send back response: we know we got the stop
                 mustContinue = false;
+
+                zmq::message_t reply(5);
+                memcpy((void *) reply.data(), "World", 5);
+                socket.send(reply);
                 break;
             }
             case Requests::POST_OK: {
                 std::cout << "Simulating big CPU overload." << std::endl;
                 sleep(3);
+
+                zmq::message_t reply(5);
+                memcpy((void *) reply.data(), "World", 5);
+                socket.send(reply);
                 break;
             }
             default: {
                 std::cout << "Unknown request." << std::endl;
+
+                zmq::message_t reply(5);
+                memcpy((void *) reply.data(), "World", 5);
+                socket.send(reply);
                 break;
             }
         }
-
-        // Do main algorithmic work here
-
-        zmq::message_t reply(5);
-        memcpy((void *) reply.data(), "World", 5);
-        socket.send(reply);
     }
     socket.close();
     return 0;

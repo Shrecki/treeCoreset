@@ -16,10 +16,11 @@ enum Requests {
 };
 
 class ClusteredPoints {
-public:
     unsigned int nBuckets;
     unsigned int bucketCapacity;
     unsigned int nsplits;
+    int dimension;
+public:
     std::vector<std::vector<Point*>*> buckets;
     std::vector<unsigned int> bucketCapacities;
     std::vector<Node*> nodes;
