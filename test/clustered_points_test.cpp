@@ -113,9 +113,58 @@ TEST_F(ClusteredPointsTest, insertingExactlyMPointsCausesSecondBucketToBeFilledW
     clusteredPoints.insertPoint(p0);
     clusteredPoints.insertPoint(&p1);
     EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),0);
+    EXPECT_EQ(clusteredPoints.buckets.at(1)->size(), 2);
 
 }
 
 TEST_F(ClusteredPointsTest, inserting2MPointsCausesThirdBucketToBeFilledWithExactlyMPoints){
+    std::vector<Point*> points;
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0;
+    v2 << 4,0,0;
+    v3 << 0,0, 10;
 
+    double array[3] = {0,0,0};
+    Point *p0 = Point::convertArrayToPoint(array, 3);
+    Point p1(&v1), p2(&v2), p3(&v3), p4(&v4);
+
+
+    ClusteredPoints clusteredPoints(10,2);
+    clusteredPoints.insertPoint(p0);
+    clusteredPoints.insertPoint(&p1);
+    clusteredPoints.insertPoint(&p2);
+    clusteredPoints.insertPoint(&p3);
+    EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),0);
+    EXPECT_EQ(clusteredPoints.buckets.at(1)->size(), 0);
+    EXPECT_EQ(clusteredPoints.buckets.at(2)->size(), 2);
+}
+
+
+TEST_F(ClusteredPointsTest, insertingPointsDynamicallyAllocatedShouldNotCauseMemLeak){
+    std::vector<Point*> points;
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0;
+    v2 << 4,0,0;
+    v3 << 0,0, 10;
+
+    double array0[3] = {0,0,0};
+    double array1[3] = {0,5,0};
+    double array2[3] = {4,0,0};
+    double array3[3] = {0,0,10};
+
+    Point *p0 = Point::convertArrayToPoint(array0, 3);
+    Point *p1 = Point::convertArrayToPoint(array1, 3);
+    Point *p2 = Point::convertArrayToPoint(array2, 3);
+    Point *p3 = Point::convertArrayToPoint(array3, 3);
+
+    ClusteredPoints clusteredPoints(10,2);
+    clusteredPoints.insertPoint(p0);
+    clusteredPoints.insertPoint(p1);
+    clusteredPoints.insertPoint(p2);
+    clusteredPoints.insertPoint(p3);
+    EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),0);
+    EXPECT_EQ(clusteredPoints.buckets.at(1)->size(), 0);
+    EXPECT_EQ(clusteredPoints.buckets.at(2)->size(), 2);
 }

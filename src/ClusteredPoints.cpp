@@ -64,7 +64,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
             for(int j=0;j<bucketCapacities[i];++j){
                 if(q.find(buckets[i]->at(j)) == q.end()){
                     buckets[i]->at(j)->cleanupData();
-                    delete buckets[i]->at(j);
+                    //delete buckets[i]->at(j);
                 }
                 buckets[i]->at(j)=nullptr;
             }
