@@ -73,10 +73,46 @@ TEST_F(ClusteredPointsTest, clustedPointsProperlyPerformsInsertionOfSinglePointW
 }
 
 TEST_F(ClusteredPointsTest, insertingBelowMPointsFillsOnlyFirstBucket){
+    // First, we create m points
+    std::vector<Point*> points;
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0;
+    v2 << 4,0,0;
+    v3 << 0,0, 10;
 
+    double array[3] = {0,0,0};
+    Point *p0 = Point::convertArrayToPoint(array, 3);
+    Point p1(&v1);
+
+
+    ClusteredPoints clusteredPoints(10,3);
+    clusteredPoints.insertPoint(p0);
+    clusteredPoints.insertPoint(&p1);
+    EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),2);
+    EXPECT_EQ(clusteredPoints.buckets.at(0)->at(0), p0);
+    for(int i=1; i < 10; i++){
+        EXPECT_EQ(clusteredPoints.buckets.at(i)->size(),0);
+    }
 }
 
 TEST_F(ClusteredPointsTest, insertingExactlyMPointsCausesSecondBucketToBeFilledWithExactlyMPoints){
+    std::vector<Point*> points;
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 0,0,0;
+    v1 << 0, 5, 0;
+    v2 << 4,0,0;
+    v3 << 0,0, 10;
+
+    double array[3] = {0,0,0};
+    Point *p0 = Point::convertArrayToPoint(array, 3);
+    Point p1(&v1);
+
+
+    ClusteredPoints clusteredPoints(10,2);
+    clusteredPoints.insertPoint(p0);
+    clusteredPoints.insertPoint(&p1);
+    EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),0);
 
 }
 

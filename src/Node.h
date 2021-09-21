@@ -57,7 +57,7 @@ public:
     void propagateUpCostsParentOneSided();
     void updateCostBasedOnChildren();
     Point* selectNewClusterRep(Distance distance);
-    Point* splitNode(Distance distance);
+    Point* splitNode(Distance distance, Node* n1, Node *n2);
 
     static bool isInInterval(double x, double min, double max, bool inclusive);
 

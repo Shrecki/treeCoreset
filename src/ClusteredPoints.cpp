@@ -7,13 +7,13 @@
 
 
 void ClusteredPoints::insertPoint(Point *newPoint) {
-    unsigned int curr_cap = bucketCapacities[0];
+    unsigned int curr_cap(0);
     if(buckets[0]->size()== buckets[0]->capacity()){
         throw std::logic_error("Bucket 0 cannot be full before point insertion.");
     }
     buckets[0]->push_back(newPoint);
     bucketCapacities[0]++;
-    if(bucketCapacities[0] == buckets[0]->capacity()){
+    if(buckets[0]->size()== buckets[0]->capacity()){
         // Create set q
         std::set<Point*> q;
         // Move all points from bucket[0] into set q
@@ -30,7 +30,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
             // Convert q to vector
             tmp_vec.insert(tmp_vec.begin(), q.begin(), q.end());
             // Reduce step
-            q=coreset::treeCoresetReduce(&tmp_vec, bucketCapacity);
+            q=coreset::treeCoresetReduceOptim(&tmp_vec, bucketCapacity, nodes);
             bucket_i++;
             curr_cap = bucketCapacities[bucket_i];
         }
@@ -69,11 +69,13 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
                 buckets[i]->at(j)=nullptr;
             }
             bucketCapacities[i] = 0;
+            buckets[i]->clear();
         }
     }
 }
 
-ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity) {
+ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity): nBuckets(nBuckets),
+bucketCapacity(bucketCapacity), nsplits((unsigned int)pow(2, bucketCapacity-1) + 1) {
     buckets.reserve(nBuckets);
 
     for(int i=0; i<nBuckets;++i){
@@ -81,6 +83,11 @@ ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapac
         tmpVec->reserve(bucketCapacity);
         buckets.push_back(tmpVec);
         bucketCapacities.push_back(0);
+    }
+
+    // We will allocate exactly 2^(m-1)+1 nodes
+    for(int i=0; i < nsplits; ++i){
+        nodes.push_back(new Node(10));
     }
 }
 
@@ -95,6 +102,12 @@ ClusteredPoints::~ClusteredPoints() {
         delete buckets[i];
         buckets[i] = nullptr;
     }
+
+    for(int i=0; i < nsplits; ++i){
+        delete nodes.at(i);
+        nodes.at(i) = nullptr;
+    }
+    nodes.clear();
     buckets.clear();
     bucketCapacities.clear();
 }

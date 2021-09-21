@@ -6,8 +6,20 @@
 #include "Node.h"
 
 std::set<Point*> coreset::treeCoresetReduce(std::vector<Point *> *points, unsigned int m) {
+    std::vector<Node*> nodes;
+    return treeCoresetReduceOptim(points, m, nodes);
+}
+
+
+std::set<Point*> coreset::treeCoresetReduceOptim(std::vector<Point *> *points, unsigned int m, std::vector<Node*> &nodes) {
     unsigned int n=points->size();
     std::set<Point*> s;
+
+    bool useOnlyRoot(false);
+    if(nodes.size() < pow(2, m-1)+1){
+        // We will only use the first node
+        useOnlyRoot = true;
+    }
 
     // 1. Select q1 at random from P (uniformly random this time)
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
@@ -17,12 +29,18 @@ std::set<Point*> coreset::treeCoresetReduce(std::vector<Point *> *points, unsign
     Point *q1(points->at(index));
 
     // 2. Create the root node with representative q1 and points as point set
-    Node root(n);
-    root.setRepresentative(q1, Distance::Euclidean);
+    Node* root;
+    if(useOnlyRoot){
+        root = new Node(n);
+    } else {
+        root = nodes.at(0);
+    }
+    unsigned int allocated_nodes = 1;
+    root->setRepresentative(q1, Distance::Euclidean);
 
     for(int i=0; i<n; ++i){
         if(i!=index){
-            root.addPoint(points->at(i),Distance::Euclidean);
+            root->addPoint(points->at(i),Distance::Euclidean);
         }
     }
 
@@ -32,11 +50,21 @@ std::set<Point*> coreset::treeCoresetReduce(std::vector<Point *> *points, unsign
     // 4. Main loop
     for(int i=1;i<m;++i){
         // select new child node randomly
-        Node* electedChild = root.getRandomChild();
+        Node* electedChild = root->getRandomChild();
         // elect new qi from root using splitNode
-        Point *newRep = electedChild->splitNode(Distance::Euclidean);
+        Point *newRep;
+        if(useOnlyRoot){
+            newRep = electedChild->splitNode(Distance::Euclidean, nullptr, nullptr);
+        } else {
+            newRep = electedChild->splitNode(Distance::Euclidean, nodes.at(allocated_nodes), nodes.at(allocated_nodes+1));
+        }
         // Add newRep into S only if not already present (hence the set)
         s.insert(newRep);
+        allocated_nodes +=2;
+    }
+
+    if(useOnlyRoot){
+        delete root;
     }
 
     return s;

@@ -41,9 +41,6 @@ void Node::setRepresentative(Point *newPoint, Distance distance) {
     if(representative == newPoint){
         throw std::logic_error("This point is already representative of this node");
     }
-    if(representative != nullptr){
-        throw std::logic_error("Cannot set a new point as representative: this node already has one");
-    }
     representative = newPoint;
     cost = 0;
     addPoint(representative, distance);
@@ -180,7 +177,7 @@ Point *Node::selectNewClusterRep(Distance distance) {
     throw std::range_error("Should have selected at least a point, but probability never fell within normalized cost intervals");
 }
 
-Point* Node::splitNode(Distance distance) {
+Point* Node::splitNode(Distance distance, Node* n1, Node* n2) {
     if(!isLeaf()){
         throw std::logic_error("Splitting node only makes sense on leaf nodes!");
     }
@@ -197,10 +194,18 @@ Point* Node::splitNode(Distance distance) {
     Point * newRep = selectNewClusterRep(distance);
 
     unsigned int n_elems = pointSet.size();
-    // We must remember to delete these two nodes from this Node, because they were created from this Node
-    shouldDeleteChildren = true;
-    Node * left = new Node(n_elems);
-    Node * right = new Node(n_elems);
+    Node * left;
+    Node * right;
+
+    if(n1 == nullptr || n2 == nullptr){
+        // We must remember to delete these two nodes from this Node, because they were created from this Node
+        shouldDeleteChildren = true;
+        left = new Node(n_elems);
+        right = new Node(n_elems);
+    } else {
+        left = n1;
+        right = n2;
+    }
     setAsChild(left, true);
     setAsChild(right, false);
     left->setRepresentative(newRep, distance);
