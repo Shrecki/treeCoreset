@@ -22,6 +22,7 @@ public:
     std::vector<unsigned int> bucketCapacities;
 
     explicit ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity);
+    ~ClusteredPoints();
     void insertPoint(Point *newPoint);
 };
 

@@ -42,12 +42,4 @@ std::set<Point*> coreset::treeCoresetReduce(std::vector<Point *> *points, unsign
     return s;
 }
 
-Eigen::VectorXd* coreset::getMapFromArray(double* array, int arraySz){
-    Eigen::VectorXd* b = (Eigen::VectorXd*) new Eigen::Map<Eigen::VectorXd>(array, arraySz);
-    return b;
-}
 
-
-Point* coreset::convertArrayToPoint(double* array, int arraySz){
-    return new Point(getMapFromArray(array, arraySz));
-}

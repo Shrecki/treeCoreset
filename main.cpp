@@ -9,6 +9,7 @@
 
 #include "src/coreset_algorithms.h"
 #include "src/ClusteredPoints.h"
+#include "src/Point.h"
 
 #define N_SAMPLES 728*14.0
 #define M 200*12
@@ -43,7 +44,7 @@ int main() {
                 std::cout << "Received a POST request." << std::endl;
 
                 // Convert to a point
-                Point* p = coreset::convertArrayToPoint(&array[1], nElems-1);
+                Point* p = Point::convertArrayToPoint(&array[1], nElems-1);
 
                 // Insert into the overall algorithm
                 clusteredPoints.insertPoint(p);

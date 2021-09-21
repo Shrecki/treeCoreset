@@ -1,11 +1,9 @@
 //
 // Created by guibertf on 9/15/21.
 //
-
 #include "Point.h"
-#include <cmath>
 
-Point::Point(Eigen::VectorXd *newData): data(newData) {
+Point::Point(Eigen::VectorXd *newData, bool wasConverted=false): data(newData), wasConverted(wasConverted) {
 
 }
 
@@ -54,5 +52,22 @@ Point::~Point() {
 }
 
 void Point::cleanupData() {
-    delete (Eigen::Map<Eigen::VectorXd>*)data;
+    if(wasConverted){
+        // It came from a map, which was then cast as data
+        delete (Eigen::Map<Eigen::VectorXd>*)data;
+        delete this;
+    }
+}
+
+Point* Point::convertArrayToPoint(double* array, int arraySz){
+    return new Point(Point::getMapFromArray(array, arraySz), true);
+}
+
+Eigen::VectorXd* Point::getMapFromArray(double* array, int arraySz){
+    Eigen::VectorXd* b = (Eigen::VectorXd*) new Eigen::Map<Eigen::VectorXd>(array, arraySz);
+    return b;
+}
+
+Point::Point(Eigen::VectorXd *newData): data(newData), wasConverted(false) {
+
 }

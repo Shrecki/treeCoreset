@@ -8,26 +8,24 @@
 
 void ClusteredPoints::insertPoint(Point *newPoint) {
     unsigned int curr_cap = bucketCapacities[0];
-    if(curr_cap < bucketCapacity){
-        buckets[0]->at(curr_cap) = newPoint;
-        bucketCapacities[0]++;
-    } else{
-        // Create empty set
+    if(buckets[0]->size()== buckets[0]->capacity()){
+        throw std::logic_error("Bucket 0 cannot be full before point insertion.");
+    }
+    buckets[0]->push_back(newPoint);
+    bucketCapacities[0]++;
+    if(bucketCapacities[0] == buckets[0]->capacity()){
+        // Create set q
         std::set<Point*> q;
-        // Move all points from bucket[0] into said set ( plus p, quite obviously)
-        for(int i=0; i < curr_cap; ++i){
-            q.insert(buckets[0]->at(i));
-        }
-        q.insert(newPoint);
+        // Move all points from bucket[0] into set q
+        q.insert(buckets[0]->begin(), buckets[0]->end());
 
         unsigned int bucket_i = 1;
         curr_cap = bucketCapacities[bucket_i];
         std::vector<Point*> tmp_vec;
         tmp_vec.reserve(bucketCapacity*4);
         while(curr_cap !=0 && bucket_i < nBuckets){
-            for(int i=0;i<curr_cap;i++){
-                q.insert(buckets[bucket_i]->at(i));
-            }
+            // Copy all points from bucket_i in q (notice that, since these are sets, this is like taking the union)
+            q.insert(buckets[bucket_i]->begin(), buckets[bucket_i]->end());
 
             // Convert q to vector
             tmp_vec.insert(tmp_vec.begin(), q.begin(), q.end());
@@ -37,8 +35,6 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
             curr_cap = bucketCapacities[bucket_i];
         }
 
-
-
         // There are 2 possibilities:
         //  1. We reached an empty Bi. It means we can copy all points from Qi without a worry in the world
         //  2. Somehow, we reached the last Bi, which was not empty, and we now have an aggregate of its points in Qi.
@@ -46,19 +42,19 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
         // Second case is harder, because for each pointer to insert we must decide whether to free a pointer or not.
         if(bucket_i == nBuckets){ // This is case 2
             for(int i=0; i < curr_cap; ++i){
-                bool isin = q.count(buckets.at(nBuckets-1)->at(i));
+                bool isin = q.find(buckets[nBuckets-1]->at(i)) != q.end();
                 if(!isin){
                     buckets[nBuckets-1]->at(i)->cleanupData();
                     delete buckets[nBuckets-1]->at(i);
                 }
-                buckets[nBuckets-1]->at(i) = nullptr;
+                buckets[nBuckets-1]->clear();
             }
             bucket_i = bucket_i-1;
+            curr_cap = 0;
         }
         // Whether in 1 or 2, we must now put all points from Q into Bi
         for(Point*p: q){
-            curr_cap = 0;
-            buckets[bucket_i]->at(curr_cap) = p;
+            buckets[bucket_i]->push_back(p);
             ++curr_cap;
         }
         bucketCapacities[bucket_i] = curr_cap;
@@ -75,7 +71,6 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
             bucketCapacities[i] = 0;
         }
     }
-
 }
 
 ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity) {
@@ -87,6 +82,21 @@ ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapac
         buckets.push_back(tmpVec);
         bucketCapacities.push_back(0);
     }
+}
+
+ClusteredPoints::~ClusteredPoints() {
+    for(int i=0; i < buckets.size(); ++i){
+        for(int j=0; j < buckets[i]->size(); ++j){
+            Point *p =buckets[i]->at(j);
+            p->cleanupData();
+            buckets[i]->at(j)=nullptr;
+        }
+        buckets[i]->clear();
+        delete buckets[i];
+        buckets[i] = nullptr;
+    }
+    buckets.clear();
+    bucketCapacities.clear();
 }
 
 
