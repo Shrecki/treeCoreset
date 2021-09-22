@@ -4,7 +4,7 @@
 
 #include "ClusteredPoints.h"
 #include "coreset_algorithms.h"
-
+#include "kmeansplusplus.h"
 
 void ClusteredPoints::insertPoint(Point *newPoint) {
     if(newPoint == nullptr){
@@ -122,6 +122,16 @@ ClusteredPoints::~ClusteredPoints() {
     nodes.clear();
     buckets.clear();
     bucketCapacities.clear();
+}
+
+std::vector<Point *> ClusteredPoints::getClusters(unsigned int k) {
+    // This method must:
+    // 1- Compute the union of all buckets
+    // 2- Perform coresetreduce on it
+    // 3- Run Kmeans++ five times on it
+    // Each time we run Kmeans++, get the cost as well
+    // Then, send back the clusters with lowest cost of them all
+    return std::vector<Point *>();
 }
 
 
