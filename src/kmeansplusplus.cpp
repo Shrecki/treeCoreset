@@ -9,7 +9,7 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
     if(inputPoints.empty()){
         throw std::invalid_argument("Cannot run this algorithm without points");
     }
-    unsigned long nPoints = inputPoints.size();
+    int nPoints = inputPoints.size();
     long dimension = inputPoints.at(0)->getData()->size();
 
     std::vector<Eigen::VectorXd> centroids;
@@ -64,7 +64,8 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
 
     Eigen::VectorXd tmpCentroid;
 
-    for(int e=0; e<epochs; ++e){
+    int e=0;
+    for(; e<epochs; ++e){
         for(int j=0; j<k;++j){
             minHalfDist = __DBL_MAX__;
             newDist = 0.0;
