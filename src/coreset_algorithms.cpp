@@ -2,6 +2,7 @@
 // Created by guibertf on 9/17/21.
 //
 
+#include <iostream>
 #include "coreset_algorithms.h"
 #include "Node.h"
 
@@ -65,6 +66,10 @@ std::set<Point*> coreset::treeCoresetReduceOptim(std::vector<Point *> *points, u
 
     if(useOnlyRoot){
         delete root;
+    } else {
+        for(Node *no: nodes){
+            no->resetNode();
+        }
     }
 
     return s;

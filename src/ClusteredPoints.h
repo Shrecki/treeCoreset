@@ -28,7 +28,7 @@ public:
     explicit ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity);
     ~ClusteredPoints();
     void insertPoint(Point *newPoint);
-    std::vector<Point*> getClusters(unsigned int k);
+    std::vector<Point*> getRepresentatives();
 };
 
 #endif //UNTITLED_CLUSTEREDPOINTS_H+

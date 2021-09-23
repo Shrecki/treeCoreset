@@ -309,3 +309,16 @@ void Node::setRng(RandomGenerator *newRng) {
         rng = newRng;
     }
 }
+
+void Node::resetNode() {
+    if(shouldDeleteChildren){
+        delete leftChild;
+        delete rightChild;
+        shouldDeleteChildren = false;
+    }
+    leftChild = nullptr;
+    rightChild = nullptr;
+    parent = nullptr;
+    representative = nullptr;
+    pointSet.clear();
+}

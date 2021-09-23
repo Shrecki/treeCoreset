@@ -2,6 +2,7 @@
 // Created by guibertf on 9/20/21.
 //
 
+#include <iostream>
 #include "ClusteredPoints.h"
 #include "coreset_algorithms.h"
 #include "kmeansplusplus.h"
@@ -97,6 +98,7 @@ bucketCapacity(bucketCapacity), nsplits((unsigned int)pow(2, bucketCapacity-1) +
         bucketCapacities.push_back(0);
     }
 
+
     // We will allocate exactly 2^(m-1)+1 nodes
     for(int i=0; i < nsplits; ++i){
         nodes.push_back(new Node(10));
@@ -124,14 +126,30 @@ ClusteredPoints::~ClusteredPoints() {
     bucketCapacities.clear();
 }
 
-std::vector<Point *> ClusteredPoints::getClusters(unsigned int k) {
+std::vector<Point *> ClusteredPoints::getRepresentatives() {
     // This method must:
     // 1- Compute the union of all buckets
     // 2- Perform coresetreduce on it
-    // 3- Run Kmeans++ five times on it
-    // Each time we run Kmeans++, get the cost as well
-    // Then, send back the clusters with lowest cost of them all
-    return std::vector<Point *>();
+    // We don't care about kmeans++, some other part of the program can handle it
+    std::set<Point*> q;
+    std::vector<Point*> u;
+
+    // Union of all buckets
+    for(auto v: buckets){
+        q.insert(v->begin(), v->end());
+    }
+
+    // Convert to vector
+    u.insert(u.begin(), q.begin(), q.end());
+
+    // Reduce step
+    q=coreset::treeCoresetReduceOptim(&u, bucketCapacity, nodes);
+
+    // Convert back to vector and return
+    std::vector<Point*> results;
+    results.insert(results.begin(), q.begin(), q.end());
+
+    return results;
 }
 
 

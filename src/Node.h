@@ -59,6 +59,8 @@ public:
     Point* selectNewClusterRep(Distance distance);
     Point* splitNode(Distance distance, Node* n1, Node *n2);
 
+    void resetNode();
+
     static bool isInInterval(double x, double min, double max, bool inclusive);
 
 };
