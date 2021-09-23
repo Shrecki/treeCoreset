@@ -4,6 +4,8 @@
 #include "ClusteredPoints.h"
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
+#include <fstream>
+#include "utils.h"
 
 using ::testing::Return;
 
@@ -195,3 +197,44 @@ TEST_F(ClusteredPointsTest, insertingPointsDynamicallyAllocatedShouldNotCauseMem
     EXPECT_EQ(clusteredPoints.buckets.at(1)->size(), 0);
     EXPECT_EQ(clusteredPoints.buckets.at(2)->size(), 2);
 }
+
+
+TEST_F(ClusteredPointsTest, pointsFromFile){
+    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/exampledata.csv");
+
+    std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
+    Eigen::VectorXd vectorTest(2);
+    std::vector<Eigen::VectorXd> vectors;
+    std::vector<Point*> inputPoints;
+    while(!results.at(results.size()-1).empty()){
+        for(int i=0; i < 2; ++i){
+            std::string s = results.at(i);
+            vectorTest(i) = std::stod(s);
+        }
+        vectors.push_back(vectorTest);
+        results = getNextLineAndSplitIntoTokens(pointFile);
+    }
+
+    pointFile.close();
+
+    for(int i=0; i < vectors.size(); ++i) {
+        inputPoints.push_back(new Point(&vectors.at(i)));
+    }
+
+    int m = 3;
+    int l = ceil(log2(inputPoints.size()*1.0/m)+2);
+    ClusteredPoints clusteredPoints(l,m);
+    for(int i=0; i < vectors.size(); ++i){
+        clusteredPoints.insertPoint(inputPoints.at(i));
+    }
+
+    std::vector<Point*> res = clusteredPoints.getRepresentatives();
+    std::cout << "Size:" << res.size() << std::endl;
+
+    for(Point* p: res){
+        std::cout << *p->getData() << std::endl;
+    }
+
+    std::cout << "All done!" << std::endl;
+}
+

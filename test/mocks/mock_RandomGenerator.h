@@ -7,6 +7,8 @@
 #include <random>
 #include "gmock/gmock.h"  // Brings in gMock.
 #include "RandomGenerator.h"
+
+
 class mock_RandomGenerator: public RandomGenerator{
 public:
     MOCK_METHOD0(CallOp, double());
