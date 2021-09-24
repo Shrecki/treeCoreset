@@ -9,6 +9,10 @@
 #include <vector>
 #include "RandomGenerator.h"
 #include <memory>
+
+/**
+ * Class describing a node. It should be noted that a node, in itself, is sufficient to describe a binary tree
+ */
 class Node {
 private:
     std::vector<Point*> pointSet;

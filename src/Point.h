@@ -11,6 +11,10 @@
 
 enum class Distance { Euclidean, Cosine, Correlation };
 
+
+/**
+ * Convenience class describe a point and allowing distance computations on it.
+ */
 class Point {
 private:
     Eigen::VectorXd * data;
