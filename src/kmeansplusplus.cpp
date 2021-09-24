@@ -6,7 +6,7 @@
 #include <random>
 #include <utility>
 
-std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(Eigen::VectorXd firstCentroid, std::vector<Point *> inputPoints, unsigned int k){
+std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(const Eigen::VectorXd &firstCentroid, const std::vector<Point *> &inputPoints, const unsigned int &k){
     // Compute initialization points according to the kMeans++ algorithm
     std::vector<Eigen::VectorXd> startCentroids;
     int nPoints = inputPoints.size();
@@ -59,7 +59,7 @@ std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(Eigen::VectorXd firs
     return startCentroids;
 }
 
-Threeple* kmeans::kMeansPlusPlus(std::vector<Point *> inputPoints, unsigned int k, unsigned int epochs) {
+Threeple* kmeans::kMeansPlusPlus(const std::vector<Point *> &inputPoints, const unsigned int &k, const unsigned int &epochs) {
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<int> distribution(0, inputPoints.size() - 1);
@@ -67,6 +67,27 @@ Threeple* kmeans::kMeansPlusPlus(std::vector<Point *> inputPoints, unsigned int 
     std::vector<Eigen::VectorXd> startCentroids = generateStartCentroids(*inputPoints.at(id)->getData(),inputPoints, k);
     // Apply kMeans with these initializations
     return kMeans(inputPoints, &startCentroids, k, epochs);
+}
+
+std::vector<Eigen::VectorXd> kmeans::getBestClusters(int nTries, const std::vector<Point *> &inputPoints, const unsigned int &k, const unsigned int &epochs){
+    std::vector<Eigen::VectorXd> bestCentroids;
+    for(int i = 0; i < k; ++i){
+        bestCentroids.emplace_back(Eigen::VectorXd::Zero(inputPoints.at(0)->getData()->size()));
+    }
+    double bestCost(__DBL_MAX__);
+
+    for(int r=0; r < nTries; ++r){
+        Threeple *results = kmeans::kMeansPlusPlus(inputPoints, k, epochs);
+        if(results->totalCost < bestCost){
+            bestCost = results->totalCost;
+            bestCentroids.clear();
+            bestCentroids.insert(bestCentroids.begin(), results->points.begin(), results->points.end());
+        }
+
+        delete results; // We need to deallocate this memory!
+    }
+
+    return bestCentroids;
 }
 
 int kmeans::findNearestClusterIndex(const std::vector<Eigen::VectorXd> &centroids, const Eigen::VectorXd &point){
@@ -97,7 +118,7 @@ int kmeans::findNearestClusterIndex(const std::vector<Eigen::VectorXd> &centroid
 
 // Maybe for now just implement the easy version. This way, it can be tested properly.
 // We can always return to a more advanced version later down the line
-Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Eigen::VectorXd> *startCentroids, unsigned int k, unsigned int epochs){
+Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vector<Eigen::VectorXd> *startCentroids, const unsigned int &k, const unsigned int &epochs){
     Distance measure = Distance::Euclidean;
     double THRESHOLD = 10e-6;
     if(inputPoints.empty()){

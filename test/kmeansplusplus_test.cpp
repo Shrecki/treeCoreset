@@ -268,3 +268,32 @@ TEST_F(KMeansTest, closestPointsOptimizedYieldsExpectedShortestPoint){
     index = kmeans::findNearestClusterIndex(centroids, v9);
     EXPECT_EQ(index, 3);
 }
+
+
+
+
+TEST_F(KMeansTest, kmeansplusplusDoesntBreak) {
+    // Just to test, we will create three clusters, each of 4 points in 2D
+    std::vector<Point *> points;
+    Eigen::VectorXd v0(2), v1(2), v2(2), v3(2), v4(2), v5(2), v6(2), v7(2), v8(2), v9(2), v10(2), v11(2);
+    v0 << 0, 0;
+    v1 << 0, 1.8;
+    v2 << 0, -1.5;
+    v3 << 1, 0;
+    v4 << -2, 0;
+
+    Eigen::VectorXd vectors[5] = {v0, v1, v2, v3, v4};
+    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3), p4(&v4);
+    std::vector<Point *> inputPoints;
+    inputPoints.push_back(&p0);
+    inputPoints.push_back(&p1);
+    inputPoints.push_back(&p2);
+    inputPoints.push_back(&p3);
+    inputPoints.push_back(&p4);
+
+    std::vector<Eigen::VectorXd> centroids;
+
+    Threeple *t = kmeans::kMeansPlusPlus(inputPoints, 3, 100);
+
+    std::vector<Eigen::VectorXd> bestCenters = kmeans::getBestClusters(5, inputPoints, 3, 100);
+}
