@@ -148,18 +148,13 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Eigen::Ve
         centroidMeans.emplace_back(Eigen::VectorXd::Zero(dimension));
     }
 
+    int nearest;
+    double dist(0);
     for(int i=0; i < nPoints;++i){
-        double minDist(__DBL_MAX__), dist(0);
-        for(int j=0; j < k; ++j){
-            // This step might be made smarter by using triangle inequality again
-            dist = Point::computeDistance(*inputPoints.at(i)->getData(), centroids.at(j), measure);
-            lowerBounds[i][j]=dist;
-            if(dist < minDist){
-                upperBounds[i] = dist;
-                minDist = dist;
-                assignments[i] = j;
-            }
-        }
+        nearest = findNearestClusterIndex(centroids, *inputPoints.at(i)->getData());
+        assignments[i] = nearest;
+        dist = Point::computeDistance(centroids.at(nearest), *inputPoints.at(i)->getData(), measure);
+        upperBounds[i] = dist;
         outDated[i] = false;
     }
 
