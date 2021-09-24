@@ -69,6 +69,31 @@ Threeple* kmeans::kMeansPlusPlus(std::vector<Point *> inputPoints, unsigned int 
     return kMeans(inputPoints, &startCentroids, k, epochs);
 }
 
+int kmeans::findNearestClusterIndex(const std::vector<Eigen::VectorXd> &centroids, const Eigen::VectorXd &point){
+    int assignment = 0;
+    int k = centroids.size();
+    double centroidToCentroidDistance[k][k];
+    double dist(0);
+    for(int i=0; i < k; ++i){
+        for(int j=i; j < k; ++j){
+            dist = Point::computeDistance(centroids.at(i), centroids.at(j), Distance::Euclidean);
+            centroidToCentroidDistance[i][j] = dist;
+            centroidToCentroidDistance[j][i] = dist;
+        }
+        centroidToCentroidDistance[i][i] = 0.0;
+    }
+    double currDistance = Point::computeDistance(centroids.at(assignment), point, Distance::Euclidean);
+    for(int i=1; i < centroids.size(); ++i){
+        if(i == assignment || centroidToCentroidDistance[assignment][i] >= 2.0*currDistance) continue;
+        dist = Point::computeDistance(centroids.at(i), point, Distance::Euclidean);
+        if(dist < currDistance){
+            currDistance = dist;
+            assignment = i;
+        }
+    }
+
+    return assignment;
+}
 
 // Maybe for now just implement the easy version. This way, it can be tested properly.
 // We can always return to a more advanced version later down the line

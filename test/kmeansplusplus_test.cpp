@@ -230,6 +230,41 @@ TEST_F(KMeansTest, randomInitOfNodes) {
         EXPECT_TRUE(pval > 0.01);
         std::cout << pval << std::endl;
     }
+}
+
+TEST_F(KMeansTest, closestPointsOptimizedYieldsExpectedShortestPoint){
+    Eigen::VectorXd v0(2), v1(2), v2(2), v3(2), v4(2), v5(2), v6(2), v7(2), v8(2),v9(2),v10(2),v11(2);
+    v0 << 0,1.0;
+    v1 << 0,5.0;
+    v2 << 100,100;
+    v3 << 1,0;
+    v4 << -2,0;
+
+    v5 << 0.1, 10.2;
+    v6 << 0, 0;
+    v7 << -1.5, 0;
+    v8 << -0.5,0;
+    v9 << 0.5,0;
 
 
+    Eigen::VectorXd vectors[5] = {v0, v1, v2, v3, v4};
+    std::vector<Eigen::VectorXd> centroids;
+    for(int i=0; i < 5; ++i){
+        centroids.push_back(vectors[i]);
+    }
+    int index = kmeans::findNearestClusterIndex(centroids, v5);
+    EXPECT_EQ(index, 1);
+
+    index = kmeans::findNearestClusterIndex(centroids, v6);
+    EXPECT_EQ(index, 0);
+
+    index = kmeans::findNearestClusterIndex(centroids, v7);
+    EXPECT_EQ(index, 4);
+
+
+    index = kmeans::findNearestClusterIndex(centroids, v8);
+    EXPECT_EQ(index, 0);
+
+    index = kmeans::findNearestClusterIndex(centroids, v9);
+    EXPECT_EQ(index, 3);
 }
