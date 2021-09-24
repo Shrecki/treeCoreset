@@ -3,11 +3,77 @@
 //
 
 #include "kmeansplusplus.h"
+#include <random>
+#include <utility>
+
+std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(Eigen::VectorXd firstCentroid, std::vector<Point *> inputPoints, unsigned int k){
+    // Compute initialization points according to the kMeans++ algorithm
+    std::vector<Eigen::VectorXd> startCentroids;
+    int nPoints = inputPoints.size();
+
+    // Initialize to have something
+    for(int j=0; j < k; ++j){
+        startCentroids.push_back(*inputPoints.at(0)->getData());
+    }
+
+    double minDist[nPoints];
+    for(int i=0; i < nPoints; ++i){
+        minDist[i] = 0;
+    }
+
+    // First, select a point randomly and uniformly (generate a uniform sample and that's it)
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<double> unif_distribution(0, 1.0);
+
+    startCentroids.at(0) = std::move(firstCentroid);
+
+    double sum, minDistance, probability;
+    for(int j=1; j<k; ++j){
+        sum = 0;
+        for(int i=0; i < nPoints; ++i){
+            // Find nearest cluster among all clusters from 0 to j for this point, set result in minDistance
+            minDistance = __DBL_MAX__;
+            double dist(0);
+            for(int c=0; c<j; c++){
+                dist = Point::computeDistance(startCentroids.at(c), *inputPoints.at(i)->getData(), Distance::Euclidean);
+                if(dist < minDistance){
+                    minDistance = dist;
+                }
+            }
+            minDist[i] = minDistance;
+            sum += minDistance;
+        }
+
+        // Generate random sample
+        probability = unif_distribution(gen);
+        sum *= probability;
+        for(int i=0; i < nPoints; ++i){
+            sum -= minDist[i];
+            if(sum>0) continue;
+            startCentroids.at(j) = *inputPoints.at(i)->getData();
+            break;
+        }
+    }
+
+    return startCentroids;
+}
+
+Threeple* kmeans::kMeansPlusPlus(std::vector<Point *> inputPoints, unsigned int k, unsigned int epochs) {
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<int> distribution(0, inputPoints.size() - 1);
+    int id = distribution(gen);
+    std::vector<Eigen::VectorXd> startCentroids = generateStartCentroids(*inputPoints.at(id)->getData(),inputPoints, k);
+    // Apply kMeans with these initializations
+    return kMeans(inputPoints, &startCentroids, k, epochs);
+}
 
 
 // Maybe for now just implement the easy version. This way, it can be tested properly.
 // We can always return to a more advanced version later down the line
-Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *startCentroids, unsigned int k, unsigned int epochs){
+Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Eigen::VectorXd> *startCentroids, unsigned int k, unsigned int epochs){
+    Distance measure = Distance::Euclidean;
     double THRESHOLD = 10e-6;
     if(inputPoints.empty()){
         throw std::invalid_argument("Cannot run this algorithm without points");
@@ -21,11 +87,9 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
         if(startCentroids->size() != k){
             throw std::invalid_argument("Start centroids should contain exactly k elements");
         }
-        for(auto c: *startCentroids){
-            Eigen::VectorXd tmpVector;
-            tmpVector = *c->getData(); // this does a deep copy of centroid's data
-            centroids.push_back(tmpVector);
-            previousCentroids.push_back(tmpVector);
+        for(auto &c: *startCentroids){
+            centroids.push_back(c);
+            previousCentroids.push_back(c);
         }
     } else {
         // @todo: Generate randomly new centroids from input points
@@ -62,7 +126,8 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
     for(int i=0; i < nPoints;++i){
         double minDist(__DBL_MAX__), dist(0);
         for(int j=0; j < k; ++j){
-            dist = Point::computeDistance(*inputPoints.at(i)->getData(), centroids.at(j), Distance::Euclidean);
+            // This step might be made smarter by using triangle inequality again
+            dist = Point::computeDistance(*inputPoints.at(i)->getData(), centroids.at(j), measure);
             lowerBounds[i][j]=dist;
             if(dist < minDist){
                 upperBounds[i] = dist;
@@ -74,14 +139,15 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
     }
 
     bool converged(false);
+    double deltaMov[k];
 
-    while(!converged){
+    for(int iter=0; iter<epochs; iter++){
         // Compute cluster to cluster distance
         // Compute s(c) as smallest half distance of cluster c to any other cluster
         for(int i=0; i<k; i++){
             double minS(__DBL_MAX__), currDist(0.0);
             for(int j=i; j<k; ++j){
-                currDist = Point::computeDistance(centroids.at(i), centroids.at(j), Distance::Euclidean);
+                currDist = Point::computeDistance(centroids.at(i), centroids.at(j), measure);
                 clusterToClusterDist[i][j] = currDist;
                 // Matrix is symmetric
                 clusterToClusterDist[j][i] = currDist;
@@ -99,19 +165,19 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
             u_x = upperBounds[i];
             if(u_x <= s[c_x]) continue;
             for(int j=0; j<k; ++j){
-                if(j == c_x || u_x <= lowerBounds[i][k] || u_x <= 0.5*clusterToClusterDist[c_x][k]) continue;
+                if(j == c_x || u_x <= lowerBounds[i][j] || u_x <= 0.5*clusterToClusterDist[c_x][j]) continue;
                 if(outDated[i]){
-                    dist = Point::computeDistance(*inputPoints.at(i)->getData(), centroids.at(c_x), Distance::Euclidean);
+                    dist = Point::computeDistance(*inputPoints.at(i)->getData(), centroids.at(c_x), measure);
                     lowerBounds[i][c_x] = dist;
                 } else {
                     dist = upperBounds[i];
                 }
 
-                if(dist > lowerBounds[i][k] || dist > 0.5*clusterToClusterDist[c_x][k]){
-                    newDist = Point::computeDistance(*inputPoints.at(i)->getData(), centroids.at(k), Distance::Euclidean);
-                    lowerBounds[i][k] = newDist;
+                if(dist > lowerBounds[i][j] || dist > 0.5*clusterToClusterDist[c_x][j]){
+                    newDist = Point::computeDistance(*inputPoints.at(i)->getData(), centroids.at(j), measure);
+                    lowerBounds[i][j] = newDist;
                     if(newDist < dist){
-                        assignments[i] = k;
+                        assignments[i] = j;
                     }
                 }
             }
@@ -135,13 +201,16 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
 
         for(int i =0; i <nPoints; ++i){
             for(int j=0; j <k; ++j){
-                lowerBounds[i][j] = std::max(lowerBounds[i][j]-Point::computeDistance(centroids.at(j), centroidMeans.at(j), Distance::Euclidean), 0.0);
+                lowerBounds[i][j] = std::max(lowerBounds[i][j]-Point::computeDistance(centroids.at(j), centroidMeans.at(j), measure), 0.0);
             }
         }
 
+        double delta(0);
         for(int i=0; i < nPoints; ++i){
             c_x = assignments[i];
-            upperBounds[i] += Point::computeDistance(centroidMeans.at(c_x), centroids.at(c_x), Distance::Euclidean);
+            delta = Point::computeDistance(centroidMeans.at(c_x), centroids.at(c_x), measure);
+            upperBounds[i] += delta;
+            deltaMov[c_x] = delta;
             outDated[i] = true;
         }
         // Update centroids with their means!
@@ -149,8 +218,28 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
             centroids.at(j) = centroidMeans.at(j);
         }
 
+        double tS(0);
+        for(int j=0; j <k; ++j){
+            tS += deltaMov[j];
+        }
+
+        tS/=k;
+
+        if(tS < THRESHOLD){
+            break;
+        }
     }
 
+    // Now, compute total cost (that is, sum of distances in each cluster)
+    double totalDist(0.0);
+    std::vector<unsigned int> finalAssignments;
+    finalAssignments.reserve(nPoints);
+    for(int i=0; i < nPoints; ++i){
+        totalDist += Point::computeDistance(centroids.at(assignments[i]), *inputPoints.at(i)->getData(), measure);
+        finalAssignments.push_back(assignments[i]);
+    }
+
+    return new Threeple(centroids, finalAssignments, totalDist);
 
 
     /** Until convergence:
@@ -179,7 +268,6 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
     *    r(x) = true
     * For all c:
     *    Replace center c by m(c)
-    * We will keep track of the assignments
     **/
 
 
@@ -302,13 +390,4 @@ Threeple* kmeans::kMeans(std::vector<Point*> &inputPoints, std::vector<Point*> *
         }
     }
  **/
-    // Now, return the centroids, assignments and total sum of distances for this specific solution
-    double totalDist(0.0);
-    std::vector<unsigned int> finalAssignments;
-    finalAssignments.reserve(nPoints);
-    for(int i=0; i < nPoints; ++i){
-        totalDist += Point::computeDistance(centroids.at(assignments[i]), *inputPoints.at(i)->getData(), Distance::Euclidean);
-        finalAssignments.push_back(assignments[i]);
-    }*
-    return new Threeple(centroids, finalAssignments, totalDist);
 }
