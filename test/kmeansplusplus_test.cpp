@@ -152,8 +152,10 @@ TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
     for(int i=0; i < inputPoints.size(); ++i){
         delete inputPoints.at(i);
     }
-}
 
+    delete t;
+}
+/*
 TEST_F(KMeansTest, randomInitOfNodes) {
     // Just to test, we will create three clusters, each of 4 points in 2D
     std::vector<Point*> points;
@@ -231,7 +233,7 @@ TEST_F(KMeansTest, randomInitOfNodes) {
         std::cout << pval << std::endl;
     }
 }
-
+*/
 TEST_F(KMeansTest, closestPointsOptimizedYieldsExpectedShortestPoint){
     Eigen::VectorXd v0(2), v1(2), v2(2), v3(2), v4(2), v5(2), v6(2), v7(2), v8(2),v9(2),v10(2),v11(2);
     v0 << 0,1.0;
@@ -296,4 +298,38 @@ TEST_F(KMeansTest, kmeansplusplusDoesntBreak) {
     Threeple *t = kmeans::kMeansPlusPlus(inputPoints, 3, 100);
 
     std::vector<Eigen::VectorXd> bestCenters = kmeans::getBestClusters(5, inputPoints, 3, 100);
+
+    delete t;
+}
+
+
+TEST_F(KMeansTest, convertingFromVecOfEigenPointsToArray){
+    Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);
+    v0 << 1,2,3;
+    v1 << 4, 5, 6;
+    v2 << 7,8,9;
+    v3 << -1,-2,-3;
+    v4 << -4, -5, -6;
+    v5 << -7, -6, -9;
+
+    std::vector<Eigen::VectorXd> clusters;
+    clusters.push_back(v0);
+    clusters.push_back(v1);
+    clusters.push_back(v2);
+    clusters.push_back(v3);
+    clusters.push_back(v4);
+    clusters.push_back(v5);
+
+    int nClusters = clusters.size();
+    int dimsPerCluster = clusters.at(0).size();
+    std::vector<double> outputData;
+
+    kmeans::convertFromVectorOfEigenXdToArray(outputData, clusters);
+
+    for(int i=0; i < nClusters; ++i){
+        for(int j=0; j < dimsPerCluster; ++j){
+            EXPECT_FLOAT_EQ(outputData.at(i*dimsPerCluster + j), clusters.at(i)[j]);
+        }
+    }
+
 }

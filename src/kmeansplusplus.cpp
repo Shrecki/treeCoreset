@@ -6,6 +6,7 @@
 #include <random>
 #include <utility>
 
+
 std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(const Eigen::VectorXd &firstCentroid, const std::vector<Point *> &inputPoints, const unsigned int &k){
     // Compute initialization points according to the kMeans++ algorithm
     std::vector<Eigen::VectorXd> startCentroids;
@@ -133,10 +134,8 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         if(startCentroids->size() != k){
             throw std::invalid_argument("Start centroids should contain exactly k elements");
         }
-        for(auto &c: *startCentroids){
-            centroids.push_back(c);
-            previousCentroids.push_back(c);
-        }
+        centroids.insert(centroids.begin(),startCentroids->begin(), startCentroids->end());
+        previousCentroids.insert(previousCentroids.begin(),startCentroids->begin(), startCentroids->end());
     } else {
         // @todo: Generate randomly new centroids from input points
     }
@@ -169,6 +168,13 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         centroidMeans.emplace_back(Eigen::VectorXd::Zero(dimension));
     }
 
+    for(int i=0; i < nPoints;++i){
+        for(int j=0; j < k; ++j){
+            lowerBounds[i][j] = 0;
+        }
+    }
+
+
     int nearest;
     double dist(0);
     for(int i=0; i < nPoints;++i){
@@ -176,6 +182,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         assignments[i] = nearest;
         dist = Point::computeDistance(centroids.at(nearest), *inputPoints.at(i)->getData(), measure);
         upperBounds[i] = dist;
+        lowerBounds[i][nearest] = dist;
         outDated[i] = false;
     }
 
@@ -197,7 +204,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
                 }
             }
             clusterToClusterDist[i][i] = 0.0;
-            s[k] = 0.5*minS;
+            s[i] = 0.5*minS;
         }
         unsigned int c_x(0);
         double u_x(0), dist(0), newDist(0);

@@ -10,6 +10,8 @@
 #include "Point.h"
 #include <set>
 #include "Node.h"
+#include "coreset_algorithms.h"
+#include "kmeansplusplus.h"
 
 enum Requests {
     POST_REQ, GET_REQ, LOAD_REQ, SAVE_REQ, STOP_REQ, POST_OK, GET_OK, LOAD_OK, SAVE_OK, STOP_OK, ERROR
@@ -48,6 +50,31 @@ public:
      * @return m representative points
      */
     std::vector<Point*> getRepresentatives();
+
+    void setAllToNullPtr();
+
+    /**
+     * @brief Returns union of bucket pointers as a vector
+     * @param startBucket
+     * @param endBucket
+     * @return
+     */
+    std::vector<Point*> getUnionOfBuckets(int startBucket, int endBucket);
+
+    void getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs){
+        // Run coreset on union of buckets
+        std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
+        std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
+        std::vector<Point *> representatives(representativeSet.begin(), representativeSet.end());
+
+        // Get best clustering out of 5 attempts
+        std::vector<Eigen::VectorXd> clusters = kmeans::getBestClusters(5, representatives, k, epochs);
+
+        // Convert to a 1D array (ie: flatten all vectors together)
+        kmeans::convertFromVectorOfEigenXdToArray(data, clusters);
+    }
+
+
 };
 
 #endif //UNTITLED_CLUSTEREDPOINTS_H+

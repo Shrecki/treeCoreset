@@ -97,6 +97,19 @@ namespace kmeans {
      * @return Cluster centroids corresponding to kmeans++ with lowest cost
      */
     std::vector<Eigen::VectorXd> getBestClusters(int nTries, const std::vector<Point *> &inputPoints, const unsigned int &k, const unsigned int &epochs);
+
+    static void convertFromVectorOfEigenXdToArray(std::vector<double> &outputData, const std::vector<Eigen::VectorXd> &vectors){
+        int nClusters = vectors.size();
+        int dimsPerCluster = vectors.at(0).size();
+
+        outputData.reserve(vectors.size()*vectors.at(0).size());
+
+        for(int i = 0; i < nClusters ; ++i){
+            for(int j = 0; j < vectors.at(0).size(); ++j){
+                outputData.push_back(vectors.at(i)[j]);
+            }
+        }
+    }
 }
 
 #endif //UNTITLED_KMEANSPLUSPLUS_H

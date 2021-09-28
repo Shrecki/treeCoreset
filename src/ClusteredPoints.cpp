@@ -59,6 +59,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
                 if(!isin){
                     buckets[nBuckets-1]->at(i)->cleanupData();
                     delete buckets[nBuckets-1]->at(i);
+                    buckets[nBuckets-1]->at(i) = nullptr;
                 }
                 buckets[nBuckets-1]->clear();
             }
@@ -90,7 +91,6 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
 ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity): nBuckets(nBuckets),
 bucketCapacity(bucketCapacity), nsplits((unsigned int)pow(2, bucketCapacity-1) + 1), dimension(-1) {
     buckets.reserve(nBuckets);
-
     for(int i=0; i<nBuckets;++i){
         auto *tmpVec = new std::vector<Point*>();
         tmpVec->reserve(bucketCapacity);
@@ -109,7 +109,9 @@ ClusteredPoints::~ClusteredPoints() {
     for(int i=0; i < buckets.size(); ++i){
         for(int j=0; j < buckets[i]->size(); ++j){
             Point *p =buckets[i]->at(j);
-            p->cleanupData();
+            if(p != nullptr){
+                p->cleanupData();
+            }
             buckets[i]->at(j)=nullptr;
         }
         buckets[i]->clear();
@@ -150,6 +152,24 @@ std::vector<Point *> ClusteredPoints::getRepresentatives() {
     results.insert(results.begin(), q.begin(), q.end());
 
     return results;
+}
+
+std::vector<Point *> ClusteredPoints::getUnionOfBuckets(int startBucket, int endBucket) {
+    std::set<Point *> u;
+    for(int i=startBucket; i < endBucket; ++i){
+        u.insert(buckets.at(i)->begin(),buckets.at(i)->end());
+    }
+    std::vector<Point *> vec(u.begin(), u.end());
+    return vec;
+}
+
+void ClusteredPoints::setAllToNullPtr() {
+    for(auto & bucket : buckets){
+        for(auto & i : *bucket){
+            i = nullptr;
+        }
+    }
+
 }
 
 

@@ -218,7 +218,7 @@ TEST_F(ClusteredPointsTest, pointsFromFile){
     pointFile.close();
 
     for(int i=0; i < vectors.size(); ++i) {
-        inputPoints.push_back(new Point(&vectors.at(i)));
+        inputPoints.push_back(new Point(&vectors.at(i), false));
     }
 
     int m = 3;
@@ -236,5 +236,78 @@ TEST_F(ClusteredPointsTest, pointsFromFile){
     }
 
     std::cout << "All done!" << std::endl;
+
+    for(auto & inputPoint : inputPoints){
+        delete inputPoint;
+    }
+
+    clusteredPoints.setAllToNullPtr();
 }
+
+
+TEST_F(ClusteredPointsTest, runningOnReducedVersionIsNotTooFarFromActualClusters){
+    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/exampledata.csv");
+
+    std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
+    Eigen::VectorXd vectorTest(2);
+    std::vector<Eigen::VectorXd> vectors;
+    std::vector<Point*> inputPoints;
+    while(!results.at(results.size()-1).empty()){
+        for(int i=0; i < 2; ++i){
+            std::string s = results.at(i);
+            vectorTest(i) = std::stod(s);
+        }
+        vectors.push_back(vectorTest);
+        results = getNextLineAndSplitIntoTokens(pointFile);
+    }
+
+    for(int i=0; i < vectors.size(); ++i) {
+        inputPoints.push_back(new Point(&vectors.at(i)));
+    }
+
+    pointFile.close();
+
+    std::ifstream labelFile("/home/guibertf/CLionProjects/treeCoreset/test/expectedLabels.csv");
+    int expectedLabels[inputPoints.size()];
+    int i =0;
+    std::string line;
+    while(std::getline(labelFile, line)){
+        expectedLabels[i] = std::stoi(line);
+        i = i+1;
+    }
+
+    labelFile.close();
+
+    std::vector<Eigen::VectorXd> startCentroids;
+    Eigen::VectorXd v0(2), v1(2), v2(2);
+    v0 << 0,0;
+    v1 << 5,0;
+    v2 << 0,5;
+    Point p0(&v0), p1(&v1), p2(&v2);
+    startCentroids.push_back(v0);
+    startCentroids.push_back(v1);
+    startCentroids.push_back(v2);
+
+    Threeple *t = kmeans::kMeans(inputPoints, &startCentroids, 3, 100);
+
+    int m = 3;
+    int l = ceil(log2(inputPoints.size()*1.0/m)+2);
+    ClusteredPoints clusteredPoints(l,m);
+    for(int i=0; i < vectors.size(); ++i){
+        clusteredPoints.insertPoint(inputPoints.at(i));
+    }
+
+    std::vector<double> array;
+    clusteredPoints.getClustersAsFlattenedArray(array, 3, 100);
+
+
+    // Free memory once we're done :)
+    for(auto & inputPoint : inputPoints){
+        delete inputPoint;
+    }
+
+    delete t;
+    clusteredPoints.setAllToNullPtr();
+}
+
 
