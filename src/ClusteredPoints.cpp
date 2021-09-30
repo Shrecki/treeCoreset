@@ -11,14 +11,18 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
     if(newPoint == nullptr){
         throw std::logic_error("Cannot add a nullptr as point");
     }
-    if(newPoint->getData()->size() == 0){
+    if(newPoint->getData().size() == 0){
         throw std::logic_error("Cannot add a point of 0 dimension");
     }
     if(dimension == -1){
-        dimension = newPoint->getData()->size();
+        dimension = newPoint->getData().size();
     }
-    if(newPoint->getData()->size()!=dimension){
+    if(newPoint->getData().size()!=dimension){
         throw std::logic_error("Cannot add a point with this dimension when the first point had a different dimension");
+    }
+    Eigen::VectorXd data = newPoint->getData();
+    for(int i=0; i < dimension; ++i){
+        assert(!std::isnan(data(i)));
     }
     unsigned int curr_cap(0);
     if(buckets[0]->size()== buckets[0]->capacity()){
@@ -89,7 +93,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
 }
 
 ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity): nBuckets(nBuckets),
-bucketCapacity(bucketCapacity), nsplits((unsigned int)pow(2, bucketCapacity-1) + 1), dimension(-1) {
+bucketCapacity(bucketCapacity), nsplits((unsigned int)2*(bucketCapacity-1) + 1), dimension(-1) {
     buckets.reserve(nBuckets);
     for(int i=0; i<nBuckets;++i){
         auto *tmpVec = new std::vector<Point*>();
@@ -99,7 +103,7 @@ bucketCapacity(bucketCapacity), nsplits((unsigned int)pow(2, bucketCapacity-1) +
     }
 
 
-    // We will allocate exactly 2^(m-1)+1 nodes
+    // We will allocate exactly 2*(m-1)+1 nodes
     for(int i=0; i < nsplits; ++i){
         nodes.push_back(new Node(10));
     }
@@ -160,6 +164,12 @@ std::vector<Point *> ClusteredPoints::getUnionOfBuckets(int startBucket, int end
         u.insert(buckets.at(i)->begin(),buckets.at(i)->end());
     }
     std::vector<Point *> vec(u.begin(), u.end());
+    for(auto &p: vec){
+        Eigen::VectorXd v = p->getData();
+        for(int i = 0; i < v.size(); ++i){
+            assert(!std::isnan(v(i)));
+        }
+    }
     return vec;
 }
 

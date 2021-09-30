@@ -45,7 +45,8 @@ TEST_F(ClusteredPointsTest, clustedPointsProperlyPerformsInsertionOfSinglePointW
     v2 << 4,0,0;
     v3 << 0,0, 10;
 
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
 
 
     ClusteredPoints clusteredPoints(10,4);
@@ -85,7 +86,7 @@ TEST_F(ClusteredPointsTest, insertingBelowMPointsFillsOnlyFirstBucket){
 
     double array[3] = {0,0,0};
     Point *p0 = Point::convertArrayToPoint(array, 3);
-    Point p1(&v1);
+    Point p1(std::make_unique<Eigen::VectorXd>(v1));
 
 
     ClusteredPoints clusteredPoints(10,3);
@@ -108,7 +109,7 @@ TEST_F(ClusteredPointsTest, insertingExactlyMPointsCausesSecondBucketToBeFilledW
 
     double array[3] = {0,0,0};
     Point *p0 = Point::convertArrayToPoint(array, 3);
-    Point p1(&v1);
+    Point p1(std::make_unique<Eigen::VectorXd>(v1));
 
 
     ClusteredPoints clusteredPoints(10,2);
@@ -129,7 +130,8 @@ TEST_F(ClusteredPointsTest, inserting2MPointsCausesThirdBucketToBeFilledWithExac
 
     double array[3] = {0,0,0};
     Point *p0 = Point::convertArrayToPoint(array, 3);
-    Point p1(&v1), p2(&v2), p3(&v3), p4(&v4);
+    Point p1(std::make_unique<Eigen::VectorXd>(v1)), p2(std::make_unique<Eigen::VectorXd>(v2)),
+    p3(std::make_unique<Eigen::VectorXd>(v3)), p4(std::make_unique<Eigen::VectorXd>(v4));
 
 
     ClusteredPoints clusteredPoints(10,2);
@@ -150,7 +152,7 @@ TEST_F(ClusteredPointsTest, insertingNullPtrRaisesException){
 TEST_F(ClusteredPointsTest, insertingEmptyArrayRaisesException){
     ClusteredPoints clusteredPoints(10, 2);
     Eigen::VectorXd v0(0);
-    Point p0(&v0);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0));
     EXPECT_ANY_THROW(clusteredPoints.insertPoint(&p0));
 }
 
@@ -161,7 +163,8 @@ TEST_F(ClusteredPointsTest, insertingPointsShouldConformToDimensionalityOfFirstI
     v1 << 0, 5, 0;
     v2 << 4,0;
 
-    Point p0(&v0), p1(&v1), p2(&v2);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2));
 
 
     ClusteredPoints clusteredPoints(10,4);
@@ -218,7 +221,7 @@ TEST_F(ClusteredPointsTest, pointsFromFile){
     pointFile.close();
 
     for(int i=0; i < vectors.size(); ++i) {
-        inputPoints.push_back(new Point(&vectors.at(i), false));
+        inputPoints.push_back(new Point(std::make_unique<Eigen::VectorXd>(vectors.at(i)), false));
     }
 
     int m = 3;
@@ -232,7 +235,7 @@ TEST_F(ClusteredPointsTest, pointsFromFile){
     std::cout << "Size:" << res.size() << std::endl;
 
     for(Point* p: res){
-        std::cout << *p->getData() << std::endl;
+        std::cout << p->getData() << std::endl;
     }
 
     std::cout << "All done!" << std::endl;
@@ -262,7 +265,7 @@ TEST_F(ClusteredPointsTest, runningOnReducedVersionIsNotTooFarFromActualClusters
     }
 
     for(int i=0; i < vectors.size(); ++i) {
-        inputPoints.push_back(new Point(&vectors.at(i)));
+        inputPoints.push_back(new Point(std::make_unique<Eigen::VectorXd>(vectors.at(i))));
     }
 
     pointFile.close();
@@ -283,7 +286,8 @@ TEST_F(ClusteredPointsTest, runningOnReducedVersionIsNotTooFarFromActualClusters
     v0 << 0,0;
     v1 << 5,0;
     v2 << 0,5;
-    Point p0(&v0), p1(&v1), p2(&v2);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2));
     startCentroids.push_back(v0);
     startCentroids.push_back(v1);
     startCentroids.push_back(v2);

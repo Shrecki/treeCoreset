@@ -8,6 +8,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <set>
+#include <memory>
 
 enum class Distance { Euclidean, Cosine, Correlation };
 
@@ -17,18 +18,18 @@ enum class Distance { Euclidean, Cosine, Correlation };
  */
 class Point {
 private:
-    Eigen::VectorXd * data;
+    std::unique_ptr<Eigen::VectorXd> data;
     bool wasConverted;
 public:
-    Eigen::VectorXd * getData() const;
+    Eigen::VectorXd getData() const;
     double computeDistance(Point &otherPoint, Distance distance) const;
     static double computeDistance(const Eigen::VectorXd &p1, const Eigen::VectorXd &p2, Distance distance);
-    Point(Eigen::VectorXd *newData);
-    explicit Point(Eigen::VectorXd *newData, bool wasConverted);
+    Point(std::unique_ptr<Eigen::VectorXd> newData);
+    explicit Point(std::unique_ptr<Eigen::VectorXd> newData, bool wasConverted);
     void cleanupData();
     ~Point();
     static Point* convertArrayToPoint(double* array, int arraySz);
-    static Eigen::VectorXd* getMapFromArray(double* array, int arraySz);
+    static std::unique_ptr<Eigen::VectorXd> getMapFromArray(double* array, int arraySz);
 };
 
 

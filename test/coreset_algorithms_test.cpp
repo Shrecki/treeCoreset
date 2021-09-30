@@ -36,8 +36,8 @@ TEST_F(CoresetTest, coresetReturnsExactlyNRepresentatives) {
     v1 << 0, 5, 0;
     v2 << 4,0,0;
     v3 << 0,0, 10;
-
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     points.push_back(&p0);
     points.push_back(&p1);
     points.push_back(&p2);
@@ -60,7 +60,8 @@ TEST_F(CoresetTest, coresetReturnsSpecifiedNumberOfRepresentatives) {
     v2 << 4,0,0;
     v3 << 0,0, 10;
 
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     points.push_back(&p0);
     points.push_back(&p1);
     points.push_back(&p2);
@@ -91,7 +92,10 @@ TEST_F(CoresetTest, inTwoClusterCaseCoresetIdentifiesOutlyingPointAsCluster) {
     v5 << 0,0, 8000;
     v6 << -4, -20, -5;
 
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3), p4(&v4),p5(&v5),p6(&v6);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3)),
+    p4(std::make_unique<Eigen::VectorXd>(v4)),p5(std::make_unique<Eigen::VectorXd>(v5)),
+    p6(std::make_unique<Eigen::VectorXd>(v6));
     points.push_back(&p0);
     points.push_back(&p1);
     points.push_back(&p2);
@@ -121,7 +125,10 @@ TEST_F(CoresetTest, optimizedCoresetWorksWithProvidedNodes){
     v5 << 0,0, 8000;
     v6 << -4, -20, -5;
 
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3), p4(&v4),p5(&v5),p6(&v6);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3)),
+    p4(std::make_unique<Eigen::VectorXd>(v4)),p5(std::make_unique<Eigen::VectorXd>(v5)),
+    p6(std::make_unique<Eigen::VectorXd>(v6));
     points.push_back(&p0);
     points.push_back(&p1);
     points.push_back(&p2);

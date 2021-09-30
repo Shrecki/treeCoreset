@@ -17,7 +17,7 @@ std::set<Point*> coreset::treeCoresetReduceOptim(std::vector<Point *> *points, u
     std::set<Point*> s;
 
     bool useOnlyRoot(false);
-    if(nodes.size() < pow(2, m-1)+1){
+    if(nodes.size() < 2*(m-1)+1){
         // We will only use the first node
         useOnlyRoot = true;
     }

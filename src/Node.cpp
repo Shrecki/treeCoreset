@@ -271,6 +271,11 @@ void Node::addPoint(Point *newPoint, Distance distance) {
         throw std::runtime_error("Cost should not be negative if representative was set");
     }
 
+    Eigen::VectorXd currD = newPoint->getData();
+    for(int i=0; i < newPoint->getData().size(); ++i){
+        assert(!std::isnan(currD(i)));
+    }
+
     // Update cost
     if(newPoint != representative){
         double dist(newPoint->computeDistance(*representative, distance));

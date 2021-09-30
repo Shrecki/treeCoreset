@@ -54,8 +54,8 @@ TEST_F(NodeTest, addPointCorrectlyUpdatesCostWithSingleVector){
     Eigen::VectorXd v2(4);
     v2 << 1, 2, 7,  4;
 
-    Point p1(&vector);
-    Point p2(&v2);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
+    Point p2(std::make_unique<Eigen::VectorXd>(v2));
 
     node->setRepresentative(&p1, Distance::Euclidean);
     double distance = p2.computeDistance(p1, Distance::Euclidean);
@@ -71,8 +71,8 @@ TEST_F(NodeTest, addPointCorrectlyUpdatesSizeWithSingleVector){
     Eigen::VectorXd v2(4);
     v2 << 1, 2, 7,  4;
 
-    Point p1(&vector);
-    Point p2(&v2);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
+    Point p2(std::make_unique<Eigen::VectorXd>(v2));
 
     node->setRepresentative(&p1, Distance::Euclidean);
     double distance = p2.computeDistance(p1, Distance::Euclidean);
@@ -88,8 +88,8 @@ TEST_F(NodeTest, addPointCorrectlyAppendsPointToPointSet){
     Eigen::VectorXd v2(4);
     v2 << 1, 2, 7,  4;
 
-    Point p1(&vector);
-    Point p2(&v2);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
+    Point p2(std::make_unique<Eigen::VectorXd>(v2));
 
     node->setRepresentative(&p1, Distance::Euclidean);
     double distance = p2.computeDistance(p1, Distance::Euclidean);
@@ -107,7 +107,8 @@ TEST_F(NodeTest, costOfNodeIsSumOfSquaredCosts){
     v3 << 4,100, 28;
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -120,7 +121,7 @@ TEST_F(NodeTest, addPointThrowsExceptOnNullPtr){
     Node *node = new Node(10);
     Eigen::VectorXd vector(4);
     vector << 1, 2, 3,  4;
-    Point p1(&vector);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
     node->setRepresentative(&p1, Distance::Euclidean);
     EXPECT_ANY_THROW(node->addPoint(nullptr, Distance::Euclidean));
     delete node;
@@ -135,7 +136,7 @@ TEST_F(NodeTest, addPointThrowsExceptOnNonLeaf){
 
     Eigen::VectorXd vector(4);
     vector << 1, 2, 3,  4;
-    Point p1(&vector);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
     EXPECT_ANY_THROW(node->addPoint(&p1, Distance::Euclidean));
     delete node;
     delete child;
@@ -149,8 +150,8 @@ TEST_F(NodeTest, setRepresentativeShouldSetCostToZeroWithNoPointsAvailableYet){
     Eigen::VectorXd v2(4);
     v2 << 1, 2, 7,  4;
 
-    Point p1(&vector);
-    Point p2(&vector);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
+    //Point p2(&vector);
 
     EXPECT_EQ(node->getCost(), -1);
     node->setRepresentative(&p1, Distance::Euclidean);
@@ -163,7 +164,7 @@ TEST_F(NodeTest, setRepresentativeSetsRepresentativeToCorrectPointer){
     Eigen::VectorXd vector(4);
     vector << 1, 2, 3,  4;
 
-    Point p1(&vector);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
     node->setRepresentative(&p1, Distance::Euclidean);
     EXPECT_EQ(node->getRepresentative(), &p1);
     delete node;
@@ -179,7 +180,7 @@ TEST_F(NodeTest, SetReprMustBeBeforeAnyAddPoint){
     Node *node = new Node(10);
     Eigen::VectorXd vector(4);
     vector << 1, 2, 3,  4;
-    Point p1(&vector);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
     EXPECT_ANY_THROW(node->addPoint(&p1, Distance::Euclidean));
     delete node;
 }
@@ -191,7 +192,7 @@ TEST_F(NodeTest, settingTwiceSameReprThrowsException){
     Eigen::VectorXd v2(4);
     v2 << 1, 2, 7,  4;
 
-    Point p1(&vector);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
     node->setRepresentative(&p1, Distance::Euclidean);
     EXPECT_ANY_THROW(node->setRepresentative(&p1, Distance::Euclidean));
     delete node;
@@ -203,7 +204,7 @@ TEST_F(NodeTest, settingReprOnNonLeafThrowsException){
     node->setAsChild(child, false);
     Eigen::VectorXd vector(4);
     vector << 1, 2, 3,  4;
-    Point p1(&vector);
+    Point p1(std::make_unique<Eigen::VectorXd>(vector));
     EXPECT_ANY_THROW(node->setRepresentative(&p1, Distance::Euclidean));
     delete node;
     delete child;
@@ -709,7 +710,8 @@ TEST_F(NodeTest, selectClusterRepHasUniformDistribWithEvenlySpacedPoints){
     v3 << 0,0, 1;
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)), p2(std::make_unique<Eigen::VectorXd>(v2)),
+    p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -753,7 +755,8 @@ TEST_F(NodeTest, selectClusterConformsToMoreComplexDistributions){
     // Therefore we know the expected probabilities, as 25/141=0.1773, 16/141=0.113475177, 100/141=0.709219858
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -787,7 +790,8 @@ TEST_F(NodeTest, splittingNodeCreatesChildren){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -807,7 +811,8 @@ TEST_F(NodeTest, splittingNodeRemovesRepresentativeOfParentNode){
     v3 << 0,0, 10; // Norm would be 10
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -826,7 +831,8 @@ TEST_F(NodeTest, splittingNodeEmptiesPointSetOfNode){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -854,7 +860,8 @@ TEST_F(NodeTest, splittingNodeSetsRepresentativeDependingOnSelectedPoint){
 
 
     Node *testNode = new Node(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode->setRepresentative(&p0, Distance::Euclidean);
     testNode->addPoint(&p1, Distance::Euclidean);
     testNode->addPoint(&p2, Distance::Euclidean);
@@ -919,7 +926,8 @@ TEST_F(NodeTest, splitNodeReturnsLeftChildRepresentative){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -940,7 +948,8 @@ TEST_F(NodeTest, splitNodeKeepsParentSizeUnchanged){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -959,7 +968,8 @@ TEST_F(NodeTest, splitNodeSetsChildrenSizesCorrectly){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -986,7 +996,8 @@ TEST_F(NodeTest, splitNodeSetChildrenCostCorrectly){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -1012,7 +1023,8 @@ TEST_F(NodeTest, splitNodeCalledTwiceSplitsPointsAsExpectedAndImprovingCosts){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -1052,7 +1064,8 @@ TEST_F(NodeTest, splitNodeOnNodeWithSinglePoint){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
 
     EXPECT_ANY_THROW(testNode.splitNode(Distance::Euclidean, nullptr, nullptr));
@@ -1067,7 +1080,8 @@ TEST_F(NodeTest, splitNodeUpdatesParentCostCorrectlyWithZeroOrigin){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -1093,7 +1107,8 @@ TEST_F(NodeTest, splitNodeThrowsExceptionIfCalledOnNodeWithASinglePoint){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
 
     EXPECT_ANY_THROW(testNode.splitNode(Distance::Euclidean, nullptr, nullptr));
@@ -1108,7 +1123,8 @@ TEST_F(NodeTest, splitNodeSetsUpNodeAsParentOfChildren){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -1129,7 +1145,8 @@ TEST_F(NodeTest, splitNodeOnNonLeafNodeThrowsException){
 
 
     Node testNode(10), childNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);
@@ -1148,7 +1165,8 @@ TEST_F(NodeTest, splitNodeClustersPointsInChildrenAsItShould){
 
 
     Node testNode(10);
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
     testNode.setRepresentative(&p0, Distance::Euclidean);
     testNode.addPoint(&p1, Distance::Euclidean);
     testNode.addPoint(&p2, Distance::Euclidean);

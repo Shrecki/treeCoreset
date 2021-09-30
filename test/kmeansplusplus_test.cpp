@@ -46,7 +46,12 @@ TEST_F(KMeansTest, kmeansSimpleCaseAssignsClustersCorrectly) {
     v9 << 9.5,0;
     v10 << 10,-0.5;
     v11 << 10,0.5;
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3),p4(&v4), p5(&v5), p6(&v6), p7(&v7),p8(&v8), p9(&v9), p10(&v10), p11(&v11);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3)),
+    p4(std::make_unique<Eigen::VectorXd>(v4)), p5(std::make_unique<Eigen::VectorXd>(v5)),
+    p6(std::make_unique<Eigen::VectorXd>(v6)), p7(std::make_unique<Eigen::VectorXd>(v7)),
+    p8(std::make_unique<Eigen::VectorXd>(v8)), p9(std::make_unique<Eigen::VectorXd>(v9)),
+    p10(std::make_unique<Eigen::VectorXd>(v10)), p11(std::make_unique<Eigen::VectorXd>(v11));
     std::vector<Point*> inputPoints;
     inputPoints.push_back(&p0);
     inputPoints.push_back(&p1);
@@ -99,7 +104,7 @@ TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
     }
 
     for(int i=0; i < vectors.size(); ++i) {
-        inputPoints.push_back(new Point(&vectors.at(i)));
+        inputPoints.push_back(new Point(std::make_unique<Eigen::VectorXd>(vectors.at(i))));
     }
 
     pointFile.close();
@@ -121,7 +126,8 @@ TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
     v0 << 0,0;
     v1 << 5,0;
     v2 << 0,5;
-    Point p0(&v0), p1(&v1), p2(&v2);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2));
     startCentroids.push_back(v0);
     startCentroids.push_back(v1);
     startCentroids.push_back(v2);
@@ -285,7 +291,9 @@ TEST_F(KMeansTest, kmeansplusplusDoesntBreak) {
     v4 << -2, 0;
 
     Eigen::VectorXd vectors[5] = {v0, v1, v2, v3, v4};
-    Point p0(&v0), p1(&v1), p2(&v2), p3(&v3), p4(&v4);
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+    p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3)),
+    p4(std::make_unique<Eigen::VectorXd>(v4));
     std::vector<Point *> inputPoints;
     inputPoints.push_back(&p0);
     inputPoints.push_back(&p1);
