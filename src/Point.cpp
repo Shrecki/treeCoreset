@@ -80,7 +80,7 @@ double Point::computeDistance(const Eigen::VectorXd &p1, const Eigen::VectorXd &
     return d;
 }
 
-double Point::computeDistance(Point &otherPoint, Distance distance) const{
+double Point::computeDistance(const Point &otherPoint, Distance distance) const{
     Eigen::VectorXd p1 = getData();
     Eigen::VectorXd p2 = otherPoint.getData();
     //std::cout << (p1)(901184) << std::endl;
@@ -101,12 +101,12 @@ void Point::cleanupData() {
     }
 }
 
-Point* Point::convertArrayToPoint(double* array, int arraySz){
+Point* Point::convertArrayToPoint(const double* array, const int arraySz){
     if(arraySz ==0) throw std::logic_error("Cannot convert an array with size 0");
     return new Point(Point::getMapFromArray(array, arraySz), true);
 }
 
-std::unique_ptr<Eigen::VectorXd> Point::getMapFromArray(double* array, int arraySz){
+std::unique_ptr<Eigen::VectorXd> Point::getMapFromArray(const double* array, const int arraySz){
     std::unique_ptr<Eigen::VectorXd> b = std::make_unique<Eigen::VectorXd>(Eigen::VectorXd::Zero(arraySz));
     for(int i =0; i < (*b).size(); ++i){
         (*b)(i) = array[i];

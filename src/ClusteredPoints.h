@@ -61,19 +61,15 @@ public:
      */
     std::vector<Point*> getUnionOfBuckets(int startBucket, int endBucket);
 
-    void getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs){
-        // Run coreset on union of buckets
-        std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
-        std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
-        std::vector<Point *> representatives(representativeSet.begin(), representativeSet.end());
-
-        // Get best clustering out of 5 attempts
-        std::vector<Eigen::VectorXd> clusters = kmeans::getBestClusters(5, representatives, k, epochs);
-
-        // Convert to a 1D array (ie: flatten all vectors together)
-        kmeans::convertFromVectorOfEigenXdToArray(data, clusters);
-    }
-
+    /**
+     * @brief Get union of points of all buckets. Perform coreset reduce algorithm on said union to obtain m
+     * representative points, and run kmeans++ five times to get best cluster assignments.
+     * Finally write out the clusters in the data array as a single contiguous array.
+     * @param data Vector of doubles, storing contiguously the centroids of the best assignment.
+     * @param k
+     * @param epochs
+     */
+    void getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs);
 
 };
 

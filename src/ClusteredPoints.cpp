@@ -182,5 +182,19 @@ void ClusteredPoints::setAllToNullPtr() {
 
 }
 
+void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs) {
+    // Run coreset on union of buckets
+    std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
+    std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
+    std::vector<Point *> representatives(representativeSet.begin(), representativeSet.end());
+
+    // Get best clustering out of 5 attempts
+    std::vector<Eigen::VectorXd> clusters = kmeans::getBestClusters(5, representatives, k, epochs);
+
+    // Convert to a 1D array (ie: flatten all vectors together)
+    kmeans::convertFromVectorOfEigenXdToArray(data, clusters);
+}
+
+
 
 

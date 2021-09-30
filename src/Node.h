@@ -34,16 +34,16 @@ public:
 
     Node(const Node&) = delete;
 
-    bool isLeaf() const;
+    [[nodiscard]] bool isLeaf() const;
 
     // Getter methods
-    unsigned int getSize() const;
-    double getCost() const;
-    const std::vector<Point*>* getPointSet() const{ return &this->pointSet; }
-    Point* getRepresentative() const;
-    Node* getLeftChild() const { return leftChild; }
-    Node* getRightChild() const { return rightChild; }
-    Node* getParent() const { return parent; }
+    [[nodiscard]] unsigned int getSize() const;
+    [[nodiscard]] double getCost() const;
+    [[nodiscard]] const std::vector<Point*>* getPointSet() const{ return &this->pointSet; }
+    [[nodiscard]] Point* getRepresentative() const;
+    [[nodiscard]] Node* getLeftChild() const { return leftChild; }
+    [[nodiscard]] Node* getRightChild() const { return rightChild; }
+    [[nodiscard]] Node* getParent() const { return parent; }
 
     // Various setters, to update inner states of the Node
     void setCost(double newCost);

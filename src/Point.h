@@ -21,15 +21,41 @@ private:
     std::unique_ptr<Eigen::VectorXd> data;
     bool wasConverted;
 public:
-    Eigen::VectorXd getData() const;
-    double computeDistance(Point &otherPoint, Distance distance) const;
+    [[nodiscard]] Eigen::VectorXd getData() const;
+    /**
+     * Computes distance measure between point and an other point, based on provided distance
+     * @param otherPoint
+     * @param distance
+     * @return
+     */
+    [[nodiscard]] double computeDistance(const Point &otherPoint, Distance distance) const;
+    /**
+     * Distance computation between two vectors, based on the provided distance metric
+     * @param p1
+     * @param p2
+     * @param distance
+     * @return Distance between the two points
+     */
     static double computeDistance(const Eigen::VectorXd &p1, const Eigen::VectorXd &p2, Distance distance);
-    Point(std::unique_ptr<Eigen::VectorXd> newData);
+    explicit Point(std::unique_ptr<Eigen::VectorXd> newData);
     explicit Point(std::unique_ptr<Eigen::VectorXd> newData, bool wasConverted);
     void cleanupData();
     ~Point();
-    static Point* convertArrayToPoint(double* array, int arraySz);
-    static std::unique_ptr<Eigen::VectorXd> getMapFromArray(double* array, int arraySz);
+    /**
+     * @brief Given an input array of double and the number of elements to consider in the array, convert said array
+     * into a Point class, ie convert to an eigen vectorXd the array and initialize a new point that uses this vector.
+     * @param array
+     * @param arraySz
+     * @return Resulting point vector
+     */
+    static Point* convertArrayToPoint(const double* array, int arraySz);
+    /**
+     * @brief Convert an input array to an eigen vectorXd and return unique pointer to said vector Xd.
+     * @param array
+     * @param arraySz
+     * @return Unique pointer to a vector of size arraySz, containing the elements of array
+     */
+    static std::unique_ptr<Eigen::VectorXd> getMapFromArray(const double* array, int arraySz);
 };
 
 
