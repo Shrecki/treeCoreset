@@ -13,10 +13,6 @@
 #include "coreset_algorithms.h"
 #include "kmeansplusplus.h"
 
-enum Requests {
-    POST_REQ, GET_REQ, LOAD_REQ, SAVE_REQ, STOP_REQ, POST_OK, GET_OK, LOAD_OK, SAVE_OK, STOP_OK, ERROR
-};
-
 /**
  * Compressed representation of a set of points, based on buckets of binary trees split on point proximities.
  * This data structure handles the logic of the buckets described in the StreamKM++ algorithm.

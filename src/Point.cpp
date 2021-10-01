@@ -30,41 +30,14 @@ static double computeCorrelationDistance(const Eigen::VectorXd &v1, const Eigen:
     return computeCosineDistance(centeredV1, centeredV2);
 }
 
-static double computeEuclideanDistance(const Eigen::VectorXd &v1, const Eigen::VectorXd &v2){
-    assert(v1.size() == v2.size());
-    for(int i=0; i < v1.size(); ++i){
-        assert(!std::isnan(v1(i)));
-        assert(!std::isnan(v2(i)));
-    }
-    Eigen::VectorXd v = Eigen::VectorXd::Zero(v1.size());
-    double n(0.0);
-    double c;
-    for(int i=0; i < v1.size(); ++i){
-        //if(i == 901288){
-        //    std::cout << v1(i) << std::endl;
-        //    std::cout << v2(i) << std::endl;
-        //}
-        c = v1(i) - v2(i);
-        if(std::isnan(c)){
-            if(std::isnan(v1(i))){
-                std::cout << "v1 nan at index " << i << std::endl;
-            }
-            if(std::isnan(v2(i))){
-                std::cout << "v2 nan at index " << i << std::endl;
-            }
-        }
-        v(i) = c;
-        n+= c*c;
-    }
-    return sqrt(n);
+
+inline double  Point::computeEuclideanDistance(const Eigen::VectorXd &v1, const Eigen::VectorXd &v2){
+    return (v1-v2).norm();
 }
 
 double Point::computeDistance(const Eigen::VectorXd &p1, const Eigen::VectorXd &p2, Distance distance){
     double d = 0;
-    for(int i=0; i < p1.size(); ++i){
-        assert(!std::isnan(p1(i)));
-        assert(!std::isnan(p2(i)));
-    }
+
     switch (distance) {
         case Distance::Euclidean: {
             d = computeEuclideanDistance(p1, p2);
@@ -83,15 +56,10 @@ double Point::computeDistance(const Eigen::VectorXd &p1, const Eigen::VectorXd &
 double Point::computeDistance(const Point &otherPoint, Distance distance) const{
     Eigen::VectorXd p1 = getData();
     Eigen::VectorXd p2 = otherPoint.getData();
-    //std::cout << (p1)(901184) << std::endl;
-    //std::cout << (p1)(901194) << std::endl;
-    //std::cout << (p1)(901287) << std::endl;
-    //std::cout << (p1)(901288) << std::endl;
     return Point::computeDistance(p1, p2, distance);
 }
 
-Point::~Point() {
-}
+Point::~Point() = default;
 
 void Point::cleanupData() {
     if(wasConverted){

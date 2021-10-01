@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(untitled)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS_INIT "-Werror -Wall -Wextra -Wpedantic -O3")
 
 include(FetchContent)
 FetchContent_Declare(
@@ -39,7 +40,7 @@ add_executable(unit_test ${SOURCES} ${Boost_LIBRARIES}
         test/point_test.cpp test/main_test.cpp test/node_test.cpp
         test/mocks/mock_RandomGenerator.cpp test/mocks/mock_RandomGenerator.h src/RandomGenerator.cpp src/RandomGenerator.h
         test/math_framework.cpp test/math_framework.h test/coreset_algorithms_test.cpp test/clustered_points_test.cpp
-        src/kmeansplusplus.h src/kmeansplusplus.cpp test/kmeansplusplus_test.cpp test/utils.cpp test/utils.h)
+        src/kmeansplusplus.h src/kmeansplusplus.cpp test/kmeansplusplus_test.cpp test/utils.cpp test/utils.h src/Requests.h)
 target_link_libraries(unit_test gtest_main)
 target_link_libraries(unit_test gmock_main)
 target_include_directories(unit_test PRIVATE src)

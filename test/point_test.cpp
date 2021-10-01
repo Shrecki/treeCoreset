@@ -4,6 +4,7 @@
 #include "Point.h"
 #include <gtest/gtest.h>
 #include <cmath>
+#include <chrono>
 
 class PointTest : public ::testing::Test {
 protected:
@@ -68,4 +69,29 @@ TEST_F(PointTest, CorrelationDistanceWorksCorrectly) {
 TEST_F(PointTest, convertingEmptyArrayRaisesException){
     double array[0] = {};
     EXPECT_ANY_THROW(Point::convertArrayToPoint(array, 0));
+}
+
+TEST_F(PointTest, benchmarkingNorm){
+    Eigen::VectorXd v = Eigen::VectorXd::Zero(800000);
+    Eigen::VectorXd v2 = Eigen::VectorXd::Zero(800000);
+    for(int i =0; i < 800000; ++i){
+        v(i) = i;
+        v2(i) = i+7;
+    }
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+    auto t1 = high_resolution_clock::now();
+    Point::computeEuclideanDistance(v, v2);
+    auto t2 = high_resolution_clock::now();
+
+    auto t3 = high_resolution_clock::now();
+    (v-v2).norm();
+    auto t4 = high_resolution_clock::now();
+
+    duration<double, std::milli> ms_double = t2 - t1;
+    duration<double, std::milli> ms_double_2 = t4 - t3;
+    std::cout << ms_double.count() << "ms" << std::endl;
+    std::cout << ms_double_2.count() << "ms" << std::endl;
 }

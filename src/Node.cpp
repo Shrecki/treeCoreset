@@ -272,7 +272,8 @@ void Node::addPoint(Point *newPoint, Distance distance) {
     }
 
     Eigen::VectorXd currD = newPoint->getData();
-    for(int i=0; i < newPoint->getData().size(); ++i){
+    int nD = currD.size();
+    for(int i=0; i < nD; ++i){
         assert(!std::isnan(currD(i)));
     }
 

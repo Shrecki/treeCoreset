@@ -56,6 +56,8 @@ public:
      * @return Unique pointer to a vector of size arraySz, containing the elements of array
      */
     static std::unique_ptr<Eigen::VectorXd> getMapFromArray(const double* array, int arraySz);
+
+     static double computeEuclideanDistance(const Eigen::VectorXd &v1, const Eigen::VectorXd &v2);
 };
 
 

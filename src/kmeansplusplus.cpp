@@ -5,6 +5,8 @@
 #include "kmeansplusplus.h"
 #include <random>
 #include <utility>
+#include <chrono>
+#include <iostream>
 
 
 std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(const Eigen::VectorXd &firstCentroid, const std::vector<Point *> &inputPoints, const unsigned int &k){
@@ -65,6 +67,7 @@ Threeple* kmeans::kMeansPlusPlus(const std::vector<Point *> &inputPoints, const 
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<int> distribution(0, inputPoints.size() - 1);
     int id = distribution(gen);
+    // This part can be made faster, if we specify the startCentroids vector pre allocated already such that it doesn't have to be at every call
     std::vector<Eigen::VectorXd> startCentroids = generateStartCentroids(inputPoints.at(id)->getData(),inputPoints, k);
     // Apply kMeans with these initializations
     return kMeans(inputPoints, &startCentroids, k, epochs);
@@ -120,6 +123,7 @@ int kmeans::findNearestClusterIndex(const std::vector<Eigen::VectorXd> &centroid
 // Maybe for now just implement the easy version. This way, it can be tested properly.
 // We can always return to a more advanced version later down the line
 Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vector<Eigen::VectorXd> *startCentroids, const unsigned int &k, const unsigned int &epochs){
+
     Distance measure = Distance::Euclidean;
     double THRESHOLD = 10e-6;
     if(inputPoints.empty()){
@@ -130,151 +134,204 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
 
     std::vector<Eigen::VectorXd> centroids;
     std::vector<Eigen::VectorXd> previousCentroids;
-    if(startCentroids != nullptr){
-        if(startCentroids->size() != k){
-            throw std::invalid_argument("Start centroids should contain exactly k elements");
-        }
-        centroids.insert(centroids.begin(),startCentroids->begin(), startCentroids->end());
-        previousCentroids.insert(previousCentroids.begin(),startCentroids->begin(), startCentroids->end());
-    } else {
-        // @todo: Generate randomly new centroids from input points
-    }
-
-
-    /**
-     * Elkan's algorithm is used here instead of the naive k-means
-     * The reason for this is that we expect in our use-case data of very high dimension. As a consequence, computing
-     * distance between points becomes more expensive, since it is proportional to data dimensionality.
-     * Elkan's algorithm allows to minimize these comparisons, using triangle inequality.
-     * BE CAREFUL TO USE A DISTANCE METRIC THAT SATISFIES THE TRIANGLE INEQUALITY!
-     */
-
-    /**
-     * Initialize lower bound to 0 for each point x and center c
-    * Assign each point x to closest center c (todo: improve to avoid redundant computations)
-    * Each time the distance b/w x and c is computed, set lower bound to this value
-    * Assign upper bound as distance of x to closest center c
-    **/
-    double lowerBounds[nPoints][k];
-    double upperBounds[nPoints];
     unsigned int assignments[nPoints];
-    double clusterToClusterDist[k][k];
-    bool outDated[nPoints]; // Signals if assignment is outdated (Starts to false, since we initialize points to their closest cluster initially)
-    double s[k];
 
-    std::vector<Eigen::VectorXd> centroidMeans;
-    centroids.reserve(k);
-    for(int j=0; j <k ; ++j){
-        centroidMeans.emplace_back(Eigen::VectorXd::Zero(dimension));
-    }
-
-    for(int i=0; i < nPoints;++i){
-        for(int j=0; j < k; ++j){
-            lowerBounds[i][j] = 0;
+    if(inputPoints.size() <=k ){
+        for(int i=0; i < inputPoints.size();++i){
+            Eigen::VectorXd currEigen = inputPoints.at(i)->getData();
+            centroids.push_back(currEigen);
+            assignments[i]=i;
         }
-    }
 
-
-    int nearest;
-    double dist(0);
-    for(int i=0; i < nPoints;++i){
-        nearest = findNearestClusterIndex(centroids, inputPoints.at(i)->getData());
-        assignments[i] = nearest;
-        dist = Point::computeDistance(centroids.at(nearest), inputPoints.at(i)->getData(), measure);
-        upperBounds[i] = dist;
-        lowerBounds[i][nearest] = dist;
-        outDated[i] = false;
-    }
-
-    bool converged(false);
-    double deltaMov[k];
-
-    for(int iter=0; iter<epochs; iter++){
-        // Compute cluster to cluster distance
-        // Compute s(c) as smallest half distance of cluster c to any other cluster
-        for(int i=0; i<k; i++){
-            double minS(__DBL_MAX__), currDist(0.0);
-            for(int j=i; j<k; ++j){
-                currDist = Point::computeDistance(centroids.at(i), centroids.at(j), measure);
-                clusterToClusterDist[i][j] = currDist;
-                // Matrix is symmetric
-                clusterToClusterDist[j][i] = currDist;
-                if(currDist < minS){
-                    minS = currDist;
-                }
+    } else {
+        if (startCentroids != nullptr) {
+            if (startCentroids->size() != k) {
+                throw std::invalid_argument("Start centroids should contain exactly k elements");
             }
-            clusterToClusterDist[i][i] = 0.0;
-            s[i] = 0.5*minS;
+            centroids.insert(centroids.begin(), startCentroids->begin(), startCentroids->end());
+            previousCentroids.insert(previousCentroids.begin(), startCentroids->begin(), startCentroids->end());
+        } else {
+            // @todo: Generate randomly new centroids from input points
         }
-        unsigned int c_x(0);
-        double u_x(0), dist(0), newDist(0);
-        for(int i=0; i < nPoints; ++i){
-            c_x = assignments[i];
-            u_x = upperBounds[i];
-            if(u_x <= s[c_x]) continue;
-            for(int j=0; j<k; ++j){
-                if(j == c_x || u_x <= lowerBounds[i][j] || u_x <= 0.5*clusterToClusterDist[c_x][j]) continue;
-                if(outDated[i]){
-                    dist = Point::computeDistance(inputPoints.at(i)->getData(), centroids.at(c_x), measure);
-                    lowerBounds[i][c_x] = dist;
-                } else {
-                    dist = upperBounds[i];
-                }
 
-                if(dist > lowerBounds[i][j] || dist > 0.5*clusterToClusterDist[c_x][j]){
-                    newDist = Point::computeDistance(inputPoints.at(i)->getData(), centroids.at(j), measure);
-                    lowerBounds[i][j] = newDist;
-                    if(newDist < dist){
-                        assignments[i] = j;
+
+        /**
+         * Elkan's algorithm is used here instead of the naive k-means
+         * The reason for this is that we expect in our use-case data of very high dimension. As a consequence, computing
+         * distance between points becomes more expensive, since it is proportional to data dimensionality.
+         * Elkan's algorithm allows to minimize these comparisons, using triangle inequality.
+         * BE CAREFUL TO USE A DISTANCE METRIC THAT SATISFIES THE TRIANGLE INEQUALITY!
+         */
+
+        /**
+         * Initialize lower bound to 0 for each point x and center c
+        * Assign each point x to closest center c (todo: improve to avoid redundant computations)
+        * Each time the distance b/w x and c is computed, set lower bound to this value
+        * Assign upper bound as distance of x to closest center c
+        **/
+        double lowerBounds[nPoints][k];
+        double upperBounds[nPoints];
+        double clusterToClusterDist[k][k];
+        bool outDated[nPoints]; // Signals if assignment is outdated (Starts to false, since we initialize points to their closest cluster initially)
+        double s[k];
+
+        std::vector<Eigen::VectorXd> centroidMeans;
+        centroids.reserve(k);
+        centroidMeans.reserve(k);
+        for (int j = 0; j < k; ++j) {
+            centroidMeans.emplace_back(Eigen::VectorXd::Zero(dimension));
+        }
+
+        for (int i = 0; i < nPoints; ++i) {
+            for (int j = 0; j < k; ++j) {
+                lowerBounds[i][j] = 0;
+            }
+        }
+
+
+        int nearest;
+        double dist(0);
+        for (int i = 0; i < nPoints; ++i) {
+            nearest = findNearestClusterIndex(centroids, inputPoints.at(i)->getData());
+            assignments[i] = nearest;
+            dist = Point::computeDistance(centroids.at(nearest), inputPoints.at(i)->getData(), measure);
+            upperBounds[i] = dist;
+            lowerBounds[i][nearest] = dist;
+            outDated[i] = false;
+        }
+
+        bool converged(false);
+        double deltaMov[k];
+        unsigned int c_x(0);
+        double u_x(0), newDist(0);
+        int pointCounts[k];
+
+        using std::chrono::high_resolution_clock;
+        using std::chrono::duration_cast;
+        using std::chrono::duration;
+        using std::chrono::milliseconds;
+
+        Eigen::VectorXd currPoint;
+
+        for (int iter = 0; iter < epochs; iter++) {
+            // Reset means ?
+            for (int j = 0; j < k; j++) {
+                centroidMeans.at(j) = Eigen::VectorXd::Zero(dimension);
+                pointCounts[j] = 0;
+            }
+
+            // Compute cluster to cluster distance
+            // Compute s(c) as smallest half distance of cluster c to any other cluster
+            auto t1 = high_resolution_clock::now();
+
+            for (int i = 0; i < k; i++) {
+                double minS(__DBL_MAX__), currDist(0.0);
+                for (int j = i; j < k; ++j) {
+                    currDist = Point::computeDistance(centroids.at(i), centroids.at(j), measure);
+                    clusterToClusterDist[i][j] = currDist;
+                    // Matrix is symmetric
+                    clusterToClusterDist[j][i] = currDist;
+                    if (currDist < minS) {
+                        minS = currDist;
+                    }
+                }
+                clusterToClusterDist[i][i] = 0.0;
+                s[i] = 0.5 * minS;
+            }
+            auto t2 = high_resolution_clock::now();
+
+            c_x = 0;
+            dist = 0;
+            newDist =0;
+            for (int i = 0; i < nPoints; ++i) {
+                c_x = assignments[i];
+                u_x = upperBounds[i];
+                if (u_x <= s[c_x]) continue;
+                for (int j = 0; j < k; ++j) {
+                    if (j == c_x || u_x <= lowerBounds[i][j] || u_x <= 0.5 * clusterToClusterDist[c_x][j]) continue;
+                    if (outDated[i]) {
+                        dist = Point::computeDistance(inputPoints.at(i)->getData(), centroids.at(c_x), measure);
+                        lowerBounds[i][c_x] = dist;
+                    } else {
+                        dist = upperBounds[i];
+                    }
+
+                    if (dist > lowerBounds[i][j] || dist > 0.5 * clusterToClusterDist[c_x][j]) {
+                        currPoint = inputPoints.at(i)->getData();
+                        newDist = Point::computeDistance(currPoint, centroids.at(j), measure);
+                        lowerBounds[i][j] = newDist;
+                        if (newDist < dist) {
+                            // We're changing assignments, so remove point influence from current assignment in mean
+                            pointCounts[assignments[i]]--;
+                            centroidMeans.at(assignments[i]) -= currPoint;
+                            // Assign to new centroid
+                            assignments[i] = j;
+
+                            // Update this centroid mean
+                            pointCounts[j]++;
+                            centroidMeans.at(j) += currPoint;
+                        }
                     }
                 }
             }
-        }
 
-        // Compute for each centroid the mean of its points
-        int pointCounts[k];
-        for(int j=0; j<k; j++){
-            centroidMeans.at(j) = Eigen::VectorXd::Zero(dimension);
-            pointCounts[j] = 0;
-        }
-        for(int i=1; i < nPoints; ++i){
-            centroidMeans.at(assignments[i]) += inputPoints.at(i)->getData();
-            pointCounts[assignments[i]]++;
-        }
-        for(int j=0; j<k; j++){
-            if(pointCounts[j] != 0){
-                centroidMeans.at(j)/= pointCounts[j];
+            auto t3 = high_resolution_clock::now();
+
+
+            /*
+            for (int i = 0; i < nPoints; ++i) {
+                centroidMeans.at(assignments[i]) += inputPoints.at(i)->getData();
+                pointCounts[assignments[i]]++;
             }
-        }
+            for (int j = 0; j < k; j++) {
+                if (pointCounts[j] != 0) {
+                    centroidMeans.at(j) /= pointCounts[j];
+                }
+            }*/
 
-        for(int i =0; i <nPoints; ++i){
-            for(int j=0; j <k; ++j){
-                lowerBounds[i][j] = std::max(lowerBounds[i][j]-Point::computeDistance(centroids.at(j), centroidMeans.at(j), measure), 0.0);
+            for (int i = 0; i < nPoints; ++i) {
+                for (int j = 0; j < k; ++j) {
+                    lowerBounds[i][j] = std::max(
+                            lowerBounds[i][j] - Point::computeDistance(centroids.at(j), centroidMeans.at(j), measure),
+                            0.0);
+                }
             }
-        }
 
-        double delta(0);
-        for(int i=0; i < nPoints; ++i){
-            c_x = assignments[i];
-            delta = Point::computeDistance(centroidMeans.at(c_x), centroids.at(c_x), measure);
-            upperBounds[i] += delta;
-            deltaMov[c_x] = delta;
-            outDated[i] = true;
-        }
-        // Update centroids with their means!
-        for(int j=0; j <k; ++j){
-            centroids.at(j) = centroidMeans.at(j);
-        }
+            auto t4 = high_resolution_clock::now();
 
-        double tS(0);
-        for(int j=0; j <k; ++j){
-            tS += deltaMov[j];
-        }
 
-        tS/=k;
+            double delta(0);
+            for (int i = 0; i < nPoints; ++i) {
+                c_x = assignments[i];
+                delta = Point::computeDistance(centroidMeans.at(c_x), centroids.at(c_x), measure);
+                upperBounds[i] += delta;
+                deltaMov[c_x] = delta;
+                outDated[i] = true;
+            }
+            // Update centroids with their means!
+            for (int j = 0; j < k; ++j) {
+                centroids.at(j) = centroidMeans.at(j);
+            }
 
-        if(tS < THRESHOLD){
-            break;
+            double tS(0);
+            for (int j = 0; j < k; ++j) {
+                tS += deltaMov[j];
+            }
+
+            tS /= k;
+            auto t5 = high_resolution_clock::now();
+            duration<double, std::milli> t2t1 = t2 - t1;
+            duration<double, std::milli> t3t2 = t3 - t2;
+            duration<double, std::milli> t4t3 = t4 - t3;
+            duration<double, std::milli> t5t4 = t5 - t4;
+            double totalTime = t2t1.count() + t3t2.count() + t4t3.count() + t5t4.count();
+            std::cout << "T1: " << t2t1.count()/totalTime<<" (" << t2t1.count() <<" ms) T2: " << t3t2.count()/totalTime
+            << "(" << t3t2.count() <<" ms) T3: " <<
+            t4t3.count()/totalTime << " (" << t4t3.count() <<" ms) T4: "<<  t5t4.count()/totalTime<<" (" << t5t4.count() <<" ms)" <<  std::endl;
+
+            if (tS < THRESHOLD) {
+                break;
+            }
         }
     }
 
