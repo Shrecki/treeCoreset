@@ -222,7 +222,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
 
             // Compute cluster to cluster distance
             // Compute s(c) as smallest half distance of cluster c to any other cluster
-            auto t1 = high_resolution_clock::now();
+            //auto t1 = high_resolution_clock::now();
 
             for (int i = 0; i < k; i++) {
                 double minS(__DBL_MAX__), currDist(0.0);
@@ -238,7 +238,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
                 clusterToClusterDist[i][i] = 0.0;
                 s[i] = 0.5 * minS;
             }
-            auto t2 = high_resolution_clock::now();
+            //auto t2 = high_resolution_clock::now();
 
             c_x = 0;
             dist = 0;
@@ -275,7 +275,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
                 }
             }
 
-            auto t3 = high_resolution_clock::now();
+            //auto t3 = high_resolution_clock::now();
 
 
             /*
@@ -297,7 +297,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
                 }
             }
 
-            auto t4 = high_resolution_clock::now();
+            //auto t4 = high_resolution_clock::now();
 
 
             double delta(0);
@@ -320,14 +320,14 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
 
             tS /= k;
             auto t5 = high_resolution_clock::now();
-            duration<double, std::milli> t2t1 = t2 - t1;
+            /*duration<double, std::milli> t2t1 = t2 - t1;
             duration<double, std::milli> t3t2 = t3 - t2;
             duration<double, std::milli> t4t3 = t4 - t3;
             duration<double, std::milli> t5t4 = t5 - t4;
             double totalTime = t2t1.count() + t3t2.count() + t4t3.count() + t5t4.count();
             std::cout << "T1: " << t2t1.count()/totalTime<<" (" << t2t1.count() <<" ms) T2: " << t3t2.count()/totalTime
             << "(" << t3t2.count() <<" ms) T3: " <<
-            t4t3.count()/totalTime << " (" << t4t3.count() <<" ms) T4: "<<  t5t4.count()/totalTime<<" (" << t5t4.count() <<" ms)" <<  std::endl;
+            t4t3.count()/totalTime << " (" << t4t3.count() <<" ms) T4: "<<  t5t4.count()/totalTime<<" (" << t5t4.count() <<" ms)" <<  std::endl;*/
 
             if (tS < THRESHOLD) {
                 break;

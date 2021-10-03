@@ -31,10 +31,6 @@ static double computeCorrelationDistance(const Eigen::VectorXd &v1, const Eigen:
 }
 
 
-inline double  Point::computeEuclideanDistance(const Eigen::VectorXd &v1, const Eigen::VectorXd &v2){
-    return (v1-v2).norm();
-}
-
 double Point::computeDistance(const Eigen::VectorXd &p1, const Eigen::VectorXd &p2, Distance distance){
     double d = 0;
 

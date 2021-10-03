@@ -184,13 +184,22 @@ void ClusteredPoints::setAllToNullPtr() {
 
 void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs) {
     // Run coreset on union of buckets
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
     std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
     std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
     std::vector<Point *> representatives(representativeSet.begin(), representativeSet.end());
 
     // Get best clustering out of 5 attempts
+    auto t1 = high_resolution_clock::now();
     std::vector<Eigen::VectorXd> clusters = kmeans::getBestClusters(5, representatives, k, epochs);
+    auto t2 = high_resolution_clock::now();
 
+    duration<double, std::milli> t2t1 = t2 - t1;
+    std::cout << "Took " << t2t1.count() << " ms" << std::endl;
     // Convert to a 1D array (ie: flatten all vectors together)
     kmeans::convertFromVectorOfEigenXdToArray(data, clusters);
 }

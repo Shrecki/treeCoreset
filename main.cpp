@@ -84,17 +84,41 @@ int main() {
 
                 std::vector<double> data;
                 try {
-                    clusteredPoints.getClustersAsFlattenedArray(data, (int)array[1], 100);
+                    int k = (int)array[1];
+                    clusteredPoints.getClustersAsFlattenedArray(data, k, 100);
+                    clusteredPoints.~ClusteredPoints();
 
-                    // Reply contains the OK response, followed by the data to send
-                    zmq::message_t reply(data.size()+3);
-                    double tmpdata[data.size()+3];
-                    tmpdata[0] = (double)Requests::GET_OK; // All went well
-                    tmpdata[1] = 10; // Number of clusters
-                    tmpdata[2] = data.size()/10; // Dimension of a single centroid
-                    memcpy(tmpdata+3, data.data(), data.size()*sizeof(double)); // Copy back our vector
-                    memcpy((void*) reply.data(), tmpdata, (data.size()+3)*sizeof(double)); // Put all elements into reply
-                    socket.send(reply); // Issue reply
+                    int n = data.size();
+                    zmq::message_t* reply = new zmq::message_t(3);
+
+                    // First step is sending the number of clusters along with GET_OK to signal that all went well
+                    double tmpData[3] = {Requests::GET_OK, (double)k, 1.0*n/k};
+
+                    memcpy((void*)reply->data(), tmpData, 3*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
+                    socket.send(*reply); // Issue reply
+
+                    delete reply;
+
+                    // Now, we await an OK response
+                    socket.recv (&request);
+                    char byteArr[request.size()];
+                    memcpy(byteArr, request.data(), request.size());
+
+                    // The first double defines the request that we want
+                    array = reinterpret_cast<double*>(byteArr);
+                    if(array[0] == POST_OK){
+                        // We can start transmitting the different cluster values
+                        double* tmpVec(nullptr);
+                        for(int i=0; i < k; ++i){
+                            tmpVec = new double[n/k];
+                            memcpy(tmpVec, data.data()+i*(n/k), (n/k));
+                            memcpy((void*)reply->data(), tmpVec, (n/k)*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
+                            socket.send(*reply);
+                        }
+                    } else {
+                        // Something baad happened! Throw an exception
+                    }
+
 
                 } catch (std::exception &e){
                     std::cout << e.what() << std::endl;

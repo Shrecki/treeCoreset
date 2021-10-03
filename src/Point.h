@@ -57,7 +57,9 @@ public:
      */
     static std::unique_ptr<Eigen::VectorXd> getMapFromArray(const double* array, int arraySz);
 
-     static double computeEuclideanDistance(const Eigen::VectorXd &v1, const Eigen::VectorXd &v2);
+    [[nodiscard]] static double computeEuclideanDistance(const Eigen::VectorXd &v1, const Eigen::VectorXd &v2){
+        return (v1-v2).norm();
+    }
 };
 
 

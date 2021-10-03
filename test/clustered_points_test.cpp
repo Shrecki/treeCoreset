@@ -6,6 +6,9 @@
 #include "gmock/gmock.h"
 #include <fstream>
 #include "utils.h"
+#include <chrono>
+#include <immintrin.h>
+
 
 using ::testing::Return;
 
@@ -245,6 +248,122 @@ TEST_F(ClusteredPointsTest, pointsFromFile){
     }
 
     clusteredPoints.setAllToNullPtr();
+}
+
+__attribute__((always_inline)) __m256d computeSquaredDiff(__m256d &reg, const double * const d1, const double * const d2){
+    const __m256d a = _mm256_loadu_pd(d1); // Latency = 7 cycles
+    const __m256d b = _mm256_loadu_pd(d2);// Latency = 7 cycles
+    const __m256d diff =  _mm256_sub_pd(a, b); // (a-b)  Latency = 4 cycles
+    return _mm256_fmadd_pd(diff, diff , reg);
+}
+
+
+double hsum_double_avx(__m256d v){
+    // [x1 x2 x3 x4]
+    // [ x3 x4 ]
+    __m128d low = _mm256_castpd256_pd128(v);
+    // [ x1 x2 ]
+    __m128d high = _mm256_extractf128_pd(v, 1);
+    // [x1 + x3  x2 + x4]
+    low = _mm_add_pd(low, high);
+    // high&4 = [x1 + x3]
+    __m128d high64 = _mm_unpackhi_pd(low, low);
+    // result = x1 + x3 + x2 + x4
+    return _mm_cvtsd_f64(_mm_add_sd(low, high64));
+}
+
+double computeSum(const double *d1, const double *d2, int size, int nAccumulators){
+    __m256d acc = _mm256_setzero_pd();
+    __m256d acc2 = _mm256_setzero_pd();
+    __m256d acc3 = _mm256_setzero_pd();
+    __m256d acc4 =  _mm256_setzero_pd();
+    __m256d acc5, acc6, acc7, acc8, acc9, acc10, acc11, acc12, acc13, acc14, acc15, acc16;
+
+    __m256d diff;
+    const double * const d1End = d1 + size;
+    for(; d1 < d1End; d1 += 64, d2 += 64){
+        acc = computeSquaredDiff(acc, d1, d2);
+        acc2 = computeSquaredDiff(acc2, (d1+4), (d2+4));
+        acc3 = computeSquaredDiff(acc3, (d1+8), (d2+8));
+        acc4 = computeSquaredDiff(acc4, (d1+12), (d2+12));
+        acc5 = computeSquaredDiff(acc4, (d1+16), (d2+16));
+        acc6 = computeSquaredDiff(acc4, (d1+20), (d2+20));
+        acc7 = computeSquaredDiff(acc4, (d1+24), (d2+24));
+        acc8 = computeSquaredDiff(acc4, (d1+28), (d2+28));
+        acc9 = computeSquaredDiff(acc4, (d1+32), (d2+32));
+        acc10 = computeSquaredDiff(acc4, (d1+36), (d2+36));
+        acc11 = computeSquaredDiff(acc4, (d1+40), (d2+40));
+        acc12 = computeSquaredDiff(acc4, (d1+44), (d2+44));
+        acc13 = computeSquaredDiff(acc4, (d1+48), (d2+48));
+        acc14 = computeSquaredDiff(acc4, (d1+52), (d2+52));
+        acc15 = computeSquaredDiff(acc4, (d1+56), (d2+56));
+        acc16 = computeSquaredDiff(acc4, (d1+60), (d2+60));
+    }
+
+    // 1+ 2
+    acc2 = _mm256_add_pd(acc, acc2);
+    // 3+ 4
+    acc4 = _mm256_add_pd(acc3, acc4);
+    // 5 + 6
+    acc6= _mm256_add_pd(acc6, acc5);
+    // 7 + 8
+    acc8 = _mm256_add_pd(acc8, acc7);
+
+    acc10 = _mm256_add_pd(acc9, acc10);
+
+    acc12 = _mm256_add_pd(acc11, acc12);
+
+    acc14 = _mm256_add_pd(acc13, acc14);
+
+    acc16 = _mm256_add_pd(acc15, acc16);
+
+    // 13 + 14 + 15 + 16
+    acc16 = _mm256_add_pd(acc16, acc14);
+
+    // 9 + 10 + 11 + 12
+    acc12 = _mm256_add_pd(acc12, acc10);
+
+    // 5 + 6 + 7 + 8
+    acc8 = _mm256_add_pd(acc8, acc6);
+
+    // 1 + 2 + 3 + 4
+    acc4 = _mm256_add_pd(acc2, acc4);
+
+    // 1 + 2 + 3 + 4 + 5 + 6 + 7 +8
+    acc8 = _mm256_add_pd(acc4, acc8);
+
+    // 9 + 10 + 11 + 12 + 14 + 15 + 16
+    acc12 = _mm256_add_pd(acc12, acc16);
+
+    acc = _mm256_add_pd(acc8, acc12);
+    return hsum_double_avx(acc);
+}
+
+
+TEST_F(ClusteredPointsTest, someRandomTest){
+    Eigen::VectorXd r1 = Eigen::VectorXd::Random(902629);
+    Eigen::VectorXd r2 = Eigen::VectorXd::Random(902629);
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+    auto t1 = high_resolution_clock::now();
+    double dur1= (r1-r2).norm();
+    auto t2 = high_resolution_clock::now();
+    duration<double, std::milli> t2t1 = t2 - t1;
+    std::cout << "Took " << t2t1.count() << " ms" << std::endl;
+    double *d1 = r1.data();
+    double *d2 = r2.data();
+
+    auto t3 = high_resolution_clock::now();
+    double res = computeSum(d1, d2, r1.size(),4);
+    auto t4 = high_resolution_clock::now();
+    duration<double, std::milli> t4t3 = t4 - t3;
+    std::cout << "Took " << t4t3.count() << " ms" << std::endl;
+
+    std::cout << dur1 << std::endl;
+    std::cout << std::sqrt(res) << std::endl;
+
 }
 
 
