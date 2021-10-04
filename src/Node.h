@@ -53,11 +53,15 @@ public:
     void setRng(RandomGenerator* newRng);
 
     // Adding a point to a Node's point set
-    void addPoint(Point* newPoint, Distance distance);
+    void addPoint(Point* newPoint, const Distance &distance);
+
+    void addPoint(Point* newPoint, const double &distanceToRepresentative, const Distance &distance);
+
 
     // Methods related to specific algorithms of the tree coreset paper
     // (random child selection, cluster rep selection, cost propagation, node splitting)
     Node* getRandomChild();
+    Node* getRandomChildOptim();
     void propagateUpCostsParentOneSided();
     void updateCostBasedOnChildren();
     Point* selectNewClusterRep(Distance distance);

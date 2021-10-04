@@ -12,7 +12,7 @@
 #include <windows.h>
 #endif
 
-#define REQUEST_TIMEOUT 2500 // msecs, (>1000!)
+#define REQUEST_TIMEOUT 15500 // msecs, (>1000!)
 
 using namespace matlab::data;
 using matlab::mex::ArgumentList;

@@ -14,7 +14,7 @@
 #include "src/Requests.h"
 
 #define N_SAMPLES 728*14.0
-#define M 2400
+#define M 200
 
 int main() {
     zmq::context_t context(1);

@@ -4,7 +4,7 @@
 #include <iostream>
 #include "Point.h"
 
-Point::Point(std::unique_ptr<Eigen::VectorXd> newData, bool wasConverted): wasConverted(wasConverted) {
+Point::Point(std::unique_ptr<Eigen::VectorXd> newData, bool wasConverted): wasConverted(wasConverted), dist(-1.0) {
     data = std::move(newData);
     for(int i=0; i < data->size(); ++i){
         assert(!std::isnan((*data)(i)));
@@ -86,7 +86,7 @@ std::unique_ptr<Eigen::VectorXd> Point::getMapFromArray(const double* array, con
     return b;
 }
 
-Point::Point(std::unique_ptr<Eigen::VectorXd> newData): wasConverted(false) {
+Point::Point(std::unique_ptr<Eigen::VectorXd> newData): wasConverted(false), dist(-1.0) {
     // Change it here to make a deep copy of newData instead of simply using this pointer?
     data = std::move(newData);
 

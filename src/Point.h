@@ -20,6 +20,7 @@ class Point {
 private:
     std::unique_ptr<Eigen::VectorXd> data;
     bool wasConverted;
+    double dist;
 public:
     [[nodiscard]] Eigen::VectorXd getData() const;
     /**
@@ -40,6 +41,7 @@ public:
     explicit Point(std::unique_ptr<Eigen::VectorXd> newData);
     explicit Point(std::unique_ptr<Eigen::VectorXd> newData, bool wasConverted);
     void cleanupData();
+
     ~Point();
     /**
      * @brief Given an input array of double and the number of elements to consider in the array, convert said array
@@ -60,6 +62,10 @@ public:
     [[nodiscard]] static double computeEuclideanDistance(const Eigen::VectorXd &v1, const Eigen::VectorXd &v2){
         return (v1-v2).norm();
     }
+
+    void setDistance(double newDist){ dist = newDist;}
+
+    inline double getDistance() { return dist; }
 };
 
 
