@@ -2,32 +2,36 @@
 #include "mex.hpp"
 #include "mexAdapter.hpp"
 #include <iostream>
-#include "Requests.h"
-#include <sstream> //for std::stringstream
-#include <string>
-
 #ifndef _WIN32
 #include <unistd.h>
 #else
 #include <windows.h>
 #endif
-#define REQUEST_TIMEOUT 20500 // msecs, (>1000!)
+
+#define REQUEST_TIMEOUT 30500 // msecs, (>1000!)
 
 using namespace matlab::data;
 using matlab::mex::ArgumentList;
 
+#include <sstream> //for std::stringstream
+#include <string>
+
+
+enum Requests {
+    POST_REQ, GET_REQ, LOAD_REQ, SAVE_REQ, STOP_REQ, POST_OK, GET_OK, LOAD_OK, SAVE_OK, STOP_OK, ERROR
+};
 
 class MexFunction : public matlab::mex::Function {
 public:
     void operator()(ArgumentList outputs, ArgumentList inputs) {
         // First, we will create the request
         // Prepare request
-        double x = GET_REQ;
+        double x = GET_REQ;        
         double simpleArray[1];
         simpleArray[0]=x;
         simpleArray[1]=inputs[0][0]; // Number of clusters
         std::cout << simpleArray[1] << std::endl;
-
+        
         zmq::message_t request(2*sizeof(double));
         memcpy((void *) request.data(), (void*)(&simpleArray), 2*sizeof(double));
 
@@ -46,55 +50,73 @@ public:
             std::cout << "After polling" << std::endl;
             int rc = zmq::poll(items, 1, REQUEST_TIMEOUT);
             std::cout << "Polling done." << std::endl;
-
+            
             if(rc == -1){ break;}
             if(items[0].revents & ZMQ_POLLIN){
                 zmq::message_t reply;
                 socket.recv(&reply);
                 int nElements(reply.size());
-                char byteArray[nElements];
+                char byteArray[nElements*sizeof(double)];
+                memcpy(byteArr, reply.data(), nElements*sizeof(double));
                 double* array = reinterpret_cast<double*>(byteArray);
                 switch((int)array[0]){
                     case Requests::GET_OK :{
                         // First element indicates the number of clusters
                         // Second element indicates the dimension of a centroid
-                        // Other elements are the values, as a single array
                         int nClusters = (int)array[1];
                         int dimension = (int)array[2];
+                        
+                        // Now, we send POST_OK to signal we're ready to receive all cluster points
+                        zmq::message_t resp(sizeof(double));
+                        memcpy((void *) resp.data(), (void*)(&POST_OK), sizeof(double));
+                        socket.send(resp);
+
                         ArrayFactory f;
-                        for(int i=0; i < nElements; ++i){
+                        for(int i=0; i < nClusters; ++i){
                             std::vector<double> currCentroid;
                             currCentroid.reserve(dimension);
+                            // Now we expect to receive a new response, which should contain an array of exactly dimension points.
+                            socket.recv(&reply);
+                            char byteArray[dimension*sizeof(double)];
+                            memcpy(byteArr, reply.data(), dimension*sizeof(double));
+                            double* array = reinterpret_cast<double*>(byteArray);
+                            
+                            // Copy back this array to a new tmpCentroid array
                             for(int j=0; j < dimension; ++j){
-                                currCentroid.push_back(array[i*dimension + j + 3]);
+                                currCentroid.push_back(array[j]);
                             }
-                            TypedArray<double> tmpCentroid = f.createArray<double>({nClusters*dimension,1});
-                            for(int j=0; j < nClusters*dimension; ++j){
-                                tmpCentroid[j] = currCentroid.at(j);
+                            TypedArray<double> tmpCentroid = f.createArray<double>({dimension,1});
+                            for(int j=0; j < dimension; ++j){
+                                tmpCentroid[j] = currCentroid.at(j);   
                             }
+                            
+                            // Save this to the output
                             outputs[i] = tmpCentroid;
+                            
+                            // Send ok response
+                            socket.send(resp);
                         }
                         break;
                     }
-
+                    
                     case Requests::ERROR : {
                         // Something went wrong: print the exception
                         break;
                     }
-
+                    
                     default: {
                         // Invalid response to this query
                         break;
                     }
                 }
-
+                
                 expect_reply=0;
             } else {
-                std::cout << "Server seems to be offline, abandoning." << std::endl;
-                expect_reply=0;
+               std::cout << "Server seems to be offline, abandoning." << std::endl; 
+               expect_reply=0;
             }
         }
-
+        
         socket.close();
         context.close();
     }

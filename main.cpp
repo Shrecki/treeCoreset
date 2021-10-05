@@ -114,6 +114,15 @@ int main() {
                             memcpy(tmpVec, data.data()+i*(n/k), (n/k));
                             memcpy((void*)reply->data(), tmpVec, (n/k)*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
                             socket.send(*reply);
+                            std::cout << "Transmitted cluster " << i << std::endl;
+                            // Await OK response
+                            socket.recv(&request);
+                            char resp[request.size()];
+                            memcpy(resp, request.data(), request.size());
+                            array = reinterpret_cast<double*>(byteArr);
+                            if(array[0] != POST_OK){
+                                throw std::logic_error("Did not receive an OK response");
+                            }
                         }
                     } else {
                         // Something baad happened! Throw an exception
