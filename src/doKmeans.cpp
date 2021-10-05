@@ -42,6 +42,8 @@ public:
 
         // Send request
         socket.send(request);
+        
+        double post_ok = POST_OK;
 
         int expect_reply = 1;
         while(expect_reply){
@@ -57,7 +59,7 @@ public:
                 socket.recv(&reply);
                 int nElements(reply.size());
                 char byteArray[nElements*sizeof(double)];
-                memcpy(byteArr, reply.data(), nElements*sizeof(double));
+                memcpy(byteArray, reply.data(), nElements*sizeof(double));
                 double* array = reinterpret_cast<double*>(byteArray);
                 switch((int)array[0]){
                     case Requests::GET_OK :{
@@ -68,7 +70,7 @@ public:
                         
                         // Now, we send POST_OK to signal we're ready to receive all cluster points
                         zmq::message_t resp(sizeof(double));
-                        memcpy((void *) resp.data(), (void*)(&POST_OK), sizeof(double));
+                        memcpy((void *) resp.data(), (void*)(&post_ok), sizeof(double));
                         socket.send(resp);
 
                         ArrayFactory f;
@@ -77,7 +79,7 @@ public:
                             currCentroid.reserve(dimension);
                             // Now we expect to receive a new response, which should contain an array of exactly dimension points.
                             socket.recv(&reply);
-                            char byteArray[dimension*sizeof(double)];
+                            char byteArr[dimension*sizeof(double)];
                             memcpy(byteArr, reply.data(), dimension*sizeof(double));
                             double* array = reinterpret_cast<double*>(byteArray);
                             
