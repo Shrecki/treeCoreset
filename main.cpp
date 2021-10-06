@@ -14,7 +14,7 @@
 #include "src/Requests.h"
 
 #define N_SAMPLES 728*14.0
-#define M 200
+#define M 132
 
 int main() {
     zmq::context_t context(1);
@@ -89,7 +89,7 @@ int main() {
                     clusteredPoints.~ClusteredPoints();
 
                     int n = data.size();
-                    zmq::message_t* reply = new zmq::message_t(3);
+                    zmq::message_t* reply = new zmq::message_t(3*sizeof(double));
 
                     // First step is sending the number of clusters along with GET_OK to signal that all went well
                     double tmpData[3] = {Requests::GET_OK, (double)k, 1.0*n/k};
@@ -106,13 +106,19 @@ int main() {
 
                     // The first double defines the request that we want
                     array = reinterpret_cast<double*>(byteArr);
+                    int dim = n/k;
+                    std::cout << dim << std::endl;
                     if(array[0] == POST_OK){
                         // We can start transmitting the different cluster values
-                        double* tmpVec(nullptr);
                         for(int i=0; i < k; ++i){
-                            tmpVec = new double[n/k];
-                            memcpy(tmpVec, data.data()+i*(n/k), (n/k));
-                            memcpy((void*)reply->data(), tmpVec, (n/k)*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
+                            //tmpVec = new double[n/k];
+                            double tmpVec[dim];
+                            for(int j=0;j< dim; ++j){
+                                tmpVec[j] = data.at(i*dim +j);
+                            }
+                            //memcpy(&tmpVec, data.data()+i*dim, dim*sizeof(double));
+                            reply = new zmq::message_t(dim*sizeof(double));
+                            memcpy((void*)reply->data(), (void*)(&tmpVec), dim*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
                             socket.send(*reply);
                             std::cout << "Transmitted cluster " << i << std::endl;
                             // Await OK response

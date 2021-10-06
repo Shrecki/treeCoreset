@@ -90,6 +90,7 @@ std::vector<Eigen::VectorXd> kmeans::getBestClusters(int nTries, const std::vect
 
         delete results; // We need to deallocate this memory!
     }
+    std::cout << bestCost << std::endl;
 
     return bestCentroids;
 }
@@ -174,10 +175,16 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         double clusterToClusterDist[k][k];
         bool outDated[nPoints]; // Signals if assignment is outdated (Starts to false, since we initialize points to their closest cluster initially)
         double s[k];
+/*
+        for(auto v: centroids){
+            std::cout << v.norm() << std::endl;
+        }*/
 
         std::vector<Eigen::VectorXd> centroidMeans;
-        centroids.reserve(k);
+        //centroids.reserve(k);
         centroidMeans.reserve(k);
+        int pointCounts[k];
+
         for (int j = 0; j < k; ++j) {
             centroidMeans.emplace_back(Eigen::VectorXd::Zero(dimension));
         }
@@ -194,6 +201,10 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         for (int i = 0; i < nPoints; ++i) {
             nearest = findNearestClusterIndex(centroids, inputPoints.at(i)->getData());
             assignments[i] = nearest;
+
+            centroidMeans.at(nearest) += inputPoints.at(i)->getData();
+            pointCounts[nearest]++;
+
             dist = Point::computeDistance(centroids.at(nearest), inputPoints.at(i)->getData(), measure);
             upperBounds[i] = dist;
             lowerBounds[i][nearest] = dist;
@@ -204,7 +215,6 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         double deltaMov[k];
         unsigned int c_x(0);
         double u_x(0), newDist(0);
-        int pointCounts[k];
 
         using std::chrono::high_resolution_clock;
         using std::chrono::duration_cast;
@@ -214,11 +224,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         Eigen::VectorXd currPoint;
 
         for (int iter = 0; iter < epochs; iter++) {
-            // Reset means ?
-            for (int j = 0; j < k; j++) {
-                centroidMeans.at(j) = Eigen::VectorXd::Zero(dimension);
-                pointCounts[j] = 0;
-            }
+
 
             // Compute cluster to cluster distance
             // Compute s(c) as smallest half distance of cluster c to any other cluster
@@ -311,7 +317,15 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
             // Update centroids with their means!
             for (int j = 0; j < k; ++j) {
                 centroids.at(j) = centroidMeans.at(j);
+                //std::cout << centroids.at(j).norm() << std::endl;
             }
+
+            // Reset means
+            /*
+            for (int j = 0; j < k; j++) {
+                centroidMeans.at(j) = Eigen::VectorXd::Zero(dimension);
+                pointCounts[j] = 0;
+            }*/
 
             double tS(0);
             for (int j = 0; j < k; ++j) {

@@ -8,7 +8,7 @@
 #include <windows.h>
 #endif
 
-#define REQUEST_TIMEOUT 30500 // msecs, (>1000!)
+#define REQUEST_TIMEOUT 50000 // msecs, (>1000!)
 
 using namespace matlab::data;
 using matlab::mex::ArgumentList;
@@ -55,14 +55,17 @@ public:
             
             if(rc == -1){ break;}
             if(items[0].revents & ZMQ_POLLIN){
+                std::cout << "Received response." << std::endl;
                 zmq::message_t reply;
                 socket.recv(&reply);
                 int nElements(reply.size());
                 char byteArray[nElements*sizeof(double)];
                 memcpy(byteArray, reply.data(), nElements*sizeof(double));
                 double* array = reinterpret_cast<double*>(byteArray);
+                std::cout << array[0] << std::endl;
                 switch((int)array[0]){
                     case Requests::GET_OK :{
+                        std::cout << "Was an OK response." << std::endl;
                         // First element indicates the number of clusters
                         // Second element indicates the dimension of a centroid
                         int nClusters = (int)array[1];
@@ -72,6 +75,8 @@ public:
                         zmq::message_t resp(sizeof(double));
                         memcpy((void *) resp.data(), (void*)(&post_ok), sizeof(double));
                         socket.send(resp);
+                        
+                        std::cout << "Replied OK" << std::endl;
 
                         ArrayFactory f;
                         for(int i=0; i < nClusters; ++i){
@@ -79,6 +84,7 @@ public:
                             currCentroid.reserve(dimension);
                             // Now we expect to receive a new response, which should contain an array of exactly dimension points.
                             socket.recv(&reply);
+                            std::cout << "Received new centroid." << std::endl;
                             char byteArr[dimension*sizeof(double)];
                             memcpy(byteArr, reply.data(), dimension*sizeof(double));
                             double* array = reinterpret_cast<double*>(byteArray);
@@ -97,7 +103,9 @@ public:
                             
                             // Send ok response
                             socket.send(resp);
+                            std::cout << "Sent out OK" << std::endl;
                         }
+                        std::cout << "Done with centroids" << std::endl;
                         break;
                     }
                     

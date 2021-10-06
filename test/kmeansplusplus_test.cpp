@@ -304,9 +304,15 @@ TEST_F(KMeansTest, kmeansplusplusDoesntBreak) {
     std::vector<Eigen::VectorXd> centroids;
 
     Threeple *t = kmeans::kMeansPlusPlus(inputPoints, 3, 100);
+    std::cout << t->totalCost << std::endl;
 
-    std::vector<Eigen::VectorXd> bestCenters = kmeans::getBestClusters(5, inputPoints, 3, 100);
+    std::vector<Eigen::VectorXd> clusts = t->points;
 
+    std::vector<Eigen::VectorXd> bestCenters = kmeans::getBestClusters(100, inputPoints, 3, 100);
+
+    for(auto &v: bestCenters){
+        std::cout << v << std::endl;
+    }
     delete t;
 }
 

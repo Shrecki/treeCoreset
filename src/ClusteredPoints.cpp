@@ -198,6 +198,7 @@ void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, int
     std::vector<Eigen::VectorXd> clusters = kmeans::getBestClusters(5, representatives, k, epochs);
     auto t2 = high_resolution_clock::now();
 
+
     duration<double, std::milli> t2t1 = t2 - t1;
     std::cout << "Took " << t2t1.count() << " ms" << std::endl;
     // Convert to a 1D array (ie: flatten all vectors together)
