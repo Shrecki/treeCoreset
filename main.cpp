@@ -86,18 +86,16 @@ int main() {
                 try {
                     int k = (int)array[1];
                     clusteredPoints.getClustersAsFlattenedArray(data, k, 100);
-                    clusteredPoints.~ClusteredPoints();
+                    //clusteredPoints.~ClusteredPoints();
 
                     int n = data.size();
-                    zmq::message_t* reply = new zmq::message_t(3*sizeof(double));
+                    zmq::message_t reply(3*sizeof(double));
 
                     // First step is sending the number of clusters along with GET_OK to signal that all went well
                     double tmpData[3] = {Requests::GET_OK, (double)k, 1.0*n/k};
 
-                    memcpy((void*)reply->data(), tmpData, 3*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
-                    socket.send(*reply); // Issue reply
-
-                    delete reply;
+                    memcpy((void*)reply.data(), tmpData, 3*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
+                    socket.send(reply); // Issue reply
 
                     // Now, we await an OK response
                     socket.recv (&request);
@@ -117,9 +115,9 @@ int main() {
                                 tmpVec[j] = data.at(i*dim +j);
                             }
                             //memcpy(&tmpVec, data.data()+i*dim, dim*sizeof(double));
-                            reply = new zmq::message_t(dim*sizeof(double));
-                            memcpy((void*)reply->data(), (void*)(&tmpVec), dim*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
-                            socket.send(*reply);
+                            zmq::message_t rep(dim*sizeof(double));
+                            memcpy((void*)rep.data(), (void*)(&tmpVec), dim*sizeof(double)); // First we send OK, with all relevant sizes so that the other side knows what to wait for
+                            socket.send(rep);
                             std::cout << "Transmitted cluster " << i << std::endl;
                             // Await OK response
                             socket.recv(&request);
@@ -129,7 +127,10 @@ int main() {
                             if(array[0] != POST_OK){
                                 throw std::logic_error("Did not receive an OK response");
                             }
+                            std::cout << "Received POST_OK" << std::endl;
                         }
+                        // To signal that we are done, we send back one last OK
+                        socket.send(reply);
                     } else {
                         // Something baad happened! Throw an exception
                     }
