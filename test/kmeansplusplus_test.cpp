@@ -75,6 +75,11 @@ TEST_F(KMeansTest, kmeansSimpleCaseAssignsClustersCorrectly) {
     Eigen::VectorXd c2 = t->points.at(1);
     Eigen::VectorXd c3 = t->points.at(2);
 
+    std::cout << c1 << std::endl;
+
+    std::cout << c2 << std::endl;
+    std::cout << c3 << std::endl;
+
     unsigned int firstExpAssign(t->assignments[0]), secondClustAssign(t->assignments[4]), thirdClustAssign(t->assignments[8]);
     EXPECT_TRUE(firstExpAssign != secondClustAssign);
     EXPECT_TRUE(firstExpAssign != thirdClustAssign);
@@ -152,6 +157,7 @@ TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
     }
     // We are willing to allow for some tolerance, because of floating point differences,
     // tie breaks and other implementation details between SKLearn and our results.
+    std::cout << 1.0- (1.0*nPosEqs/inputPoints.size()) << std::endl;
     EXPECT_TRUE(1.0- (1.0*nPosEqs/inputPoints.size()) < 0.01);
 
     // Free memory once we're done :)
@@ -280,7 +286,7 @@ TEST_F(KMeansTest, closestPointsOptimizedYieldsExpectedShortestPoint){
 
 
 
-TEST_F(KMeansTest, kmeansplusplusDoesntBreak) {
+TEST_F(KMeansTest, getBestClusterReturnsExpectedClusters) {
     // Just to test, we will create three clusters, each of 4 points in 2D
     std::vector<Point *> points;
     Eigen::VectorXd v0(2), v1(2), v2(2), v3(2), v4(2), v5(2), v6(2), v7(2), v8(2), v9(2), v10(2), v11(2);
@@ -303,17 +309,28 @@ TEST_F(KMeansTest, kmeansplusplusDoesntBreak) {
 
     std::vector<Eigen::VectorXd> centroids;
 
-    Threeple *t = kmeans::kMeansPlusPlus(inputPoints, 3, 100);
-    std::cout << t->totalCost << std::endl;
-
-    std::vector<Eigen::VectorXd> clusts = t->points;
-
     std::vector<Eigen::VectorXd> bestCenters = kmeans::getBestClusters(100, inputPoints, 3, 100);
+    std::vector<Eigen::VectorXd> expectedCenters;
+    Eigen::VectorXd ve0(2), ve1(2), ve2(2);
+    ve0 << 1.0/3.0, -0.5;
+    ve1 << 0,1.8;
+    ve2 << -2, 0;
+    expectedCenters.push_back(ve0);
+    expectedCenters.push_back(ve1);
+    expectedCenters.push_back(ve2);
 
-    for(auto &v: bestCenters){
-        std::cout << v << std::endl;
+
+    for(int j=0; j < 3; ++j){
+        Eigen::VectorXd vecInt = bestCenters.at(j);
+        bool foundBest(false);
+        for(int i=0; i < 3; ++i){
+            if(abs((vecInt - expectedCenters.at(i)).norm())<10e-8){
+                foundBest = true;
+                break;
+            }
+        }
+        EXPECT_TRUE(foundBest);
     }
-    delete t;
 }
 
 

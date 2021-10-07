@@ -90,8 +90,6 @@ std::vector<Eigen::VectorXd> kmeans::getBestClusters(int nTries, const std::vect
 
         delete results; // We need to deallocate this memory!
     }
-    std::cout << bestCost << std::endl;
-
     return bestCentroids;
 }
 
@@ -187,6 +185,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
 
         for (int j = 0; j < k; ++j) {
             centroidMeans.emplace_back(Eigen::VectorXd::Zero(dimension));
+            pointCounts[j]=0;
         }
 
         for (int i = 0; i < nPoints; ++i) {
@@ -224,7 +223,6 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         Eigen::VectorXd currPoint;
 
         for (int iter = 0; iter < epochs; iter++) {
-
 
             // Compute cluster to cluster distance
             // Compute s(c) as smallest half distance of cluster c to any other cluster
@@ -268,13 +266,15 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
                         lowerBounds[i][j] = newDist;
                         if (newDist < dist) {
                             // We're changing assignments, so remove point influence from current assignment in mean
-                            pointCounts[assignments[i]]--;
-                            centroidMeans.at(assignments[i]) -= currPoint;
+                            unsigned int assId = assignments[i];
+                            pointCounts[assId]-=1;
+                            centroidMeans.at(assId) -= currPoint;
+
                             // Assign to new centroid
                             assignments[i] = j;
 
                             // Update this centroid mean
-                            pointCounts[j]++;
+                            pointCounts[j]+=1;
                             centroidMeans.at(j) += currPoint;
                         }
                     }
@@ -284,14 +284,22 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
             //auto t3 = high_resolution_clock::now();
 
 
-            /*
+
+            // Reset means
+/*
+            for (int j = 0; j < k; j++) {
+                centroidMeans.at(j) = Eigen::VectorXd::Zero(dimension);
+                pointCounts[j] = 0;
+            }
+
             for (int i = 0; i < nPoints; ++i) {
                 centroidMeans.at(assignments[i]) += inputPoints.at(i)->getData();
                 pointCounts[assignments[i]]++;
-            }
-            for (int j = 0; j < k; j++) {
+            }*/
+            /*for (int j = 0; j < k; j++) {
                 if (pointCounts[j] != 0) {
                     centroidMeans.at(j) /= pointCounts[j];
+                    std::cout << centroidMeans.at(j) << std::endl;
                 }
             }*/
 
@@ -307,9 +315,12 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
 
 
             double delta(0);
+            Eigen::VectorXd currM;
             for (int i = 0; i < nPoints; ++i) {
                 c_x = assignments[i];
-                delta = Point::computeDistance(centroidMeans.at(c_x), centroids.at(c_x), measure);
+                currM = centroidMeans.at(c_x);
+                currM /= pointCounts[c_x];
+                delta = Point::computeDistance(currM, centroids.at(c_x), measure);
                 upperBounds[i] += delta;
                 deltaMov[c_x] = delta;
                 outDated[i] = true;
@@ -317,15 +328,12 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
             // Update centroids with their means!
             for (int j = 0; j < k; ++j) {
                 centroids.at(j) = centroidMeans.at(j);
+                if(pointCounts[j] != 0){
+                    centroids.at(j) /= pointCounts[j];
+                }
                 //std::cout << centroids.at(j).norm() << std::endl;
             }
 
-            // Reset means
-            /*
-            for (int j = 0; j < k; j++) {
-                centroidMeans.at(j) = Eigen::VectorXd::Zero(dimension);
-                pointCounts[j] = 0;
-            }*/
 
             double tS(0);
             for (int j = 0; j < k; ++j) {
