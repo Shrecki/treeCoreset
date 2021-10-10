@@ -24,6 +24,7 @@ class ClusteredPoints {
     unsigned int bucketCapacity;
     unsigned int nsplits;
     int dimension;
+    bool otherBucketsFull;
 public:
     std::vector<std::vector<Point*>*> buckets;
     std::vector<unsigned int> bucketCapacities;
@@ -66,6 +67,10 @@ public:
      * @param epochs
      */
     void getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs);
+
+    void reduceBuckets();
+
+    void performUnionCoresetAndGetRepresentativesAsFlattenedArray(std::vector<double> &data);
 
 };
 

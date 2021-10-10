@@ -15,25 +15,19 @@ using matlab::mex::ArgumentList;
 
 #include <sstream> //for std::stringstream
 #include <string>
-
-
-enum Requests {
-    POST_REQ, GET_REQ, LOAD_REQ, SAVE_REQ, STOP_REQ, POST_OK, GET_OK, LOAD_OK, SAVE_OK, STOP_OK, ERROR
-};
+#include "Requests.h"
 
 class MexFunction : public matlab::mex::Function {
 public:
     void operator()(ArgumentList outputs, ArgumentList inputs) {
         // First, we will create the request
         // Prepare request
-        double x = GET_REQ;        
+        double x = GET_REPS;        
         double simpleArray[1];
         simpleArray[0]=x;
-        simpleArray[1]=inputs[0][0]; // Number of clusters
-        std::cout << simpleArray[1] << std::endl;
         
-        zmq::message_t request(2*sizeof(double));
-        memcpy((void *) request.data(), (void*)(&simpleArray), 2*sizeof(double));
+        zmq::message_t request(1*sizeof(double));
+        memcpy((void *) request.data(), (void*)(&simpleArray), 12*sizeof(double));
 
         // Connect to port
         zmq::context_t context(1);
@@ -76,35 +70,34 @@ public:
                         memcpy((void *) resp.data(), (void*)(&post_ok), sizeof(double));
                         socket.send(resp);
                         
-                        std::cout << "Replied OK" << std::endl;
+                        std::cout << "Sent out OK" << std::endl;
+                        
+                        for(int clus=0; clus<nClusters; ++clus){
 
-                        ArrayFactory f;
-                        for(int i=0; i < nClusters; ++i){
-                            std::vector<double> currCentroid;
-                            currCentroid.reserve(dimension);
+                            ArrayFactory f;
                             // Now we expect to receive a new response, which should contain an array of exactly dimension points.
+                            std::cout << "Expecting cluster now." << std::endl;
                             socket.recv(&reply);
-                            std::cout << "Received new centroid." << std::endl;
-                            char byteArr[dimension*sizeof(double)];
-                            memcpy(byteArr, reply.data(), dimension*sizeof(double));
-                            double* array = reinterpret_cast<double*>(byteArray);
-                            
-                            // Copy back this array to a new tmpCentroid array
-                            for(int j=0; j < dimension; ++j){
-                                currCentroid.push_back(array[j]);
-                            }
+                            std::cout << "Received new representative. Dimension should be: " << reply.size()/sizeof(double) << std::endl;
+                            char byteArr[reply.size()];
+                            memcpy(byteArr, reply.data(), reply.size());
+                            double* array = reinterpret_cast<double*>(byteArr);
+
+
                             TypedArray<double> tmpCentroid = f.createArray<double>({dimension,1});
                             for(int j=0; j < dimension; ++j){
-                                tmpCentroid[j] = currCentroid.at(j);   
+                                tmpCentroid[j] = *(array+j);   
                             }
-                            
+
                             // Save this to the output
-                            outputs[i] = tmpCentroid;
+                            outputs[clus] = tmpCentroid;
                             
+
                             // Send ok response
                             socket.send(resp);
                             std::cout << "Sent out OK" << std::endl;
                         }
+                        socket.recv(&reply); // We await one last response from server before exiting
                         std::cout << "Done with centroids" << std::endl;
                         break;
                     }

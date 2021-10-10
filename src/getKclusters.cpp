@@ -1,6 +1,8 @@
 #include <zmq.hpp>
 #include "mex.hpp"
 #include "mexAdapter.hpp"
+#include "Requests.h"
+
 #include <iostream>
 #ifndef _WIN32
 #include <unistd.h>
@@ -17,17 +19,13 @@ using matlab::mex::ArgumentList;
 #include <string>
 
 
-enum Requests {
-    POST_REQ, GET_REQ, LOAD_REQ, SAVE_REQ, STOP_REQ, POST_OK, GET_OK, LOAD_OK, SAVE_OK, STOP_OK, ERROR
-};
-
 class MexFunction : public matlab::mex::Function {
 public:
     void operator()(ArgumentList outputs, ArgumentList inputs) {
         // First, we will create the request
         // Prepare request
         double x = GET_REQ;        
-        double simpleArray[1];
+        double simpleArray[2];
         simpleArray[0]=x;
         simpleArray[1]=inputs[0][0]; // Number of clusters
         std::cout << simpleArray[1] << std::endl;

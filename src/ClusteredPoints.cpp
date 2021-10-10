@@ -31,6 +31,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
     buckets[0]->push_back(newPoint);
     bucketCapacities[0]++;
     if(buckets[0]->size()== buckets[0]->capacity()){
+        otherBucketsFull = true;
         // Create set q
         std::set<Point*> q;
         // Move all points from bucket[0] into set q
@@ -93,7 +94,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
 }
 
 ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity): nBuckets(nBuckets),
-bucketCapacity(bucketCapacity), nsplits((unsigned int)2*(bucketCapacity-1) + 1), dimension(-1) {
+bucketCapacity(bucketCapacity), nsplits((unsigned int)2*(bucketCapacity-1) + 1), dimension(-1), otherBucketsFull(false) {
     buckets.reserve(nBuckets);
     for(int i=0; i<nBuckets;++i){
         auto *tmpVec = new std::vector<Point*>();
@@ -182,6 +183,40 @@ void ClusteredPoints::setAllToNullPtr() {
 
 }
 
+void ClusteredPoints::reduceBuckets(){
+    /*bool otherBucketsFull(false);
+    for(auto &b: buckets){
+        if(b != buckets.at(0) && b != nullptr){
+            if(!b->empty()){
+                otherBucketsFull = true;
+                break;
+            }
+        }
+    }*/
+    if(otherBucketsFull){
+        std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
+        std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
+
+        // Update all buckets: bucket 0 will get all representative sets, whereas other buckets will be emptied
+        for(auto &b: buckets){
+            b->clear();
+        }
+        for(auto &p: representativeSet){
+            buckets.at(0)->push_back(p);
+        }
+        otherBucketsFull = false;
+    }
+}
+
+void ClusteredPoints::performUnionCoresetAndGetRepresentativesAsFlattenedArray(std::vector<double> &data){
+    reduceBuckets();
+    std::vector<Eigen::VectorXd> representatives;
+    for(auto &b: *buckets.at(0)){
+        representatives.push_back(b->getData());
+    }
+    kmeans::convertFromVectorOfEigenXdToArray(data, representatives);
+}
+
 void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs) {
     // Run coreset on union of buckets
     using std::chrono::high_resolution_clock;
@@ -189,9 +224,11 @@ void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, int
     using std::chrono::duration;
     using std::chrono::milliseconds;
 
-    std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
-    std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
-    std::vector<Point *> representatives(representativeSet.begin(), representativeSet.end());
+    reduceBuckets();
+
+    //std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
+    //std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
+    std::vector<Point *> representatives(buckets.at(0)->begin(), buckets.at(0)->end());
 
     // Get best clustering out of 5 attempts
     auto t1 = high_resolution_clock::now();
