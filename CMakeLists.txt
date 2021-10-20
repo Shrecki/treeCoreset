@@ -35,12 +35,12 @@ set(SOURCES
         src/coreset_algorithms.h src/coreset_algorithms.cpp
         src/ClusteredPoints.cpp src/ClusteredPoints.h
         src/kmeansplusplus.cpp src/kmeansplusplus.h
-        src/Requests.h)
+        src/Requests.h src/NetworkProtocol.cpp src/NetworkProtocol.h)
 
 
 
 # For main program
-add_executable(untitled main.cpp ${SOURCES})
+add_executable(untitled main.cpp ${SOURCES} src/NetworkProtocol.cpp src/NetworkProtocol.h)
 target_include_directories(untitled PRIVATE eigen)
 
 find_package(cppzmq)
