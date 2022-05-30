@@ -72,6 +72,10 @@ public:
 
     void performUnionCoresetAndGetRepresentativesAsFlattenedArray(std::vector<double> &data);
 
+    int getDimension(){
+        return dimension;
+    }
+
 };
 
 #endif //UNTITLED_CLUSTEREDPOINTS_H+

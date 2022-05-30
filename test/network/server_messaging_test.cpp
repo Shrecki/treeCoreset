@@ -292,8 +292,69 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsWithLessThanKPointsInRepresenta
 }
 
 
-TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheNPointOnClientSide){
-    zmq::message_t request(2*sizeof(double));
+TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheNPointsOnClientSide){
+    double data[4] = {Requests::POST_REQ, 12, 10, 11};
+    zmq::message_t request(4*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&data), 4 * sizeof(double));
+    client_socket->send(request);
+
+
+    // We should receive here a success message
+    zmq::message_t resp;
+    client_socket->recv(&resp, 0);
+    std::string array = resp.to_string();
+
+    double data_sec[4] = {Requests::POST_REQ, -1, 4, 5};
+    request.rebuild(4*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&data_sec), 4 * sizeof(double));
+    client_socket->send(request);
+
+
+    // We should receive here a success message
+    client_socket->recv(&resp, 0);
+    array = resp.to_string();
+
+    // Now query the points!
+    double centroid_req[1] = {Requests::GET_REPS};
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&centroid_req), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // Receive first the GET_OK response that we expect
+    client_socket->recv(&resp, 0);
+    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::GET_OK);
+    EXPECT_EQ(reqQuery[1], 2);
+    EXPECT_EQ(reqQuery[2], 3);
+
+    delete reqQuery;
+
+    // Send GET_READY
+    request.rebuild(1*sizeof(double));
+    double ready_req = Requests::GET_READY;
+    memcpy((void *) request.data(), (void*)(&ready_req), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // Now we will get 3 messages back to back, the points and a GET_DONE message, supposedly
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    for(int i=0; i < 3; ++i){
+        EXPECT_DOUBLE_EQ(reqQuery[i], data[i+1]);
+    }
+    delete reqQuery;
+
+    // Receive next one
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    for(int i=0; i < 3; ++i){
+        EXPECT_DOUBLE_EQ(reqQuery[i], data_sec[i+1]);
+    }
+    delete reqQuery;
+
+    // Receive last point
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_DONE);
 
     // Now we stop the server
     double stop = Requests::STOP_REQ;

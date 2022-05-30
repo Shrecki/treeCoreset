@@ -102,7 +102,6 @@ namespace ServerMessaging{
                     currClusterVector[j] = data.at(i * point_dimensionality + j);
                 }
                 sendResponseFromDoubleArray(socket, point_dimensionality, currClusterVector, true);
-                std::cout << "Transmitted cluster " << i << std::endl;
             }
 
             double doneMessage[1] = {Requests::GET_DONE};
@@ -144,8 +143,8 @@ namespace ServerMessaging{
         std::vector<double> data;
         try {
             clusteredPoints.performUnionCoresetAndGetRepresentativesAsFlattenedArray(data);
-            int dim = data.size()/M;
-            sendSeveralPoints(socket,data,M,dim);
+            int dim = clusteredPoints.getDimension();
+            sendSeveralPoints(socket,data,data.size()/dim,dim);
         } catch (std::exception &e){
             throw;
         }
