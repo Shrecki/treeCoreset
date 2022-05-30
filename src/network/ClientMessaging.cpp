@@ -70,7 +70,7 @@ namespace ClientMessaging {
         // In this method, we are provided with a start request data pointer.
         // Furthermore, we are provided with an expected server initial client response and a client's consequent response
         // Lastly, we're provided with the server last expected response
-        zmq::message_t request(2*sizeof(double));
+        zmq::message_t request(client_init_req_size*sizeof(double));
         memcpy((void *) request.data(), (void*)(&client_init_req_data), client_init_req_size * sizeof(double));
         socket.send(request);
 

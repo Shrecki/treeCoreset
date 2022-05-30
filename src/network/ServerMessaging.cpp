@@ -198,8 +198,9 @@ namespace ServerMessaging{
                     std::cout << "Received a STOP request." << std::endl;
                     // Send back response: we know we got the stop
                     mustContinue = false;
-                    zmq::message_t reply(5);
-                    memcpy((void *) reply.data(), "World", 5);
+                    zmq::message_t reply(1*sizeof(double));
+                    double stop_val = Requests::STOP_OK;
+                    memcpy((void *) reply.data(), (void*)&stop_val, 1*sizeof(double));
                     socket.send(reply);
                     break;
                 }
@@ -213,8 +214,9 @@ namespace ServerMessaging{
                 }
                 default: {
                     std::cout << "Unknown request." << std::endl;
-                    zmq::message_t reply(5);
-                    memcpy((void *) reply.data(), "World", 5);
+                    std::string str_error("Unknown request");
+                    zmq::message_t reply(str_error.size());
+                    memcpy((void *) reply.data(), str_error.data(), str_error.size());
                     socket.send(reply);
                     break;
                 }

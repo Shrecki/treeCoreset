@@ -50,9 +50,7 @@ protected:
     }
 };
 
-TEST_F(ServerMessagingTest, testingServer) {
-    // We will start the server and see if we get any request that we don't expect
-
+TEST_F(ServerMessagingTest, stoppingServerWorks) {
     std::thread t1(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);
 
     double stop = Requests::STOP_REQ;
@@ -60,6 +58,39 @@ TEST_F(ServerMessagingTest, testingServer) {
     memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
     client_socket->send(request);
 
+    // We expect to receive a STOP_OK response
+    zmq::message_t resp;
+    client_socket->recv(&resp, 0);
+    double *array = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ((int)array[0], Requests::STOP_OK);
     t1.join();
+}
+
+TEST_F(ServerMessagingTest, sendingAnUnknownRequestReturnsAnErrorOnClientSide){
+
+    std::thread t1(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);
+
+    double stop = 121; // This request does not exist
+    zmq::message_t request(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // We expect to receive a STOP_OK response
+    zmq::message_t resp;
+    client_socket->recv(&resp, 0);
+    std::string array = resp.to_string();
+    //double *array = ServerMessaging::extractDoubleArrayFromContent(resp);
+
+
+    // Now we stop the server
+    stop = Requests::STOP_REQ;
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
+    client_socket->send(request);
+
+    t1.join();
+
+    std::string expected_string("Unknown request");
+    EXPECT_STREQ(array.c_str(), expected_string.c_str());
 
 }
