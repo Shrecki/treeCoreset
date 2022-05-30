@@ -2,7 +2,7 @@
 // Created by guibertf on 9/22/21.
 //
 
-#include "utils.h"
+#include "../utils.h"
 
 std::vector<std::string> getNextLineAndSplitIntoTokens(std::istream& str)
 {

@@ -7,6 +7,12 @@
 
 #include "Requests.h"
 
+#ifndef _WIN32
+#include <unistd.h>
+#else
+#include <windows.h>
+#endif
+
 #include "iostream"
 
 namespace ServerMessaging{
@@ -146,6 +152,75 @@ namespace ServerMessaging{
             sendException(socket, e);
             delete array;
             throw e;
+        }
+    }
+
+    void runServer(zmq::socket_t &socket, int N_SAMPLES, int M) {
+        std::cout << "Started server!" << std::endl;
+        ClusteredPoints clusteredPoints(ceil(log2(N_SAMPLES/M)+2), M);
+
+        bool mustContinue(true);
+        while(mustContinue){
+            // Await a request
+            zmq::message_t request;
+            socket.recv (&request, 0);
+            int nElems(ServerMessaging::getNumberOfDoublesInReq(request));
+            double *array = ServerMessaging::extractDoubleArrayFromContent(request);
+            switch((int)array[0]){
+                case Requests::POST_REQ : {
+                    ServerMessaging::handlePostRequest(array, nElems, clusteredPoints, socket);
+                    break;
+                }
+                case Requests::GET_CENTROIDS : {
+                    ServerMessaging::handleGetCentroids(array, nElems, clusteredPoints, socket);
+                    break;
+                }
+                case Requests::GET_REPS: {
+                    std::cout << "Received a Get Representatives request" << std::endl;
+                    ServerMessaging::handleGetRepresentatives(array, nElems, clusteredPoints, socket, M);
+                    break;
+                }
+                case Requests::LOAD_REQ: {
+                    std::cout << "Received a LOAD request." << std::endl;
+                    zmq::message_t reply(5);
+                    memcpy((void *) reply.data(), "World", 5);
+                    socket.send(reply);
+                    break;
+                }
+                case Requests::SAVE_REQ: {
+                    std::cout << "Received a SAVE request." << std::endl;
+                    zmq::message_t reply(5);
+                    memcpy((void *) reply.data(), "World", 5);
+                    socket.send(reply);
+                    break;
+                }
+                case Requests::STOP_REQ: {
+                    std::cout << "Received a STOP request." << std::endl;
+                    // Send back response: we know we got the stop
+                    mustContinue = false;
+                    zmq::message_t reply(5);
+                    memcpy((void *) reply.data(), "World", 5);
+                    socket.send(reply);
+                    break;
+                }
+                case Requests::POST_OK: {
+                    std::cout << "Simulating big CPU overload." << std::endl;
+                    sleep(3);
+                    zmq::message_t reply(5);
+                    memcpy((void *) reply.data(), "World", 5);
+                    socket.send(reply);
+                    break;
+                }
+                default: {
+                    std::cout << "Unknown request." << std::endl;
+                    zmq::message_t reply(5);
+                    memcpy((void *) reply.data(), "World", 5);
+                    socket.send(reply);
+                    break;
+                }
+            }
+
+            delete array;
         }
     }
 }

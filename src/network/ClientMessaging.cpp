@@ -141,6 +141,14 @@ namespace ClientMessaging {
 
     }
 
+    void requestStop(zmq::socket_t &socket){
+        double stop = Requests::STOP_REQ;
+        zmq::message_t request(1*sizeof(double));
+        memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
+        socket.send(request);
+    }
+
+
     std::vector<double>* requestCentroids(zmq::socket_t &socket, int n_centroids, int REQUEST_TIMEOUT){
         double request_data[2] = {GET_CENTROIDS, 1.0 * n_centroids};
         return pollForRequest(socket, request_data,2,

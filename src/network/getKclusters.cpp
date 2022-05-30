@@ -44,6 +44,8 @@ public:
             }
             outputs[i] = tmpCentroid;
         }
+        received_centroids->clear();
+        delete received_centroids; // Ensures we do not have any memory leak on client side.
 
         // Disconnect
         socket.close();

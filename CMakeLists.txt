@@ -65,7 +65,9 @@ add_executable(unit_test ${SOURCES}
         test/clustering/point_test.cpp test/main_test.cpp test/clustering/node_test.cpp
         test/mocks/mock_RandomGenerator.cpp test/mocks/mock_RandomGenerator.h
         test/clustering/math_framework.cpp test/clustering/math_framework.h test/clustering/coreset_algorithms_test.cpp test/clustering/clustered_points_test.cpp
-        test/clustering/kmeansplusplus_test.cpp test/clustering/utils.cpp test/clustering/utils.h)
+        test/clustering/kmeansplusplus_test.cpp test/clustering/utils.cpp test/utils.h
+        test/network/client_messaging_test.cpp
+        test/network/server_messaging_test.cpp)
 target_link_libraries(unit_test gtest_main)
 target_link_libraries(unit_test gmock_main)
 target_link_libraries(unit_test ${ZeroMQ_LIBRARY})

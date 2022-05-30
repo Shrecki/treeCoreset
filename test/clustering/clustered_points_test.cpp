@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 #include <fstream>
-#include "utils.h"
+#include "../utils.h"
 #include <chrono>
 #include <immintrin.h>
 

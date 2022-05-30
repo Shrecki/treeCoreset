@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 #include <fstream>
-#include "utils.h"
+#include "../utils.h"
 #include "math_framework.h"
 
 using ::testing::Return;
