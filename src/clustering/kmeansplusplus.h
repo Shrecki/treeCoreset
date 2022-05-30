@@ -6,6 +6,7 @@
 #define UNTITLED_KMEANSPLUSPLUS_H
 
 #include "Point.h"
+#include "../Errors.h"
 #include <vector>
 #include <cmath>
 
@@ -100,8 +101,11 @@ namespace kmeans {
 
     static void convertFromVectorOfEigenXdToArray(std::vector<double> &outputData, const std::vector<Eigen::VectorXd> &vectors){
         int nClusters = vectors.size();
-        int dimsPerCluster = vectors.at(0).size();
+        if(nClusters == 0){
+            throw(UninitializedCoresetException("Coreset does not contain any point. Please add points before attempting to extract points.", -12, -34));
+        }
 
+        int dimsPerCluster = vectors.at(0).size();
         outputData.reserve(vectors.size()*vectors.at(0).size());
 
         for(int i = 0; i < nClusters ; ++i){

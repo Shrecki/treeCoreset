@@ -75,13 +75,10 @@ std::unique_ptr<Eigen::VectorXd> Point::getMapFromArray(const double* array, con
     for(int i =0; i < (*b).size(); ++i){
         (*b)(i) = array[i];
     }
-    for(int i=0; i < b->size(); ++i){
-        assert(!std::isnan((*b)(i)));
-    }
     int nNans = b->array().isNaN().sum();
     if(nNans > 0){
         std::cout << "Included " << nNans << " nans" << std::endl;
-        throw std::invalid_argument("Array contains some NaN values! ");
+        throw std::invalid_argument("Array contains NaN values. Please fix them.");
     }
     return b;
 }

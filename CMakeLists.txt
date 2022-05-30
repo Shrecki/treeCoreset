@@ -38,7 +38,8 @@ set(SOURCES
         src/network/Requests.h
         src/network/ClientMessaging.h src/network/ClientMessaging.cpp
         src/network/ServerMessaging.h src/network/ServerMessaging.cpp
-        src/network/NetworkProtocol.cpp src/network/NetworkProtocol.h)
+        src/network/NetworkProtocol.cpp src/network/NetworkProtocol.h
+        src/Errors.h)
 
 
 set( boost_INSTALL "/usr/local/share/boost_1_77_0/build-boost")

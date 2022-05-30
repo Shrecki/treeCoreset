@@ -50,17 +50,18 @@ namespace ServerMessaging{
     }
 
     void handlePostRequest(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket){
-        std::cout << "Received a POST request." << std::endl;
-
+        //std::cout << "Received a POST request." << std::endl;
         // Convert to a point
         Requests response;
         try{
             // Convert received data to point
             Point* p = Point::convertArrayToPoint(&array[1], nElems-1);
-            std::cout << " Converted to point of " << nElems -1 << " elements." << std::endl;
+            //std::cout << " Converted to point of " << nElems -1 << " elements." << std::endl;
             Eigen::VectorXd vec = p->getData();
             for(int i=0; i < vec.size(); ++i){
-                assert(!std::isnan(vec(i)));
+                if(std::isnan(vec(i))){
+                    throw std::invalid_argument("Point argument contains NaNs. Please remove the NaNs before passing any point");
+                }
             }
             assert(p->getData().array().isNaN().sum() == 0);
             // Perform insertion (this is the InsertPoint step in the stream)
@@ -69,17 +70,10 @@ namespace ServerMessaging{
             // Send back response: all went well
             response = Requests::POST_OK;
             sendSingleMessage(socket, response);
-            std::cout << "Post OK" << std::endl;
+            //std::cout << "Post OK" << std::endl;
 
         } catch (std::exception &e) {
-            delete array;
-            // Here, send also the exception (but we will worry about it later)
-            sendException(socket, e);
-            //sendResponseFromDoubleArray(socket, 1, (double *) &response);
-
-            // We thus need a method to handle messaging of exception to the receiver
-            std::cout << e.what() << std::endl;
-            throw e;
+            throw;
         }
     }
 
@@ -153,9 +147,6 @@ namespace ServerMessaging{
             int dim = data.size()/M;
             sendSeveralPoints(socket,data,M,dim);
         } catch (std::exception &e){
-            std::cout << e.what() << std::endl;
-            sendException(socket, e);
-            delete array;
             throw;
         }
     }
@@ -171,65 +162,65 @@ namespace ServerMessaging{
             socket.recv (&request, 0);
             int nElems(ServerMessaging::getNumberOfDoublesInReq(request));
             double *array = ServerMessaging::extractDoubleArrayFromContent(request);
-            switch((int)array[0]){
-                case Requests::POST_REQ : {
-                    ServerMessaging::handlePostRequest(array, nElems, clusteredPoints, socket);
-                    break;
-                }
-                case Requests::GET_CENTROIDS : {
-                    try{
-                        ServerMessaging::handleGetCentroids(array, nElems, clusteredPoints, socket);
-                    } catch(std::exception &e){
-                        sendException(socket, e);
+            try{
+                switch((int)array[0]){
+                    case Requests::POST_REQ : {
+                        ServerMessaging::handlePostRequest(array, nElems, clusteredPoints, socket);
+                        break;
                     }
-                    break;
+                    case Requests::GET_CENTROIDS : {
+                        ServerMessaging::handleGetCentroids(array, nElems, clusteredPoints, socket);
+                        break;
+                    }
+                    case Requests::GET_REPS: {
+                        ServerMessaging::handleGetRepresentatives(array, nElems, clusteredPoints, socket, M);
+                        break;
+                    }
+                    case Requests::LOAD_REQ: {
+                        std::cout << "Received a LOAD request." << std::endl;
+                        zmq::message_t reply(5);
+                        memcpy((void *) reply.data(), "World", 5);
+                        socket.send(reply);
+                        break;
+                    }
+                    case Requests::SAVE_REQ: {
+                        std::cout << "Received a SAVE request." << std::endl;
+                        zmq::message_t reply(5);
+                        memcpy((void *) reply.data(), "World", 5);
+                        socket.send(reply);
+                        break;
+                    }
+                    case Requests::STOP_REQ: {
+                        std::cout << "Received a STOP request." << std::endl;
+                        // Send back response: we know we got the stop
+                        mustContinue = false;
+                        zmq::message_t reply(1*sizeof(double));
+                        double stop_val = Requests::STOP_OK;
+                        memcpy((void *) reply.data(), (void*)&stop_val, 1*sizeof(double));
+                        socket.send(reply);
+                        break;
+                    }
+                    case Requests::POST_OK: {
+                        std::cout << "Simulating big CPU overload." << std::endl;
+                        sleep(3);
+                        zmq::message_t reply(5);
+                        memcpy((void *) reply.data(), "World", 5);
+                        socket.send(reply);
+                        break;
+                    }
+                    default: {
+                        std::cout << "Request not implemented." << std::endl;
+                        std::string str_error("Request not implemented.");
+                        zmq::message_t reply(str_error.size());
+                        memcpy((void *) reply.data(), str_error.data(), str_error.size());
+                        socket.send(reply);
+                        break;
+                    }
                 }
-                case Requests::GET_REPS: {
-                    std::cout << "Received a Get Representatives request" << std::endl;
-                    ServerMessaging::handleGetRepresentatives(array, nElems, clusteredPoints, socket, M);
-                    break;
-                }
-                case Requests::LOAD_REQ: {
-                    std::cout << "Received a LOAD request." << std::endl;
-                    zmq::message_t reply(5);
-                    memcpy((void *) reply.data(), "World", 5);
-                    socket.send(reply);
-                    break;
-                }
-                case Requests::SAVE_REQ: {
-                    std::cout << "Received a SAVE request." << std::endl;
-                    zmq::message_t reply(5);
-                    memcpy((void *) reply.data(), "World", 5);
-                    socket.send(reply);
-                    break;
-                }
-                case Requests::STOP_REQ: {
-                    std::cout << "Received a STOP request." << std::endl;
-                    // Send back response: we know we got the stop
-                    mustContinue = false;
-                    zmq::message_t reply(1*sizeof(double));
-                    double stop_val = Requests::STOP_OK;
-                    memcpy((void *) reply.data(), (void*)&stop_val, 1*sizeof(double));
-                    socket.send(reply);
-                    break;
-                }
-                case Requests::POST_OK: {
-                    std::cout << "Simulating big CPU overload." << std::endl;
-                    sleep(3);
-                    zmq::message_t reply(5);
-                    memcpy((void *) reply.data(), "World", 5);
-                    socket.send(reply);
-                    break;
-                }
-                default: {
-                    std::cout << "Request not implemented." << std::endl;
-                    std::string str_error("Request not implemented.");
-                    zmq::message_t reply(str_error.size());
-                    memcpy((void *) reply.data(), str_error.data(), str_error.size());
-                    socket.send(reply);
-                    break;
-                }
+            } catch(std::exception &e){
+                sendException(socket, e);
             }
+
 
             delete array;
         }

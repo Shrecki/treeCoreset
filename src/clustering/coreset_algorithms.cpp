@@ -109,7 +109,7 @@ std::set<Point*> coreset::treeCoresetReduceOptim(std::vector<Point *> *points, u
         duration<double, std::milli> t4t3 = t4 - t3;
         duration<double, std::milli> t5t4 = t5 - t4;
 
-        std::cout << "T1: " << t2t1.count() << " T2: " << t3t2.count() << " T3: " << t4t3.count() << " T4: " << t5t4.count() << std::endl;
+        //std::cout << "T1: " << t2t1.count() << " T2: " << t3t2.count() << " T3: " << t4t3.count() << " T4: " << t5t4.count() << std::endl;
         //std::cout << "Tchoose: " << tChildCount << " Tsplit: " << tSplitCount << std::endl;
     }
 

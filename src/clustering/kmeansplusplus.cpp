@@ -74,6 +74,10 @@ Threeple* kmeans::kMeansPlusPlus(const std::vector<Point *> &inputPoints, const 
 }
 
 std::vector<Eigen::VectorXd> kmeans::getBestClusters(int nTries, const std::vector<Point *> &inputPoints, const unsigned int &k, const unsigned int &epochs){
+    if(inputPoints.size() < k){
+        throw std::invalid_argument("Asking for " + std::to_string(k) + " centroids with only " +
+        std::to_string(inputPoints.size()) + " representative points available. Please add more points or consider increasing number of representatives.");
+    }
     std::vector<Eigen::VectorXd> bestCentroids;
     for(int i = 0; i < k; ++i){
         bestCentroids.emplace_back(Eigen::VectorXd::Zero(inputPoints.at(0)->getData().size()));

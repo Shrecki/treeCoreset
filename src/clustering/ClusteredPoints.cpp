@@ -18,7 +18,8 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
         dimension = newPoint->getData().size();
     }
     if(newPoint->getData().size()!=dimension){
-        throw std::logic_error("Cannot add a point with this dimension when the first point had a different dimension");
+        throw std::logic_error("Cannot add a point with this dimension ("+ std::to_string(newPoint->getData().size()) +
+        ") when the first point had a different dimension (" + std::to_string(dimension)+")");
     }
     Eigen::VectorXd data = newPoint->getData();
     for(int i=0; i < dimension; ++i){
@@ -184,15 +185,6 @@ void ClusteredPoints::setAllToNullPtr() {
 }
 
 void ClusteredPoints::reduceBuckets(){
-    /*bool otherBucketsFull(false);
-    for(auto &b: buckets){
-        if(b != buckets.at(0) && b != nullptr){
-            if(!b->empty()){
-                otherBucketsFull = true;
-                break;
-            }
-        }
-    }*/
     if(otherBucketsFull){
         std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
         std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
