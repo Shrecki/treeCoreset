@@ -11,10 +11,10 @@
 #include <windows.h>
 #endif
 
-#include "coreset_algorithms.h"
-#include "ClusteredPoints.h"
-#include "Point.h"
-#include "kmeansplusplus.h"
+#include "../clustering/coreset_algorithms.h"
+#include "../clustering/ClusteredPoints.h"
+#include "../clustering/Point.h"
+#include "../clustering/kmeansplusplus.h"
 #include "Requests.h"
 
 #define N_SAMPLES 728*14.0
@@ -103,7 +103,7 @@ int NetworkProtocol::startNetwork(){
                 }
                 break;
             }
-            case Requests::GET_REQ : {
+            case Requests::GET_CENTROIDS : {
                 std::cout << "Received a GET request." << std::endl;
 
                 std::vector<double> data;

@@ -1,7 +1,7 @@
 //
 // Created by guibertf on 9/15/21.
 //
-#include "Point.h"
+#include "clustering/Point.h"
 #include <gtest/gtest.h>
 #include <cmath>
 #include <chrono>

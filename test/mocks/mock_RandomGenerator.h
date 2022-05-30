@@ -6,7 +6,7 @@
 #define UNTITLED_MOCK_RANDOMGENERATOR_H
 #include <random>
 #include "gmock/gmock.h"  // Brings in gMock.
-#include "RandomGenerator.h"
+#include "clustering/RandomGenerator.h"
 
 
 class mock_RandomGenerator: public RandomGenerator{

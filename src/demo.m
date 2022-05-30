@@ -24,3 +24,5 @@ for i=1:n_points
 end
 
 %% Now we can get the representation. To do such a thing, we can get the representatives and perform kMeans on them! We can specify several different cluster sizes, which saves computations.
+mycell = cell(1,2);
+[mycell{:}]=getKclusters(2); % This showcases how to get here two clusters

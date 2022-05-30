@@ -1,11 +1,11 @@
 //
 // Created by guibertf on 9/17/21.
 //
-#include "coreset_algorithms.h"
-#include "mocks/mock_RandomGenerator.h"
+#include "clustering/coreset_algorithms.h"
+#include "../mocks/mock_RandomGenerator.h"
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
-#include "Point.h"
+#include "clustering/Point.h"
 #include <chrono>
 
 using ::testing::Return;

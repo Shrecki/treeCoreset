@@ -29,13 +29,15 @@ message("boost lib: ${boost_LIB_DIR}, inc:${boost_INCLUDE_DIR}")
 
 
 set(SOURCES
-        src/Node.cpp src/Node.h
-        src/Point.cpp src/Point.h
-        src/RandomGenerator.cpp src/RandomGenerator.h
-        src/coreset_algorithms.h src/coreset_algorithms.cpp
-        src/ClusteredPoints.cpp src/ClusteredPoints.h
-        src/kmeansplusplus.cpp src/kmeansplusplus.h
-        src/Requests.h src/NetworkProtocol.cpp src/NetworkProtocol.h)
+        src/clustering/Node.cpp src/clustering/Node.h
+        src/clustering/Point.cpp src/clustering/Point.h
+        src/clustering/RandomGenerator.cpp src/clustering/RandomGenerator.h
+        src/clustering/coreset_algorithms.h src/clustering/coreset_algorithms.cpp
+        src/clustering/ClusteredPoints.cpp src/clustering/ClusteredPoints.h
+        src/clustering/kmeansplusplus.cpp src/clustering/kmeansplusplus.h
+        src/network/Requests.h
+        src/network/Messaging.h src/network/Messaging.cpp
+        src/network/NetworkProtocol.cpp src/network/NetworkProtocol.h)
 
 
 set( boost_INSTALL "/usr/local/share/boost_1_77_0/build-boost")
@@ -51,7 +53,7 @@ find_library(ZeroMQ_LIBRARY
         PATHS ${PC_ZeroMQ_LIBRARY_DIRS}
         )
 # For main program
-add_executable(treeCoreset main.cpp ${SOURCES} src/NetworkProtocol.cpp src/NetworkProtocol.h)
+add_executable(treeCoreset main.cpp ${SOURCES} src/network/NetworkProtocol.cpp src/network/NetworkProtocol.h)
 target_include_directories(treeCoreset PRIVATE eigen)
 target_include_directories(treeCoreset PUBLIC ${ZeroMQ_INCLUDE_DIR})
 target_link_libraries(treeCoreset PUBLIC ${ZeroMQ_LIBRARY})
@@ -59,10 +61,10 @@ target_link_libraries(treeCoreset PUBLIC ${ZeroMQ_LIBRARY})
 
 # For unit tests
 add_executable(unit_test ${SOURCES}
-        test/point_test.cpp test/main_test.cpp test/node_test.cpp
+        test/clustering/point_test.cpp test/main_test.cpp test/clustering/node_test.cpp
         test/mocks/mock_RandomGenerator.cpp test/mocks/mock_RandomGenerator.h
-        test/math_framework.cpp test/math_framework.h test/coreset_algorithms_test.cpp test/clustered_points_test.cpp
-        test/kmeansplusplus_test.cpp test/utils.cpp test/utils.h )
+        test/clustering/math_framework.cpp test/clustering/math_framework.h test/clustering/coreset_algorithms_test.cpp test/clustering/clustered_points_test.cpp
+        test/clustering/kmeansplusplus_test.cpp test/clustering/utils.cpp test/clustering/utils.h)
 target_link_libraries(unit_test gtest_main)
 target_link_libraries(unit_test gmock_main)
 target_link_libraries(unit_test ${ZeroMQ_LIBRARY})

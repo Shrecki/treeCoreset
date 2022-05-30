@@ -2,7 +2,7 @@
 // Created by guibertf on 9/22/21.
 //
 
-#include "kmeansplusplus.h"
+#include "clustering/kmeansplusplus.h"
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 #include <fstream>
@@ -93,7 +93,7 @@ TEST_F(KMeansTest, kmeansSimpleCaseAssignsClustersCorrectly) {
 }
 
 TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/exampledata.csv");
+    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -115,7 +115,7 @@ TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
     pointFile.close();
 
 
-    std::ifstream labelFile("/home/guibertf/CLionProjects/treeCoreset/test/expectedLabels.csv");
+    std::ifstream labelFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/expectedLabels.csv");
     int expectedLabels[inputPoints.size()];
     int i =0;
     std::string line;

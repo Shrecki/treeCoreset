@@ -1,7 +1,7 @@
 //
 // Created by guibertf on 9/21/21.
 //
-#include "ClusteredPoints.h"
+#include "clustering/ClusteredPoints.h"
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 #include <fstream>
@@ -206,7 +206,7 @@ TEST_F(ClusteredPointsTest, insertingPointsDynamicallyAllocatedShouldNotCauseMem
 
 
 TEST_F(ClusteredPointsTest, pointsFromFile){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/exampledata.csv");
+    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -252,7 +252,7 @@ TEST_F(ClusteredPointsTest, pointsFromFile){
 
 
 TEST_F(ClusteredPointsTest, runningOnReducedVersionIsNotTooFarFromActualClusters){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/exampledata.csv");
+    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -273,7 +273,7 @@ TEST_F(ClusteredPointsTest, runningOnReducedVersionIsNotTooFarFromActualClusters
 
     pointFile.close();
 
-    std::ifstream labelFile("/home/guibertf/CLionProjects/treeCoreset/test/expectedLabels.csv");
+    std::ifstream labelFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/expectedLabels.csv");
     int expectedLabels[inputPoints.size()];
     int i =0;
     std::string line;

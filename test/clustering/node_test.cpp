@@ -1,9 +1,9 @@
 //
 // Created by guibertf on 9/15/21.
 //
-#include "Node.h"
+#include "clustering/Node.h"
 #include <random>
-#include "mocks/mock_RandomGenerator.h"
+#include "../mocks/mock_RandomGenerator.h"
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 #include "math_framework.h"

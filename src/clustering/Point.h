@@ -5,7 +5,7 @@
 #ifndef UNTITLED_POINT_H
 #define UNTITLED_POINT_H
 
-#include <Eigen/Dense>
+#include "Eigen/Dense"
 #include <vector>
 #include <set>
 #include <memory>

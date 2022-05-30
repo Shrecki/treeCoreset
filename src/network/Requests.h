@@ -9,7 +9,7 @@
  * Defines the different requests we expect and their respective responses
  */
 enum Requests {
-    POST_REQ, GET_REQ, LOAD_REQ, SAVE_REQ, STOP_REQ, POST_OK, GET_OK, LOAD_OK, SAVE_OK, STOP_OK, ERROR, GET_REPS
+    POST_REQ, GET_CENTROIDS, LOAD_REQ, SAVE_REQ, STOP_REQ, POST_OK, GET_OK, GET_READY, GET_DONE, LOAD_OK, SAVE_OK, STOP_OK, ERROR, GET_REPS
 };
 
 // Maybe a response should just be a lookup table to minimize coding errors ?

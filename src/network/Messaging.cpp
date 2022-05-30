@@ -1,0 +1,152 @@
+//
+// Created by guibertf on 5/30/22.
+//
+
+
+#include "Messaging.h"
+
+#include "Requests.h"
+
+#include "iostream"
+
+namespace Messaging{
+    double* extractDoubleArrayFromContent(zmq::message_t &msg){
+        // Copy it back to memory
+        char * byteArray = new char[msg.size()];
+        memcpy(byteArray, msg.data(), msg.size());
+
+        return reinterpret_cast<double*>(byteArray);
+    }
+
+    int getNumberOfDoublesInReq(zmq::message_t &msg){
+        return msg.size()/sizeof(double);
+    }
+
+    void sendResponseFromDoubleArray(zmq::socket_t &socket, int responseSize, double * responseContent, bool hasMore){
+        zmq::message_t reply(responseSize*sizeof(double));
+        memcpy((void*)reply.data(), (void*)responseContent, responseSize*sizeof(double));
+        socket.send(reply, hasMore? ZMQ_SNDMORE : 0); // Issue reply
+    }
+
+    void sendException(zmq::socket_t &socket, std::exception &exception) {
+        // For now: just send some error signal.
+        // Later: send whole exception!
+        Requests response;
+        response = Requests::ERROR;
+        sendResponseFromDoubleArray(socket, 1, (double *) &response, false);
+    }
+
+    void sendSingleMessage(zmq::socket_t &socket, int response){
+        zmq::message_t reply(1);
+        memcpy((void *) reply.data(), &response, 1);
+        socket.send(reply, 0);
+    }
+
+    void handlePostRequest(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket){
+        std::cout << "Received a POST request." << std::endl;
+
+        // Convert to a point
+        Requests response;
+        try{
+            // Convert received data to point
+            Point* p = Point::convertArrayToPoint(&array[1], nElems-1);
+            std::cout << " Converted to point of " << nElems -1 << " elements." << std::endl;
+            Eigen::VectorXd vec = p->getData();
+            for(int i=0; i < vec.size(); ++i){
+                assert(!std::isnan(vec(i)));
+            }
+            assert(p->getData().array().isNaN().sum() == 0);
+            // Perform insertion (this is the InsertPoint step in the stream)
+            clusteredPoints.insertPoint(p);
+
+            // Send back response: all went well
+            response = Requests::POST_OK;
+            sendSingleMessage(socket, response);
+            std::cout << "Post OK" << std::endl;
+
+        } catch (std::exception &e) {
+            delete array;
+            // Here, send also the exception (but we will worry about it later)
+            sendException(socket, e);
+            //sendResponseFromDoubleArray(socket, 1, (double *) &response);
+
+            // We thus need a method to handle messaging of exception to the receiver
+            std::cout << e.what() << std::endl;
+            throw e;
+        }
+    }
+
+    void sendSeveralPoints(zmq::socket_t &socket, const std::vector<double> &data, int n_points, int point_dimensionality){
+        double okResponse[3] = {Requests::GET_OK, (double)n_points, 1.0 * point_dimensionality};
+        double * reqQuery = nullptr;
+        zmq::message_t request;
+
+        sendResponseFromDoubleArray(socket, 3, okResponse, false);
+
+        // The protocol works as follows:
+        // When send is ready, the server first issues 'GET_OK' with:
+        //    - number of points to transmit
+        //    - dimensionality of each point
+        // It then expects to receive from the client a 'POST_OK' signalling that it is ready to receive the points.
+        // If this goes as expected, then it will simply issue the points one by one as an n_points-part message.
+        // The last N+1 message will be a 'GET_OK' to signal the end.
+        socket.recv(&request, 0);
+        reqQuery = extractDoubleArrayFromContent(request);
+
+        if(reqQuery[0] == GET_READY) {
+            // Transmit all clusters, each as a one-part message
+            for (int i = 0; i < n_points; ++i) {
+                double currClusterVector[point_dimensionality];
+                for (int j = 0; j < point_dimensionality; ++j) {
+                    currClusterVector[j] = data.at(i * point_dimensionality + j);
+                }
+                sendResponseFromDoubleArray(socket, point_dimensionality, currClusterVector, true);
+                std::cout << "Transmitted cluster " << i << std::endl;
+            }
+
+            double doneMessage[1] = {Requests::GET_DONE};
+            sendResponseFromDoubleArray(socket, 1, doneMessage, false);
+        } else {
+            double errorResponse[1] = {Requests::ERROR};
+            sendResponseFromDoubleArray(socket, 1, errorResponse, false);
+        }
+    }
+
+    // Representatives and clusters work on a similar premise, in that they send several points without expecting a ping-pong
+    // between every send. It means that a single function can handle both.
+    void handleGetCentroids(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket){
+        std::cout << "Received a GET request." << std::endl;
+        zmq::message_t request;
+
+        std::vector<double> data;
+        try {
+            int k = (int)array[1];
+            // Prepare clusters for transmission
+            clusteredPoints.getClustersAsFlattenedArray(data, k, 100);
+            int dim = data.size()/k;
+            std::cout << dim << std::endl;
+            sendSeveralPoints(socket,data,k,dim);
+        } catch (std::exception &e){
+            std::cout << e.what() << std::endl;
+            sendException(socket, e);
+            delete array;
+            throw e;
+        }
+    }
+
+    void handleGetRepresentatives(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket, int M){
+        zmq::message_t request;
+        std::vector<double> data;
+        try {
+            clusteredPoints.performUnionCoresetAndGetRepresentativesAsFlattenedArray(data);
+            int dim = data.size()/M;
+            sendSeveralPoints(socket,data,M,dim);
+        } catch (std::exception &e){
+            std::cout << e.what() << std::endl;
+            sendException(socket, e);
+            delete array;
+            throw e;
+        }
+    }
+}
+

@@ -25,7 +25,7 @@ public:
         double x = GET_REPS;        
         double simpleArray[1];
         simpleArray[0]=x;
-        
+        std::cout << "Starting" << std::endl;
         zmq::message_t request(1*sizeof(double));
         memcpy((void *) request.data(), (void*)(&simpleArray), 12*sizeof(double));
 
@@ -36,8 +36,6 @@ public:
 
         // Send request
         socket.send(request);
-        
-        double post_ok = POST_OK;
 
         int expect_reply = 1;
         while(expect_reply){
@@ -67,6 +65,7 @@ public:
                         
                         // Now, we send POST_OK to signal we're ready to receive all cluster points
                         zmq::message_t resp(sizeof(double));
+                        double post_ok = POST_OK;
                         memcpy((void *) resp.data(), (void*)(&post_ok), sizeof(double));
                         socket.send(resp);
                         
