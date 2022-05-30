@@ -37,9 +37,10 @@ namespace ServerMessaging{
     void sendException(zmq::socket_t &socket, std::exception &exception) {
         // For now: just send some error signal.
         // Later: send whole exception!
-        Requests response;
-        response = Requests::ERROR;
-        sendResponseFromDoubleArray(socket, 1, (double *) &response, false);
+        std::string exception_msg(exception.what());
+        zmq::message_t resp(exception_msg.size());
+        memcpy((void *) resp.data(), exception_msg.data(), exception_msg.size());
+        socket.send(resp, 0);
     }
 
     void sendSingleMessage(zmq::socket_t &socket, int response){
@@ -124,19 +125,23 @@ namespace ServerMessaging{
         std::cout << "Received a GET request." << std::endl;
         zmq::message_t request;
 
+        if(nElems < 2 ){
+            throw std::invalid_argument("Malformed request. Should contain number of centroids as second argument in "
+                                        "request payload, but instead only contained GET_CENTROIDS request and no "
+                                        "centroid indication.");
+        }
+
         std::vector<double> data;
         try {
             int k = (int)array[1];
             // Prepare clusters for transmission
+            std::cout << "Expecting " << std::to_string(k) << " centroids" << std::endl;
             clusteredPoints.getClustersAsFlattenedArray(data, k, 100);
             int dim = data.size()/k;
             std::cout << dim << std::endl;
             sendSeveralPoints(socket,data,k,dim);
         } catch (std::exception &e){
-            std::cout << e.what() << std::endl;
-            sendException(socket, e);
-            delete array;
-            throw e;
+            throw;
         }
     }
 
@@ -151,7 +156,7 @@ namespace ServerMessaging{
             std::cout << e.what() << std::endl;
             sendException(socket, e);
             delete array;
-            throw e;
+            throw;
         }
     }
 
@@ -172,7 +177,11 @@ namespace ServerMessaging{
                     break;
                 }
                 case Requests::GET_CENTROIDS : {
-                    ServerMessaging::handleGetCentroids(array, nElems, clusteredPoints, socket);
+                    try{
+                        ServerMessaging::handleGetCentroids(array, nElems, clusteredPoints, socket);
+                    } catch(std::exception &e){
+                        sendException(socket, e);
+                    }
                     break;
                 }
                 case Requests::GET_REPS: {
@@ -213,8 +222,8 @@ namespace ServerMessaging{
                     break;
                 }
                 default: {
-                    std::cout << "Unknown request." << std::endl;
-                    std::string str_error("Unknown request");
+                    std::cout << "Request not implemented." << std::endl;
+                    std::string str_error("Request not implemented.");
                     zmq::message_t reply(str_error.size());
                     memcpy((void *) reply.data(), str_error.data(), str_error.size());
                     socket.send(reply);
