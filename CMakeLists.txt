@@ -36,7 +36,8 @@ set(SOURCES
         src/clustering/ClusteredPoints.cpp src/clustering/ClusteredPoints.h
         src/clustering/kmeansplusplus.cpp src/clustering/kmeansplusplus.h
         src/network/Requests.h
-        src/network/Messaging.h src/network/Messaging.cpp
+        src/network/ClientMessaging.h src/network/ClientMessaging.cpp
+        src/network/ServerMessaging.h src/network/ServerMessaging.cpp
         src/network/NetworkProtocol.cpp src/network/NetworkProtocol.h)
 
 

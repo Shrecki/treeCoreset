@@ -11,7 +11,7 @@
 #include "src/clustering/ClusteredPoints.h"
 #include "src/clustering/Point.h"
 #include "src/clustering/kmeansplusplus.h"
-#include "src/network/Messaging.h"
+#include "src/network/ServerMessaging.h"
 #include "src/network/Requests.h"
 
 #define N_SAMPLES 728*14.0
@@ -34,20 +34,20 @@ int main() {
         // Await a request
         zmq::message_t request;
         socket.recv (&request, 0);
-        int nElems(Messaging::getNumberOfDoublesInReq(request));
-        double *array = Messaging::extractDoubleArrayFromContent(request);
+        int nElems(ServerMessaging::getNumberOfDoublesInReq(request));
+        double *array = ServerMessaging::extractDoubleArrayFromContent(request);
         switch((int)array[0]){
             case Requests::POST_REQ : {
-                Messaging::handlePostRequest(array, nElems, clusteredPoints, socket);
+                ServerMessaging::handlePostRequest(array, nElems, clusteredPoints, socket);
                 break;
             }
             case Requests::GET_CENTROIDS : {
-                Messaging::handleGetCentroids(array, nElems, clusteredPoints, socket);
+                ServerMessaging::handleGetCentroids(array, nElems, clusteredPoints, socket);
                 break;
             }
             case Requests::GET_REPS: {
                 std::cout << "Received a Get Representatives request" << std::endl;
-                Messaging::handleGetRepresentatives(array, nElems, clusteredPoints, socket, M);
+                ServerMessaging::handleGetRepresentatives(array, nElems, clusteredPoints, socket, M);
                 break;
             }
             case Requests::LOAD_REQ: {

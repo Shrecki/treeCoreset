@@ -3,13 +3,13 @@
 //
 
 
-#include "Messaging.h"
+#include "ServerMessaging.h"
 
 #include "Requests.h"
 
 #include "iostream"
 
-namespace Messaging{
+namespace ServerMessaging{
     double* extractDoubleArrayFromContent(zmq::message_t &msg){
         // Copy it back to memory
         char * byteArray = new char[msg.size()];
@@ -87,7 +87,7 @@ namespace Messaging{
         // When send is ready, the server first issues 'GET_OK' with:
         //    - number of points to transmit
         //    - dimensionality of each point
-        // It then expects to receive from the client a 'POST_OK' signalling that it is ready to receive the points.
+        // It then expects to receive from the client a 'POST_OK' signaling that it is ready to receive the points.
         // If this goes as expected, then it will simply issue the points one by one as an n_points-part message.
         // The last N+1 message will be a 'GET_OK' to signal the end.
         socket.recv(&request, 0);

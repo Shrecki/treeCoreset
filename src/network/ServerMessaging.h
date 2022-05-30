@@ -2,13 +2,13 @@
 // Created by guibertf on 5/30/22.
 //
 
-#ifndef TREECORESETPROJ_MESSAGING_H
-#define TREECORESETPROJ_MESSAGING_H
+#ifndef TREECORESETPROJ_SERVERMESSAGING_H
+#define TREECORESETPROJ_SERVERMESSAGING_H
 
 
 #include "../clustering/ClusteredPoints.h"
 
-namespace Messaging {
+namespace ServerMessaging {
     void handlePostRequest(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket);
     void handleGetCentroids(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket);
     void handleGetRepresentatives(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket, int M);
@@ -20,4 +20,4 @@ namespace Messaging {
 }
 
 
-#endif //TREECORESETPROJ_MESSAGING_H
+#endif //TREECORESETPROJ_SERVERMESSAGING_H
