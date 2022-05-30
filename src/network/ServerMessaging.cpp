@@ -77,7 +77,7 @@ namespace ServerMessaging{
         }
     }
 
-    void sendSeveralPoints(zmq::socket_t &socket, const std::vector<double> &data, int n_points, int point_dimensionality){
+    void sendSeveralPoints(zmq::socket_t &socket, const std::vector<double> &data, int n_points, int point_dimensionality, bool &mustContinue){
         double okResponse[3] = {Requests::GET_OK, (double)n_points, 1.0 * point_dimensionality};
         double * reqQuery = nullptr;
         zmq::message_t request;
@@ -107,14 +107,18 @@ namespace ServerMessaging{
             double doneMessage[1] = {Requests::GET_DONE};
             sendResponseFromDoubleArray(socket, 1, doneMessage, false);
         } else {
-            double errorResponse[1] = {Requests::ERROR};
-            sendResponseFromDoubleArray(socket, 1, errorResponse, false);
+            if(reqQuery[0] == STOP_REQ){
+                handleStopReq(mustContinue, socket);
+            } else {
+                double errorResponse[1] = {Requests::ERROR};
+                sendResponseFromDoubleArray(socket, 1, errorResponse, false);
+            }
         }
     }
 
     // Representatives and clusters work on a similar premise, in that they send several points without expecting a ping-pong
     // between every send. It means that a single function can handle both.
-    void handleGetCentroids(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket){
+    void handleGetCentroids(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket, bool &mustContinue){
         std::cout << "Received a GET request." << std::endl;
         zmq::message_t request;
 
@@ -132,22 +136,32 @@ namespace ServerMessaging{
             clusteredPoints.getClustersAsFlattenedArray(data, k, 100);
             int dim = data.size()/k;
             std::cout << dim << std::endl;
-            sendSeveralPoints(socket,data,k,dim);
+            sendSeveralPoints(socket,data,k,dim, mustContinue);
         } catch (std::exception &e){
             throw;
         }
     }
 
-    void handleGetRepresentatives(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket, int M){
+    void handleGetRepresentatives(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket, int M, bool &mustContinue){
         zmq::message_t request;
         std::vector<double> data;
         try {
             clusteredPoints.performUnionCoresetAndGetRepresentativesAsFlattenedArray(data);
             int dim = clusteredPoints.getDimension();
-            sendSeveralPoints(socket,data,data.size()/dim,dim);
+            sendSeveralPoints(socket,data,data.size()/dim,dim, mustContinue);
         } catch (std::exception &e){
             throw;
         }
+    }
+
+    void handleStopReq(bool &mustContinue, zmq::socket_t &socket){
+        std::cout << "Received a STOP request." << std::endl;
+        // Send back response: we know we got the stop
+        mustContinue = false;
+        zmq::message_t reply(1*sizeof(double));
+        double stop_val = Requests::STOP_OK;
+        memcpy((void *) reply.data(), (void*)&stop_val, 1*sizeof(double));
+        socket.send(reply);
     }
 
     void runServer(zmq::socket_t &socket, int N_SAMPLES, int M) {
@@ -168,11 +182,11 @@ namespace ServerMessaging{
                         break;
                     }
                     case Requests::GET_CENTROIDS : {
-                        ServerMessaging::handleGetCentroids(array, nElems, clusteredPoints, socket);
+                        ServerMessaging::handleGetCentroids(array, nElems, clusteredPoints, socket, mustContinue);
                         break;
                     }
                     case Requests::GET_REPS: {
-                        ServerMessaging::handleGetRepresentatives(array, nElems, clusteredPoints, socket, M);
+                        ServerMessaging::handleGetRepresentatives(array, nElems, clusteredPoints, socket, M, mustContinue);
                         break;
                     }
                     case Requests::LOAD_REQ: {
@@ -190,13 +204,7 @@ namespace ServerMessaging{
                         break;
                     }
                     case Requests::STOP_REQ: {
-                        std::cout << "Received a STOP request." << std::endl;
-                        // Send back response: we know we got the stop
-                        mustContinue = false;
-                        zmq::message_t reply(1*sizeof(double));
-                        double stop_val = Requests::STOP_OK;
-                        memcpy((void *) reply.data(), (void*)&stop_val, 1*sizeof(double));
-                        socket.send(reply);
+                        handleStopReq(mustContinue, socket);
                         break;
                     }
                     case Requests::POST_OK: {

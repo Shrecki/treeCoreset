@@ -291,6 +291,110 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsWithLessThanKPointsInRepresenta
 
 }
 
+TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByStopRequestProperlyHandledByServer){
+    double data[4] = {Requests::POST_REQ, 12, 10, 11};
+    zmq::message_t request(4*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&data), 4 * sizeof(double));
+    client_socket->send(request);
+
+
+    // We should receive here a success message
+    zmq::message_t resp;
+    client_socket->recv(&resp, 0);
+    std::string array = resp.to_string();
+
+    double data_sec[4] = {Requests::POST_REQ, -1, 4, 5};
+    request.rebuild(4*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&data_sec), 4 * sizeof(double));
+    client_socket->send(request);
+
+
+    // We should receive here a success message
+    client_socket->recv(&resp, 0);
+    array = resp.to_string();
+
+    // Now query the points!
+    double centroid_req[1] = {Requests::GET_REPS};
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&centroid_req), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // Receive first the GET_OK response that we expect
+    client_socket->recv(&resp, 0);
+    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::GET_OK);
+    EXPECT_EQ(reqQuery[1], 2);
+    EXPECT_EQ(reqQuery[2], 3);
+
+    delete reqQuery;
+    // Now we stop the server
+    double stop = Requests::STOP_REQ;
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // We expect to receive a STOP_OK from the server, should it be properly handling everything
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::STOP_OK);
+    delete reqQuery;
+}
+
+TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByUnexpectedRequestProperlyHandledByServer){
+    double data[4] = {Requests::POST_REQ, 12, 10, 11};
+    zmq::message_t request(4*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&data), 4 * sizeof(double));
+    client_socket->send(request);
+
+
+    // We should receive here a success message
+    zmq::message_t resp;
+    client_socket->recv(&resp, 0);
+    std::string array = resp.to_string();
+
+    double data_sec[4] = {Requests::POST_REQ, -1, 4, 5};
+    request.rebuild(4*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&data_sec), 4 * sizeof(double));
+    client_socket->send(request);
+
+
+    // We should receive here a success message
+    client_socket->recv(&resp, 0);
+    array = resp.to_string();
+
+    // Now query the points!
+    double centroid_req[1] = {Requests::GET_REPS};
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&centroid_req), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // Receive first the GET_OK response that we expect
+    client_socket->recv(&resp, 0);
+    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::GET_OK);
+    EXPECT_EQ(reqQuery[1], 2);
+    EXPECT_EQ(reqQuery[2], 3);
+
+    delete reqQuery;
+    // Now we issue some weird request
+    double spurriousReq = 112;
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&spurriousReq), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // We expect to receive an error message from the server, should it be properly handling everything
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::ERROR);
+    delete reqQuery;
+
+    // Now we stop the server
+    double stop = Requests::STOP_REQ;
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
+    client_socket->send(request);
+}
+
 
 TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheNPointsOnClientSide){
     double data[4] = {Requests::POST_REQ, 12, 10, 11};
