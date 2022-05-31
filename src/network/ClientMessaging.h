@@ -9,9 +9,9 @@
 #include <vector>
 
 namespace ClientMessaging {
-    std::vector<double>* requestCentroids(zmq::socket_t &socket, int n_centroids, int REQUEST_TIMEOUT);
-    void requestRepresentatives(zmq::socket_t &socket);
-    void requestPutPoint(zmq::socket_t &socket);
+    std::vector<std::vector<double>*>* requestCentroids(zmq::socket_t &socket, int n_centroids, int REQUEST_TIMEOUT);
+    std::vector<std::vector<double>*>*  requestRepresentatives(zmq::socket_t &socket, int REQUEST_TIMEOUT);
+    void requestPutPoint(zmq::socket_t &socket, double *point_data, int dimension, int REQUEST_TIMEOUT);
     void requestStop(zmq::socket_t &socket);
 }
 

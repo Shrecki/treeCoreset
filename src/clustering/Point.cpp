@@ -72,7 +72,7 @@ Point* Point::convertArrayToPoint(const double* array, const int arraySz){
     try{
         p = new Point(Point::getMapFromArray(array, arraySz), true);
     } catch(std::exception &e){
-        std::cout << e.what() << std::endl;
+        //std::cout << e.what() << std::endl;
         throw;
     }
     return p;
@@ -85,8 +85,8 @@ std::unique_ptr<Eigen::VectorXd> Point::getMapFromArray(const double* array, con
     }
     int nNans = b->array().isNaN().sum();
     if(nNans > 0){
-        std::cout << "Included " << nNans << " nans" << std::endl;
-        throw std::invalid_argument("Array contains NaN values. Please fix them.");
+        //std::cout << "Included " << nNans << " nans" << std::endl;
+        throw std::invalid_argument("Array contains " + std::to_string(nNans) + " NaN values. Please fix them.");
     }
     return b;
 }

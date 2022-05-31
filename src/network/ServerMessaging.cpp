@@ -257,7 +257,7 @@ namespace ServerMessaging{
                     }
                 }
             } catch(std::exception &e){
-                std::cout << e.what() << std::endl;
+                //std::cout << e.what() << std::endl;
                 sendException(socket, e);
             }
             delete [] array;
