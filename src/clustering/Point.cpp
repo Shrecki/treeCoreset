@@ -13,6 +13,7 @@ Point::Point(std::unique_ptr<Eigen::VectorXd> newData, bool wasConverted): wasCo
 }
 
 Eigen::VectorXd Point::getData() const{
+    assert(data);
     return *data;
 }
 
@@ -67,7 +68,14 @@ void Point::cleanupData() {
 
 Point* Point::convertArrayToPoint(const double* array, const int arraySz){
     if(arraySz ==0) throw std::logic_error("Cannot convert an array with size 0");
-    return new Point(Point::getMapFromArray(array, arraySz), true);
+    Point *p = nullptr;
+    try{
+        p = new Point(Point::getMapFromArray(array, arraySz), true);
+    } catch(std::exception &e){
+        std::cout << e.what() << std::endl;
+        throw;
+    }
+    return p;
 }
 
 std::unique_ptr<Eigen::VectorXd> Point::getMapFromArray(const double* array, const int arraySz){

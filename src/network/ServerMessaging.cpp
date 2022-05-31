@@ -53,27 +53,56 @@ namespace ServerMessaging{
         //std::cout << "Received a POST request." << std::endl;
         // Convert to a point
         Requests response;
-        try{
-            // Convert received data to point
-            Point* p = Point::convertArrayToPoint(&array[1], nElems-1);
-            //std::cout << " Converted to point of " << nElems -1 << " elements." << std::endl;
-            Eigen::VectorXd vec = p->getData();
-            for(int i=0; i < vec.size(); ++i){
-                if(std::isnan(vec(i))){
-                    throw std::invalid_argument("Point argument contains NaNs. Please remove the NaNs before passing any point");
-                }
+        Point* p = nullptr;
+        // Convert received data to point
+        double * array_target =  &array[1];
+        try {
+            p = Point::convertArrayToPoint(array_target, nElems-1);
+        } catch(std::exception &e){
+            if(p!= nullptr){
+                p->cleanupData();
+                delete p;
+                p = nullptr;
             }
-            assert(p->getData().array().isNaN().sum() == 0);
+            throw;
+        }
+        //std::cout << "Converting point..." << std::endl;
+        if(p != nullptr){
+            try {
+                //std::cout << " Converted to point of " << nElems -1 << " elements." << std::endl;
+                Eigen::VectorXd vec = p->getData();
+                for (int i = 0; i < vec.size(); ++i) {
+                    if (std::isnan(vec(i))) {
+                        throw std::invalid_argument(
+                                "Point argument contains NaNs. Please remove the NaNs before passing any point");
+                    }
+                }
+                assert(p->getData().array().isNaN().sum() == 0);
+
+            } catch(std::exception &e) {
+                p->cleanupData();
+                delete p;
+                p = nullptr;
+                throw;
+            }
             // Perform insertion (this is the InsertPoint step in the stream)
-            clusteredPoints.insertPoint(p);
+            //std::cout << "Convert OK" << std::endl;
+            try {
+                clusteredPoints.insertPoint(p);
+                response = Requests::POST_OK;
+                sendSingleMessage(socket, response);
+
+            } catch(std::exception &e){
+                delete p;
+                p = nullptr;
+                throw;
+            }
+
+            //std::cout << "Insert went ok" << std::endl;
 
             // Send back response: all went well
-            response = Requests::POST_OK;
-            sendSingleMessage(socket, response);
-            //std::cout << "Post OK" << std::endl;
-
-        } catch (std::exception &e) {
-            throw;
+                //std::cout << "Response sent " << std::endl;
+                //std::cout << "Post OK" << std::endl;
         }
     }
 
@@ -114,6 +143,8 @@ namespace ServerMessaging{
                 sendResponseFromDoubleArray(socket, 1, errorResponse, false);
             }
         }
+        delete [] reqQuery;
+        reqQuery = nullptr;
     }
 
     // Representatives and clusters work on a similar premise, in that they send several points without expecting a ping-pong
@@ -169,12 +200,13 @@ namespace ServerMessaging{
         ClusteredPoints clusteredPoints(ceil(log2(N_SAMPLES/M)+2), M);
 
         bool mustContinue(true);
+        double *array = nullptr;
         while(mustContinue){
             // Await a request
             zmq::message_t request;
             socket.recv (&request, 0);
             int nElems(ServerMessaging::getNumberOfDoublesInReq(request));
-            double *array = ServerMessaging::extractDoubleArrayFromContent(request);
+            array = ServerMessaging::extractDoubleArrayFromContent(request);
             try{
                 switch((int)array[0]){
                     case Requests::POST_REQ : {
@@ -225,11 +257,11 @@ namespace ServerMessaging{
                     }
                 }
             } catch(std::exception &e){
+                std::cout << e.what() << std::endl;
                 sendException(socket, e);
             }
-
-
-            delete array;
+            delete [] array;
+            array = nullptr;
         }
     }
 }

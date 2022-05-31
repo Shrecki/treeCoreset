@@ -2,10 +2,13 @@
 // Created by guibertf on 9/20/21.
 //
 
-#include <iostream>
 #include "ClusteredPoints.h"
 #include "coreset_algorithms.h"
 #include "kmeansplusplus.h"
+
+
+#include <iostream>
+#include <algorithm>
 
 void ClusteredPoints::insertPoint(Point *newPoint) {
     if(newPoint == nullptr){
@@ -37,42 +40,54 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
         std::set<Point*> q;
         // Move all points from bucket[0] into set q
         q.insert(buckets[0]->begin(), buckets[0]->end());
+        // By construction, not point in here should be a nullptr, but we should check
+        assert(q.find(nullptr) == q.end());
 
+        // Start to look at next bucket to see if it is empty or not
         unsigned int bucket_i = 1;
+        assert(bucket_i < bucketCapacities.size());
         curr_cap = bucketCapacities[bucket_i];
         std::vector<Point*> tmp_vec;
         tmp_vec.reserve(bucketCapacity*4);
-        while(curr_cap !=0 && bucket_i < nBuckets){
-            // Copy all points from bucket_i in q (notice that, since these are sets, this is like taking the union)
-            q.insert(buckets[bucket_i]->begin(), buckets[bucket_i]->end());
+        while(curr_cap != 0 && bucket_i < nBuckets){
+            // Copy all valid points from bucket_i in q (notice that, since these are sets, this is like taking the union)
+            std::copy_if(buckets[bucket_i]->begin(), buckets[bucket_i]->end(), std::inserter(q, q.end()), [](auto val){return val != nullptr;});
 
             // Convert q to vector
             tmp_vec.insert(tmp_vec.begin(), q.begin(), q.end());
             // Reduce step
             q=coreset::treeCoresetReduceOptim(&tmp_vec, bucketCapacity, nodes);
-            bucket_i++;
+            ++bucket_i;
             curr_cap = bucketCapacities[bucket_i];
         }
 
         // There are 2 possibilities:
         //  1. We reached an empty Bi. It means we can copy all points from Qi without a worry in the world
-        //  2. Somehow, we reached the last Bi, which was not empty, and we now have an aggregate of its points in Qi.
+        //  2. Somehow, we reached the last Bi and it was not empty, and we now have an aggregate of its points in Qi.
         // First case is easy, because nothing needs to be freed.
         // Second case is harder, because for each pointer to insert we must decide whether to free a pointer or not.
         if(bucket_i == nBuckets){ // This is case 2
+            // Each point in the last bucket may or may not have been selected as a representative by the reduce op
             for(int i=0; i < curr_cap; ++i){
                 bool isin = q.find(buckets[nBuckets-1]->at(i)) != q.end();
+                // If the point is not a representative, it can be freed from memory
                 if(!isin){
+                    // Cleanup point data
                     buckets[nBuckets-1]->at(i)->cleanupData();
+                    // Delete it
                     delete buckets[nBuckets-1]->at(i);
-                    buckets[nBuckets-1]->at(i) = nullptr;
                 }
+                // Even if the memory reffered by the pointer is not deleted, it should be set to nullptr to ensure
+                // later usages do not point to it by accident
+                buckets[nBuckets-1]->at(i) = nullptr;
+
+                // Empty the bucket
                 buckets[nBuckets-1]->clear();
             }
             bucket_i = bucket_i-1;
             curr_cap = 0;
         }
-        // Whether in 1 or 2, we must now put all points from Q into Bi
+        // Whether in 1 or 2, we must now put all points from Q into Bi (copy back Q into Bi)
         for(Point*p: q){
             buckets[bucket_i]->push_back(p);
             ++curr_cap;
@@ -80,6 +95,10 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
         bucketCapacities[bucket_i] = curr_cap;
 
         // Now invalidate all pointers not present in Q
+        // Because we have aggregated all points from bucket 0 all the way to bucket_i-1, we should invalidate all pointers
+        // in these buckets.
+        // Note that because we are dealing with pointers, we should only free pointers NOT in Q, otherwise we will unwillingly
+        // free memory within Q as well.
         for(int i=0; i<bucket_i; i++){
             for(int j=0;j<bucketCapacities[i];++j){
                 if(q.find(buckets[i]->at(j)) == q.end()){
@@ -163,14 +182,22 @@ std::vector<Point *> ClusteredPoints::getRepresentatives() {
 std::vector<Point *> ClusteredPoints::getUnionOfBuckets(int startBucket, int endBucket) {
     std::set<Point *> u;
     for(int i=startBucket; i < endBucket; ++i){
-        u.insert(buckets.at(i)->begin(),buckets.at(i)->end());
+        std::copy_if(buckets.at(i)->begin(), buckets.at(i)->end(), std::inserter(u, u.end()), [](auto val){return val != nullptr;});
+        //u.insert(buckets.at(i)->begin(),buckets.at(i)->end());
     }
     std::vector<Point *> vec(u.begin(), u.end());
+
+    // A sanity check to assert that:
+    // - No null pointer should be copied in the union
+    // - No nan should be present within any point
+    // - Pointers point to valid memory location
     for(auto &p: vec){
+        assert(p != nullptr);
         Eigen::VectorXd v = p->getData();
         for(int i = 0; i < v.size(); ++i){
             assert(!std::isnan(v(i)));
         }
+
     }
     return vec;
 }
@@ -181,7 +208,6 @@ void ClusteredPoints::setAllToNullPtr() {
             i = nullptr;
         }
     }
-
 }
 
 void ClusteredPoints::reduceBuckets(){
