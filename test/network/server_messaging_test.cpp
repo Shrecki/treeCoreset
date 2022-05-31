@@ -457,7 +457,7 @@ TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByUnexpectedRequestP
 }
 
 
-TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheNPointsOnClientSide){
+TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheRepsOnClientSide){
     double data[4] = {Requests::POST_REQ, 12, 10, 11};
     zmq::message_t request(4*sizeof(double));
     memcpy((void *) request.data(), (void*)(&data), 4 * sizeof(double));
@@ -531,7 +531,83 @@ TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheNPoints
 
 
 TEST_F(ServerMessagingTest, getCentroidsOfKPointsReturnsCorrectlyTheCentroidsOnClientSide){
-    zmq::message_t request(2*sizeof(double));
+    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+
+    std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
+    Eigen::VectorXd vectorTest(2);
+    std::vector<Eigen::VectorXd> vectors;
+    std::vector<Point*> inputPoints;
+    while(!results.at(results.size()-1).empty()){
+        for(int i=0; i < 2; ++i){
+            std::string s = results.at(i);
+            vectorTest(i) = std::stod(s);
+        }
+        vectors.push_back(vectorTest);
+        results = getNextLineAndSplitIntoTokens(pointFile);
+    }
+
+    std::cout << vectors.size() << std::endl;
+
+    pointFile.close();
+
+
+    // Now push back the points
+    zmq::message_t request(3*sizeof(double));
+    int n_p =0;
+    for(int i=0; i < vectors.size(); ++i){
+        //std::cout << "Point " << std::to_string(i);
+        double data[3] = {Requests::POST_REQ, vectors.at(i)(0), vectors.at(i)(1)};
+        request.rebuild(3*sizeof(double));
+        memcpy((void *) request.data(), (void*)(&data), 3 * sizeof(double));
+        client_socket->send(request);
+
+        //std::cout << "...sent...";
+        // We should receive here a success message
+        zmq::message_t resp;
+        client_socket->recv(&resp, 0);
+        std::string array = resp.to_string();
+        n_p++;
+        //std::cout << "resp OK..." << std::endl;
+    }
+
+    // Request the centroids.
+    double centroid_req[2] = {Requests::GET_CENTROIDS, 4};
+    request.rebuild(2*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&centroid_req), 2 * sizeof(double));
+    client_socket->send(request);
+
+    // The response should be a GET_OK
+    zmq::message_t resp;
+    client_socket->recv(&resp, 0);
+    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::GET_OK);
+    EXPECT_EQ(reqQuery[1], 4);
+    EXPECT_EQ(reqQuery[2], 2);
+
+    delete [] reqQuery;
+
+    // Send GET_READY
+    request.rebuild(1*sizeof(double));
+    double ready_req = Requests::GET_READY;
+    memcpy((void *) request.data(), (void*)(&ready_req), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // Receive the centroids: we expect to get exactly 4
+    for(int i=0; i < 4; ++i){
+        client_socket->recv(&resp, 0);
+        //reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+        //for(int i=0; i < 3; ++i){
+        //    EXPECT_DOUBLE_EQ(reqQuery[i], data_sec[i+1]);
+        //}
+        //delete [] reqQuery;
+    }
+
+    // Last message MUST BE a GET_DONE
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::GET_DONE);
+
+    delete [] reqQuery;
 
     // Now we stop the server
     double stop = Requests::STOP_REQ;
@@ -542,7 +618,150 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsReturnsCorrectlyTheCentroidsOnC
 
 
 TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotAffectTheFollowingRepresentativesReturned){
-    zmq::message_t request(2*sizeof(double));
+    // Start by sending the points
+    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+
+    std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
+    Eigen::VectorXd vectorTest(2);
+    std::vector<Eigen::VectorXd> vectors;
+    std::vector<Point*> inputPoints;
+    while(!results.at(results.size()-1).empty()){
+        for(int i=0; i < 2; ++i){
+            std::string s = results.at(i);
+            vectorTest(i) = std::stod(s);
+        }
+        vectors.push_back(vectorTest);
+        results = getNextLineAndSplitIntoTokens(pointFile);
+    }
+
+    std::cout << vectors.size() << std::endl;
+
+    pointFile.close();
+
+
+    // Now push back the points
+    zmq::message_t request(3*sizeof(double));
+    int n_p =0;
+    for(int i=0; i < vectors.size(); ++i){
+        //std::cout << "Point " << std::to_string(i);
+        double data[3] = {Requests::POST_REQ, vectors.at(i)(0), vectors.at(i)(1)};
+        request.rebuild(3*sizeof(double));
+        memcpy((void *) request.data(), (void*)(&data), 3 * sizeof(double));
+        client_socket->send(request);
+
+        //std::cout << "...sent...";
+        // We should receive here a success message
+        zmq::message_t resp;
+        client_socket->recv(&resp, 0);
+        std::string array = resp.to_string();
+        n_p++;
+        //std::cout << "resp OK..." << std::endl;
+    }
+
+    // Recover (and store) representatives
+    double rep_reg[1] = {Requests::GET_REPS};
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&rep_reg), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // Receive first the GET_OK response that we expect
+    zmq::message_t resp;
+    client_socket->recv(&resp, 0);
+    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::GET_OK);
+    EXPECT_EQ(reqQuery[1], 10);
+    EXPECT_EQ(reqQuery[2], 2);
+
+    delete [] reqQuery;
+
+    // Send GET_READY
+    request.rebuild(1*sizeof(double));
+    double ready_req = Requests::GET_READY;
+    memcpy((void *) request.data(), (void*)(&ready_req), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // We should get 10 representatives
+    double representatives[10][2];
+    for(int i=0; i < 10; ++i){
+        client_socket->recv(&resp, 0);
+        reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+        // Copy back to a 2D array to ensure we store results
+        for(int j=0; j < 2; ++j){
+            representatives[i][j] = reqQuery[j];
+        }
+        delete [] reqQuery;
+    }
+
+    // Last message must be a GET_DONE
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_DONE);
+    delete [] reqQuery;
+
+    // Request centroids
+    double centroid_req[2] = {Requests::GET_CENTROIDS, 4};
+    request.rebuild(2*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&centroid_req), 2 * sizeof(double));
+    client_socket->send(request);
+
+    // -> Expect GET_OK
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_OK);
+    EXPECT_EQ(reqQuery[1], 4);
+    EXPECT_EQ(reqQuery[2], 2);
+    delete [] reqQuery;
+
+    // -> Send GET_READY
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&ready_req), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // -> Expect 4 centroids, followed by 1 GET_DONE
+    client_socket->recv(&resp, 0);
+    client_socket->recv(&resp, 0);
+    client_socket->recv(&resp, 0);
+    client_socket->recv(&resp, 0);
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_DONE);
+    delete [] reqQuery;
+
+    // Get again representatives. They should be identical to the previous ones
+    // -> send GET_REP request
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&rep_reg), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // -> expect GET_OK response
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_EQ(reqQuery[0], Requests::GET_OK);
+    EXPECT_EQ(reqQuery[1], 10);
+    EXPECT_EQ(reqQuery[2], 2);
+    delete [] reqQuery;
+
+    // -> send GET_READY
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&ready_req), 1 * sizeof(double));
+    client_socket->send(request);
+
+    // -> Receive centroids, they should be the same as before
+    for(int i=0; i < 10; ++i){
+        client_socket->recv(&resp, 0);
+        reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+        // Copy back to a 2D array to ensure we store results
+        for(int j=0; j < 2; ++j){
+            EXPECT_DOUBLE_EQ(reqQuery[j], representatives[i][j]);
+        }
+        delete [] reqQuery;
+    }
+    // -> Last message must be a GET_DONE
+    client_socket->recv(&resp, 0);
+    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_DONE);
+    delete [] reqQuery;
+
 
     // Now we stop the server
     double stop = Requests::STOP_REQ;
