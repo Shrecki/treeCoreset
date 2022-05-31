@@ -312,7 +312,7 @@ TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByStopRequestProperl
 
     double data_sec[4] = {Requests::POST_REQ, -1, 4, 5};
 
-    for(int i=0; i < 11; ++i) {
+    for(int i=0; i < 10000; ++i) {
         data_sec[1]=30*i;
         request.rebuild(4 * sizeof(double));
         memcpy((void *) request.data(), (void *) (&data_sec), 4 * sizeof(double));
