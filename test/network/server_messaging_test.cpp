@@ -275,7 +275,7 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsWithLessThanKPointsInRepresenta
     //std::cout << "Done sending points." << std::endl;
 
     // Now request this number of points+1 as centroids should throw an error immediately
-    /*double n_centroids = n_p+2;
+    double n_centroids = n_p+2;
     double centroid_req[2] = {Requests::GET_CENTROIDS, n_centroids};
     request.rebuild(2*sizeof(double));
     memcpy((void *) request.data(), (void*)(&centroid_req), 2 * sizeof(double));
@@ -284,17 +284,17 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsWithLessThanKPointsInRepresenta
     // Receive potential error message
     zmq::message_t resp;
     client_socket->recv(&resp, 0);
-    std::string array = resp.to_string();*/
+    std::string array = resp.to_string();
 
     // Now we stop the server
     double stop = Requests::STOP_REQ;
     request.rebuild(1*sizeof(double));
     memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
     client_socket->send(request);
-/*
+
     std::string expected_string("Asking for 15002 centroids with only 10 representative points available. "
                                 "Please add more points or consider increasing number of representatives.");
-    EXPECT_STREQ(array.c_str(), expected_string.c_str());*/
+    EXPECT_STREQ(array.c_str(), expected_string.c_str());
 
 }
 
