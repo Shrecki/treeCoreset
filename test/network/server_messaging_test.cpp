@@ -191,7 +191,7 @@ TEST_F(ServerMessagingTest, postingPointWithNaNsReturnsAnErrorMessageOnClientSid
     memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
     client_socket->send(request);
 
-    std::string expected_string("Array contains NaN values. Please fix them.");
+    std::string expected_string("Array contains 1 NaN values. Please fix them.");
     EXPECT_STREQ(array.c_str(), expected_string.c_str());
 }
 

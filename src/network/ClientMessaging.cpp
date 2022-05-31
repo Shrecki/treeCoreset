@@ -25,13 +25,10 @@ namespace ClientMessaging {
 
         zmq::message_t reply;
 
-        int rc;
         int nc = 0;
-        do{
-            std::cout << "Expecting new message now." << std::endl;
-            rc = socket.recv(&reply, 0);
-            assert(rc == 0);
-            rc = zmq_getsockopt (socket, ZMQ_RCVMORE, &more, &more_size);
+        do {
+            socket.recv(&reply, 0);
+            zmq_getsockopt (socket, ZMQ_RCVMORE, &more, &more_size);
 
             if(more){
                 int n_dims = reply.size()/sizeof(double);
@@ -56,16 +53,16 @@ namespace ClientMessaging {
                 auto reqQuery = ServerMessaging::extractDoubleArrayFromContent(reply);
                 if(reqQuery[0] != Requests::GET_DONE){
                     // Likely, the message is actually an exception:
+                    delete [] reqQuery;
                     throw std::runtime_error("Server says: " + reply.to_string());
                 }
+                delete [] reqQuery;
                 // std::cout << "Received last message: either an end or an error" << std::endl;
                 // We should check here whether it conforms to the expected message or not
             }
-            assert (rc == 0);
             reply.rebuild();
             nc = nc+1;
         } while(more);
-        std::cout << "Done with centroids" << std::endl;
         return return_vec;
     }
 
@@ -76,25 +73,29 @@ namespace ClientMessaging {
         // Furthermore, we are provided with an expected server initial client response and a client's consequent response
         // Lastly, we're provided with the server last expected response
         zmq::message_t request(client_init_req_size*sizeof(double));
-        memcpy((void *) request.data(), (void*)(&client_init_req_data), client_init_req_size * sizeof(double));
+        memcpy((void *) request.data(), (void*)(client_init_req_data), client_init_req_size * sizeof(double));
         socket.send(request);
 
         std::vector<std::vector<double>*> * output_data = nullptr;
 
         int expect_reply = 1;
         while(expect_reply) {
-            zmq::pollitem_t items[] = {{socket, 0, ZMQ_POLLIN, 0}};
+            zmq::pollitem_t items[1] = {{socket, 0, ZMQ_POLLIN, 0}};
             int rc = zmq::poll(items, 1, REQUEST_TIMEOUT);
 
             if (rc == -1) { break; }
             if (items[0].revents & ZMQ_POLLIN) {
+                // Check for a reply
                 zmq::message_t reply;
                 socket.recv(&reply, 0);
+
                 int nElements(reply.size());
                 char byteArray[nElements * sizeof(double)];
                 memcpy(byteArray, reply.data(), nElements * sizeof(double));
                 double *response_data = reinterpret_cast<double *>(byteArray);
+
                 if ((int) response_data[0] == server_init_resp) {
+                    // If server reply conforms to expectations, send the client response.
                     double get_ready = client_resp;
                     zmq::message_t resp(sizeof(double));
                     memcpy((void *) resp.data(), (void *) (&get_ready), sizeof(double));
@@ -110,26 +111,7 @@ namespace ClientMessaging {
 
                     break;
                 } else {
-                    switch ((int) response_data[0]) {
-
-                        // Once we're here, we are expecting to receive a GET_OK response
-                        // The protocol works as follows:
-                        // - Client (the one running this script) issues GET_REQ
-                        // - Server, if ready, will issue a GET_OK, with number of elements to receive and dimension of each element (all elements have the same dimension)
-                        // - Client then issues a GET_READY, signaling it is ready to receive
-                        // - Server sends at most n_elements+1 messages
-                        // - Last message sent by server is either an exception or a GET_DONE message.
-
-                        case Requests::ERROR : {
-                            // Something went wrong: print the exception
-                            break;
-                        }
-
-                        default: {
-                            // Invalid response to this query
-                            break;
-                        }
-                    }
+                    throw std::runtime_error("Expected response to be " + std::to_string(server_init_resp) + " but was " + reply.to_string());
                 }
                 expect_reply = 0;
             } else {
@@ -194,6 +176,13 @@ namespace ClientMessaging {
         return pollForRequest(socket, request_data,2,
                        Requests::GET_OK,Requests::GET_READY, Requests::GET_DONE,
                        REQUEST_TIMEOUT,&centroid_multipart);
+    }
+
+    std::vector<std::vector<double>*>*  requestRepresentatives(zmq::socket_t &socket, int REQUEST_TIMEOUT){
+        double request_data[1] = {GET_REPS};
+        return pollForRequest(socket, request_data,1,
+                              Requests::GET_OK,Requests::GET_READY, Requests::GET_DONE,
+                              REQUEST_TIMEOUT,&centroid_multipart);
     }
 
 }

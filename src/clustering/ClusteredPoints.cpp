@@ -219,7 +219,7 @@ void ClusteredPoints::setAllToNullPtr() {
 }
 
 void ClusteredPoints::reduceBuckets(){
-    std::cout << "Starting reduce on buckets " << std::endl;
+    // std::cout << "Starting reduce on buckets " << std::endl;
     if(otherBucketsFull){
         std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
         std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);

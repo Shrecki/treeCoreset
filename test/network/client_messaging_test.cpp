@@ -90,6 +90,31 @@ TEST_F(ClientMessagingTest, requestingToPutPointWithNanRaisesException){
     ClientMessaging::requestStop(*client_socket);
 }
 
-TEST_F(ClientMessagingTest, postingPointAndGettingRepresentativesReturnsExactlyPostedPoint){
 
+TEST_F(ClientMessagingTest, postingPointsAndGettingRepresentativesReturnsExactlyPostedPointsWithTwoPointsAndTenRepresentatives){
+// We will request to put in a simple point
+    double points[2][3] = {{0.1, 0.2, 0.4}, {0.3, 0.1, 0.7}};
+    EXPECT_NO_THROW(ClientMessaging::requestPutPoint(*client_socket, points[0], 3, 1000));
+    EXPECT_NO_THROW(ClientMessaging::requestPutPoint(*client_socket, points[1], 3, 1000));
+
+
+    auto reps = ClientMessaging::requestRepresentatives(*client_socket, 1000);
+    EXPECT_EQ(reps->size(), 2);
+    EXPECT_EQ(reps->at(0)->size(), 3);
+    for(int i=0; i < 2; ++i){
+        for(int j=0; j < 3; j++){
+            EXPECT_DOUBLE_EQ(reps->at(i)->at(j), points[i][j]);
+        }
+    }
+
+    // Free memory of vectors
+    for(int i=0; i < 2; ++i){
+        delete reps->at(i);
+        reps->at(i) = nullptr;
+    }
+    delete reps;
+    reps = nullptr;
+
+
+    ClientMessaging::requestStop(*client_socket);
 }
