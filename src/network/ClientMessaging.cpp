@@ -5,7 +5,7 @@
 #include "ClientMessaging.h"
 
 #include "Requests.h"
-#include "ServerMessaging.h"
+#include "MessagingUtils.h"
 #include <iostream>
 #include <functional>
 
@@ -50,7 +50,7 @@ namespace ClientMessaging {
                 return_vec->push_back(new_vec);
             } else {
                 // Last message must be a GET_DONE, otherwise something is off
-                auto reqQuery = ServerMessaging::extractDoubleArrayFromContent(reply);
+                auto reqQuery = extractDoubleArrayFromContent(reply);
                 if(reqQuery[0] != Requests::GET_DONE){
                     // Likely, the message is actually an exception:
                     delete [] reqQuery;

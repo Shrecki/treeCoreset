@@ -12,6 +12,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
+#include "network/MessagingUtils.h"
 #include <thread>
 
 using ::testing::Return;
@@ -63,7 +64,7 @@ TEST_F(ClientMessagingTest, requestingStopCorrectlyStopsServerAndReturnsExpected
     // We expect now to receive a stop OK
     zmq::message_t resp;
     client_socket->recv(&resp, 0);
-    double *array = ServerMessaging::extractDoubleArrayFromContent(resp);
+    double *array = extractDoubleArrayFromContent(resp);
     EXPECT_EQ((int)array[0], Requests::STOP_OK);
     delete [] array;
 }

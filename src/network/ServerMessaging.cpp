@@ -14,15 +14,9 @@
 #endif
 
 #include "iostream"
+#include "MessagingUtils.h"
 
 namespace ServerMessaging{
-    double* extractDoubleArrayFromContent(zmq::message_t &msg){
-        // Copy it back to memory
-        char * byteArray = new char[msg.size()];
-        memcpy(byteArray, msg.data(), msg.size());
-
-        return reinterpret_cast<double*>(byteArray);
-    }
 
     int getNumberOfDoublesInReq(zmq::message_t &msg){
         return msg.size()/sizeof(double);
@@ -207,7 +201,7 @@ namespace ServerMessaging{
             zmq::message_t request;
             socket.recv (&request, 0);
             int nElems(ServerMessaging::getNumberOfDoublesInReq(request));
-            array = ServerMessaging::extractDoubleArrayFromContent(request);
+            array = extractDoubleArrayFromContent(request);
             try{
                 switch((int)array[0]){
                     case Requests::POST_REQ : {

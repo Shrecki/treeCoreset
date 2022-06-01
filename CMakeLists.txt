@@ -38,7 +38,7 @@ set(SOURCES
         src/network/Requests.h
         src/network/ClientMessaging.h src/network/ClientMessaging.cpp
         src/network/ServerMessaging.h src/network/ServerMessaging.cpp
-        src/Errors.h)
+        src/Errors.h src/network/MessagingUtils.h src/network/MessagingUtils.cpp)
 
 find_package(PkgConfig)
 pkg_check_modules(PC_ZeroMQ QUIET zmq)
@@ -51,7 +51,7 @@ find_library(ZeroMQ_LIBRARY
         PATHS ${PC_ZeroMQ_LIBRARY_DIRS}
         )
 # For main program
-add_executable(treeCoreset main.cpp ${SOURCES} src/network/NetworkProtocol.cpp src/network/NetworkProtocol.h)
+add_executable(treeCoreset main.cpp ${SOURCES})
 target_include_directories(treeCoreset PRIVATE eigen)
 target_include_directories(treeCoreset PUBLIC ${ZeroMQ_INCLUDE_DIR})
 target_link_libraries(treeCoreset PUBLIC ${ZeroMQ_LIBRARY} ${Boost_LIBRARIES})

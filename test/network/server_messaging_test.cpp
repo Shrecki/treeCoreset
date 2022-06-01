@@ -9,6 +9,7 @@
 
 #include "network/ServerMessaging.h"
 #include "network/Requests.h"
+#include "network/MessagingUtils.h"
 
 
 using ::testing::Return;
@@ -65,7 +66,7 @@ TEST_F(ServerMessagingTest, stoppingServerWorks) {
     // We expect to receive a STOP_OK response
     zmq::message_t resp;
     client_socket->recv(&resp, 0);
-    double *array = ServerMessaging::extractDoubleArrayFromContent(resp);
+    double *array = extractDoubleArrayFromContent(resp);
     EXPECT_EQ((int)array[0], Requests::STOP_OK);
     delete [] array;
     //t1.join();
@@ -354,7 +355,7 @@ TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByStopRequestProperl
 
     // Receive first the GET_OK response that we expect
     client_socket->recv(&resp, 0);
-    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    double * reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::GET_OK);
     EXPECT_EQ(reqQuery[1], 10);
     EXPECT_EQ(reqQuery[2], 3);
@@ -368,7 +369,7 @@ TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByStopRequestProperl
 
     // We expect to receive a STOP_OK from the server, should it be properly handling everything
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::STOP_OK);
     delete [] reqQuery;
 }
@@ -404,7 +405,7 @@ TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByStopRequestProperl
 
     // Receive first the GET_OK response that we expect
     client_socket->recv(&resp, 0);
-    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    double * reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::GET_OK);
     EXPECT_EQ(reqQuery[1], 2);
     EXPECT_EQ(reqQuery[2], 3);
@@ -418,7 +419,7 @@ TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByStopRequestProperl
 
     // We expect to receive a STOP_OK from the server, should it be properly handling everything
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::STOP_OK);
     delete [] reqQuery;
 }
@@ -453,7 +454,7 @@ TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByUnexpectedRequestP
 
     // Receive first the GET_OK response that we expect
     client_socket->recv(&resp, 0);
-    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    double * reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::GET_OK);
     EXPECT_EQ(reqQuery[1], 2);
     EXPECT_EQ(reqQuery[2], 3);
@@ -467,7 +468,7 @@ TEST_F(ServerMessagingTest, getRepresentativeRequestFollowedByUnexpectedRequestP
 
     // We expect to receive an error message from the server, should it be properly handling everything
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::ERROR);
     delete [] reqQuery;
 
@@ -509,7 +510,7 @@ TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheRepsOnC
 
     // Receive first the GET_OK response that we expect
     client_socket->recv(&resp, 0);
-    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    double * reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::GET_OK);
     EXPECT_EQ(reqQuery[1], 2);
     EXPECT_EQ(reqQuery[2], 3);
@@ -524,7 +525,7 @@ TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheRepsOnC
 
     // Now we will get 3 messages back to back, the points and a GET_DONE message, supposedly
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     for(int i=0; i < 3; ++i){
         EXPECT_DOUBLE_EQ(reqQuery[i], data[i+1]);
     }
@@ -532,7 +533,7 @@ TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheRepsOnC
 
     // Receive next one
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     for(int i=0; i < 3; ++i){
         EXPECT_DOUBLE_EQ(reqQuery[i], data_sec[i+1]);
     }
@@ -540,7 +541,7 @@ TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheRepsOnC
 
     // Receive last point
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_DONE);
     delete [] reqQuery;
 
@@ -601,7 +602,7 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsReturnsCorrectlyTheCentroidsOnC
     // The response should be a GET_OK
     zmq::message_t resp;
     client_socket->recv(&resp, 0);
-    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    double * reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::GET_OK);
     EXPECT_EQ(reqQuery[1], 4);
     EXPECT_EQ(reqQuery[2], 2);
@@ -617,7 +618,7 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsReturnsCorrectlyTheCentroidsOnC
     // Receive the centroids: we expect to get exactly 4
     for(int i=0; i < 4; ++i){
         client_socket->recv(&resp, 0);
-        //reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+        //reqQuery = extractDoubleArrayFromContent(resp);
         //for(int i=0; i < 3; ++i){
         //    EXPECT_DOUBLE_EQ(reqQuery[i], data_sec[i+1]);
         //}
@@ -626,7 +627,7 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsReturnsCorrectlyTheCentroidsOnC
 
     // Last message MUST BE a GET_DONE
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::GET_DONE);
 
     delete [] reqQuery;
@@ -689,7 +690,7 @@ TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotA
     // Receive first the GET_OK response that we expect
     zmq::message_t resp;
     client_socket->recv(&resp, 0);
-    double * reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    double * reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::GET_OK);
     EXPECT_EQ(reqQuery[1], 10);
     EXPECT_EQ(reqQuery[2], 2);
@@ -706,7 +707,7 @@ TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotA
     double representatives[10][2];
     for(int i=0; i < 10; ++i){
         client_socket->recv(&resp, 0);
-        reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+        reqQuery = extractDoubleArrayFromContent(resp);
         // Copy back to a 2D array to ensure we store results
         for(int j=0; j < 2; ++j){
             representatives[i][j] = reqQuery[j];
@@ -716,7 +717,7 @@ TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotA
 
     // Last message must be a GET_DONE
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_DONE);
     delete [] reqQuery;
 
@@ -728,7 +729,7 @@ TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotA
 
     // -> Expect GET_OK
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_OK);
     EXPECT_EQ(reqQuery[1], 4);
     EXPECT_EQ(reqQuery[2], 2);
@@ -745,7 +746,7 @@ TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotA
     client_socket->recv(&resp, 0);
     client_socket->recv(&resp, 0);
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_DONE);
     delete [] reqQuery;
 
@@ -757,7 +758,7 @@ TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotA
 
     // -> expect GET_OK response
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_EQ(reqQuery[0], Requests::GET_OK);
     EXPECT_EQ(reqQuery[1], 10);
     EXPECT_EQ(reqQuery[2], 2);
@@ -771,7 +772,7 @@ TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotA
     // -> Receive centroids, they should be the same as before
     for(int i=0; i < 10; ++i){
         client_socket->recv(&resp, 0);
-        reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+        reqQuery = extractDoubleArrayFromContent(resp);
         // Copy back to a 2D array to ensure we store results
         for(int j=0; j < 2; ++j){
             EXPECT_DOUBLE_EQ(reqQuery[j], representatives[i][j]);
@@ -780,7 +781,7 @@ TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotA
     }
     // -> Last message must be a GET_DONE
     client_socket->recv(&resp, 0);
-    reqQuery = ServerMessaging::extractDoubleArrayFromContent(resp);
+    reqQuery = extractDoubleArrayFromContent(resp);
     EXPECT_DOUBLE_EQ(reqQuery[0], Requests::GET_DONE);
     delete [] reqQuery;
 
