@@ -19,7 +19,7 @@ namespace ServerMessaging {
     double* extractDoubleArrayFromContent(zmq::message_t &msg);
     int getNumberOfDoublesInReq(zmq::message_t &msg);
 
-    void runServer(zmq::socket_t &socket, int N_SAMPLES, int M);
+    void runServer(zmq::socket_t &socket, unsigned int N_SAMPLES, unsigned int M);
 }
 
 
