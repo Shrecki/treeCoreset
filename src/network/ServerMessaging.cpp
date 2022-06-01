@@ -162,6 +162,7 @@ namespace ServerMessaging{
         std::vector<double> data;
         try {
             int k = (int)array[1];
+
             // Prepare clusters for transmission
             std::cout << "Expecting " << std::to_string(k) << " centroids" << std::endl;
             clusteredPoints.getClustersAsFlattenedArray(data, k, 100);

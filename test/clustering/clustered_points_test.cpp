@@ -123,6 +123,20 @@ TEST_F(ClusteredPointsTest, insertingExactlyMPointsCausesSecondBucketToBeFilledW
 
 }
 
+TEST_F(ClusteredPointsTest, requestingZeroCentroidsThrowsException){
+    ClusteredPoints clusteredPoints(10,2);
+
+    std::vector<double> output;
+
+    try{
+        clusteredPoints.getClustersAsFlattenedArray(output, 0, 20);
+    } catch(std::exception &e){
+        EXPECT_STREQ(e.what(), "Number of centroids cannot be zero.");
+    }
+
+    EXPECT_THROW(clusteredPoints.getClustersAsFlattenedArray(output, 0, 20), std::invalid_argument);
+}
+
 TEST_F(ClusteredPointsTest, inserting2MPointsCausesThirdBucketToBeFilledWithExactlyMPoints){
     std::vector<Point*> points;
     Eigen::VectorXd v0(3), v1(3), v2(3), v3(3), v4(3), v5(3), v6(3);

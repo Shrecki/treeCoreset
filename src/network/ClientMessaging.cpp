@@ -111,7 +111,7 @@ namespace ClientMessaging {
 
                     break;
                 } else {
-                    throw std::runtime_error("Expected response to be " + std::to_string(server_init_resp) + " but was " + reply.to_string());
+                    throw std::runtime_error("Server says: " + reply.to_string());
                 }
                 expect_reply = 0;
             } else {
@@ -131,7 +131,10 @@ namespace ClientMessaging {
         socket.send(request);
     }
 
-    void requestPutPoint(zmq::socket_t &socket, double *point_data, int dimension, int REQUEST_TIMEOUT){
+    void requestPutPoint(zmq::socket_t &socket, double *point_data, unsigned int dimension, int REQUEST_TIMEOUT){
+        if(dimension == 0){
+            throw std::invalid_argument("Input dimension cannot be 0. Please pass a point with at least dimension 1.");
+        }
         double request_array[dimension+1];
         request_array[0]=Requests::POST_REQ;
 
@@ -171,7 +174,10 @@ namespace ClientMessaging {
     }
 
 
-    std::vector<std::vector<double>*>* requestCentroids(zmq::socket_t &socket, int n_centroids, int REQUEST_TIMEOUT){
+    std::vector<std::vector<double>*>* requestCentroids(zmq::socket_t &socket, unsigned int n_centroids, int REQUEST_TIMEOUT){
+        if(n_centroids == 0){
+            throw std::invalid_argument("Number of centroids cannot be zero.");
+        }
         double request_data[2] = {GET_CENTROIDS, 1.0 * n_centroids};
         return pollForRequest(socket, request_data,2,
                        Requests::GET_OK,Requests::GET_READY, Requests::GET_DONE,

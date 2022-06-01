@@ -230,6 +230,28 @@ TEST_F(ServerMessagingTest, postingTwoSuccessivePointsOfDifferentDimensionsRetur
 }
 
 
+TEST_F(ServerMessagingTest, getCentroidsOfZeroPointsReturnsErrorMessageOnClientSide){
+    double centroid_req[2] = {Requests::GET_CENTROIDS, 0};
+    zmq::message_t request(2*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&centroid_req), 2 * sizeof(double));
+    client_socket->send(request);
+
+    // Receive potential error message
+    zmq::message_t resp;
+    client_socket->recv(&resp, 0);
+    std::string array = resp.to_string();
+
+    // Now we stop the server
+    double stop = Requests::STOP_REQ;
+    request.rebuild(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
+    client_socket->send(request);
+
+    std::string expected_string("Number of centroids cannot be zero.");
+    EXPECT_STREQ(array.c_str(), expected_string.c_str());
+
+}
+
 TEST_F(ServerMessagingTest, getCentroidsOfKPointsWithLessThanKPointsInRepresentationReturnsAnErrorMessageOnClientSide){
     // Get many many points
     std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");

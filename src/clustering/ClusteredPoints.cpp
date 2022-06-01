@@ -252,7 +252,10 @@ void ClusteredPoints::performUnionCoresetAndGetRepresentativesAsFlattenedArray(s
     kmeans::convertFromVectorOfEigenXdToArray(data, representatives);
 }
 
-void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs) {
+void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, unsigned int k, int epochs) {
+    if(k == 0){
+        throw std::invalid_argument("Number of centroids cannot be zero.");
+    }
     // Run coreset on union of buckets
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;

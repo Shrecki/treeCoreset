@@ -66,7 +66,7 @@ public:
      * @param k
      * @param epochs
      */
-    void getClustersAsFlattenedArray(std::vector<double> &data, int k, int epochs);
+    void getClustersAsFlattenedArray(std::vector<double> &data, unsigned int k, int epochs);
 
     void reduceBuckets();
 
