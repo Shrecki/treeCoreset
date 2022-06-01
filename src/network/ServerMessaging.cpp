@@ -221,7 +221,7 @@ namespace ServerMessaging{
                     case Requests::GET_REPS: {
                         ServerMessaging::handleGetRepresentatives(array, nElems, clusteredPoints, socket, M, mustContinue);
                         break;
-                    }
+                    }/*
                     case Requests::LOAD_REQ: {
                         std::cout << "Received a LOAD request." << std::endl;
                         zmq::message_t reply(5);
@@ -235,11 +235,11 @@ namespace ServerMessaging{
                         memcpy((void *) reply.data(), "World", 5);
                         socket.send(reply);
                         break;
-                    }
+                    }*/
                     case Requests::STOP_REQ: {
                         handleStopReq(mustContinue, socket);
                         break;
-                    }
+                    }/*
                     case Requests::POST_OK: {
                         std::cout << "Simulating big CPU overload." << std::endl;
                         sleep(3);
@@ -247,7 +247,7 @@ namespace ServerMessaging{
                         memcpy((void *) reply.data(), "World", 5);
                         socket.send(reply);
                         break;
-                    }
+                    }*/
                     default: {
                         std::cout << "Request not implemented." << std::endl;
                         std::string str_error("Request not implemented.");

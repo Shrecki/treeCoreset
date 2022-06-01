@@ -18,14 +18,14 @@ FetchContent_MakeAvailable(googletest)
 
 
 
-set( boost_INSTALL "/usr/local/share/boost_1_77_0/build-boost")
-set( boost_INCLUDE_DIR ${boost_INSTALL}/include )
-set( boost_LIB_DIR ${boost_INSTALL}/lib )
-set( Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost" )
+#set( boost_INSTALL "/usr/local/share/boost_1_77_0/build-boost")
+#set( boost_INCLUDE_DIR ${boost_INSTALL}/include )
+#set( boost_LIB_DIR ${boost_INSTALL}/lib )
+#set( Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost" )
 
-find_package(Boost REQUIRED PATHS ${boost_INSTALL})
-include_directories(${boost_INCLUDE_DIR})
-message("boost lib: ${boost_LIB_DIR}, inc:${boost_INCLUDE_DIR}")
+find_package(Boost COMPONENTS program_options REQUIRED PATHS)
+include_directories(${Boost_INCLUDE_DIR})
+message("boost lib: ${Boost_LIBRARIES}, inc:${Boost_INCLUDE_DIR}")
 
 
 set(SOURCES
@@ -38,11 +38,7 @@ set(SOURCES
         src/network/Requests.h
         src/network/ClientMessaging.h src/network/ClientMessaging.cpp
         src/network/ServerMessaging.h src/network/ServerMessaging.cpp
-        src/network/NetworkProtocol.cpp src/network/NetworkProtocol.h
         src/Errors.h)
-
-
-set( boost_INSTALL "/usr/local/share/boost_1_77_0/build-boost")
 
 find_package(PkgConfig)
 pkg_check_modules(PC_ZeroMQ QUIET zmq)
@@ -58,7 +54,7 @@ find_library(ZeroMQ_LIBRARY
 add_executable(treeCoreset main.cpp ${SOURCES} src/network/NetworkProtocol.cpp src/network/NetworkProtocol.h)
 target_include_directories(treeCoreset PRIVATE eigen)
 target_include_directories(treeCoreset PUBLIC ${ZeroMQ_INCLUDE_DIR})
-target_link_libraries(treeCoreset PUBLIC ${ZeroMQ_LIBRARY})
+target_link_libraries(treeCoreset PUBLIC ${ZeroMQ_LIBRARY} ${Boost_LIBRARIES})
 
 
 # For unit tests
