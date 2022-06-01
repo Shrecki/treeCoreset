@@ -168,7 +168,7 @@ namespace ServerMessaging{
         }
     }
 
-    void handleGetRepresentatives(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket, int M, bool &mustContinue){
+    void handleGetRepresentatives(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket, unsigned int M, bool &mustContinue){
         zmq::message_t request;
         std::vector<double> data;
         try {

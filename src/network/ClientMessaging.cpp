@@ -10,6 +10,21 @@
 #include <functional>
 
 namespace ClientMessaging {
+    void free_vector(std::vector<std::vector<double>*>* vector){
+        if(vector != nullptr){
+            for(int i=0; i < vector->size(); ++i){
+                if(vector->at(i) != nullptr){
+                    vector->at(i)->clear();
+                    delete vector->at(i);
+                    vector->at(i) = nullptr;
+                }
+            }
+            vector->clear();
+            delete vector; // Ensures we do not have any memory leak on client side.
+            vector = nullptr;
+        }
+
+    }
     std::vector<std::vector<double>*> *centroid_multipart(double *array, zmq::socket_t &socket, Requests last_message){
         // First element indicates the number of clusters
         // Second element indicates the dimension of a centroid
@@ -115,8 +130,7 @@ namespace ClientMessaging {
                 }
                 expect_reply = 0;
             } else {
-                std::cout << "Server seems to be offline, abandoning." << std::endl;
-                expect_reply = 0;
+                throw std::runtime_error("Server seems to be offline, abandoning.");
             }
         }
 
@@ -167,7 +181,7 @@ namespace ClientMessaging {
                 }
                 expect_reply=0;
             } else {
-                throw std::runtime_error("Server timeout. Check the program did not crash.");
+                throw std::runtime_error("Server seems to be offline, abandoning.");
             }
         }
 

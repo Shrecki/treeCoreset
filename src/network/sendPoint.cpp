@@ -22,25 +22,18 @@ using matlab::mex::ArgumentList;
 class MexFunction : public matlab::mex::Function {
 public:
     void operator()(ArgumentList outputs, ArgumentList inputs) {
-        // First, we will create the request
-        // Prepare request
-        double x = POST_REQ;
-        
-        // Get data to pass from input
-        TypedArray<double> doubleArray = std::move(inputs[0]);
-        // Convert to a format any C++ program can understand
-        int n = doubleArray.getNumberOfElements();
-        std::cout << "Number of elements : " << n << std::endl;
-
         // Connect to port
         zmq::context_t context(1);
         zmq::socket_t socket(context, ZMQ_REQ);
         socket.connect("tcp://localhost:5555");
 
-        // TODO: CHECK IF WE CAN DIRECTLY CAST THE TYPEDARRAY TO PASS THROUGH THE DATA INSTEAD OF COPYING
+        // Get data to pass from input
+        int n  = inputs[0].getNumberOfElements();
         double point_data[n];
+        //point_data = std::move(inputs[0]);
+        //memcpy(point_data, &inputs[0], n);
         for(int i=0; i < n; ++i){
-            point_data[i] = doubleArray[i];
+            point_data[i] = inputs[0][i]; //doubleArray[i];
         }
 
         ClientMessaging::requestPutPoint(socket, point_data, n, REQUEST_TIMEOUT);

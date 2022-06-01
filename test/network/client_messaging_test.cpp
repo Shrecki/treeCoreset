@@ -77,6 +77,42 @@ TEST_F(ClientMessagingTest, requestingToPutPointsIsReturningOKResponse){
     ClientMessaging::requestStop(*client_socket);
 }
 
+TEST_F(ClientMessagingTest, requestingCentroidsOnAShutDownServerTimesOut){
+    ClientMessaging::requestStop(*client_socket);
+    zmq::message_t resp;
+    client_socket->recv(&resp,0);
+    try{
+        ClientMessaging::requestCentroids(*client_socket,2, 100);
+    } catch(std::exception &e) {
+        EXPECT_STREQ(e.what(), "Server seems to be offline, abandoning.");
+    }
+}
+
+TEST_F(ClientMessagingTest, requestingRepsOnAShutDownServerTimesOut){
+    ClientMessaging::requestStop(*client_socket);
+    zmq::message_t resp;
+    client_socket->recv(&resp,0);
+    try{
+        ClientMessaging::requestRepresentatives(*client_socket,100);
+    } catch(std::exception &e) {
+        EXPECT_STREQ(e.what(), "Server seems to be offline, abandoning.");
+    }
+}
+
+TEST_F(ClientMessagingTest, requestingToPutPointOnAShutDownServerTimesOut){
+    ClientMessaging::requestStop(*client_socket);
+    zmq::message_t resp;
+    client_socket->recv(&resp,0);
+
+    double point[3] = {0.1, 0.2, 3};
+
+    try{
+        ClientMessaging::requestPutPoint(*client_socket, point, 3, 100);
+    } catch(std::exception &e) {
+        EXPECT_STREQ(e.what(), "Server seems to be offline, abandoning.");
+    }
+}
+
 
 TEST_F(ClientMessagingTest, requestingToPutPointWithNanRaisesException){
     // We will request to put in a simple point
@@ -108,14 +144,7 @@ TEST_F(ClientMessagingTest, postingPointsAndGettingRepresentativesReturnsExactly
         }
     }
 
-    // Free memory of vectors
-    for(int i=0; i < 2; ++i){
-        delete reps->at(i);
-        reps->at(i) = nullptr;
-    }
-    delete reps;
-    reps = nullptr;
-
+    ClientMessaging::free_vector(reps);
 
     ClientMessaging::requestStop(*client_socket);
 }
@@ -291,17 +320,7 @@ TEST_F(ClientMessagingTest, gettingCentroidsReturnValidCentroidsAfterPostingMany
         }
     }
 
-    // Free vector now
-    for(int i=0; i < centroid_results->size(); ++i){
-        centroid_results->at(i)->clear();
-        delete centroid_results->at(i);
-        centroid_results->at(i) = nullptr;
-    }
-    centroid_results->clear();
-    delete centroid_results;
-    centroid_results = nullptr;
-
-
+    ClientMessaging::free_vector(centroid_results);
     ClientMessaging::requestStop(*client_socket);
 }
 
