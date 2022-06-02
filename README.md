@@ -39,7 +39,7 @@
     An implementation of the stream kmeans++ algorithm described in  in modern C++ (Ackermann, Marcel R., et al. "Streamkm++ a clustering algorithm for data streams." Journal of Experimental Algorithmics (JEA) 17 (2012): 2-1.).
     The main program launches a server, to which points can be sent from other processes arbitrarily. Representatives and centroids can be queried from the server via simple commands.
     Communication relies on the ØMQ library for minimum overhead.
-    The server estimates overall footprint on RAM for user input, and if not satisfiable exits and suggests modifications to input parameters to satisfy the specified RAM constraints.
+    The server estimates overall footprint on RAM for user input, and if not satisfiable exits and suggests modifications to input parameters to satisfy the specified RAM constraints. Note that the constraint does not consider virtual memory and as such is much stricter than what might be in effect available on your machine.
     <br />
     <a href="https://github.com/Shrecki/treeCoreset"><strong>Explore the docs »</strong></a>
     <br />
