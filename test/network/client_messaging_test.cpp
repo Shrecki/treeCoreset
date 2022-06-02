@@ -40,8 +40,8 @@ protected:
     void SetUp() override {
         //zmq::context_t ct(2);
         //zmq::socket_t server_socket(context, ZMQ_REP);
-        server_socket->bind("inproc://#1");
-        client_socket->connect("inproc://#1");
+        server_socket->bind("ipc:///tmp/test");
+        client_socket->connect("ipc:///tmp/test");
 
         //zmq::socket_t client_socket(context, ZMQ_REQ);
         t1 = new std::thread(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);

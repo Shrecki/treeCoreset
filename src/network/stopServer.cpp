@@ -32,7 +32,7 @@ public:
         try{
             zmq::context_t context(1);
             zmq::socket_t socket(context, ZMQ_PAIR);
-            socket.connect("inproc://#1");
+            socket.connect("ipc:///tmp/test");
 
             ClientMessaging::requestStop(socket);
             // Disconnect

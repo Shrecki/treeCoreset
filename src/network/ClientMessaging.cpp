@@ -139,6 +139,7 @@ namespace ClientMessaging {
     }
 
     void requestStop(zmq::socket_t &socket){
+        std::cout << "Issuing stop request" << std::endl;
         double stop = Requests::STOP_REQ;
         zmq::message_t request(1*sizeof(double));
         memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));

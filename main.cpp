@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
                                  "\nShortly, the idea is to use a tree to partition space around representative points, which serve as proxy-centroids."
                                  "When one wishes to perform k-means, an approximate solution can be obtained using the representative points, thereby greatly reducing computational costs."
                                  "\nThe server allows to recover at any time either the representatives, or the centroids for a specified number of clusters (performing Kmeans++ in the latter case)."
-                                 " Server can also be stopped upon client request, and they communicate via a inter-thread communication."
+                                 " Server can also be stopped upon client request, and they communicate via a inter-process communication."
                                  "\nAllowed options are");
     desc.add_options()
             ("help", "display this help message")
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
                     " Note that we expect 1KB = 1024B for example. If the algorithm, "
                     "because of the number of samples and number of representatives should fail to meet the RAM limit, "
                     "the program will raise an exception, indicating a sufficient number of representatives that would fulfill RAM requirement.")
-            ("process_id", po::value<unsigned int>(&port)->default_value(5555), "The process ID to use to communicate. Exactly one client may communicate with the server at a time.");
+            ("process_id", po::value<unsigned int>(&port)->default_value(1), "The process ID to use to communicate. Exactly one client may communicate with the server at a time.");
             ;
 
     po::variables_map vm;
@@ -102,8 +102,12 @@ int main(int argc, char **argv) {
     }
     zmq::context_t context(1);
     zmq::socket_t socket(context, ZMQ_PAIR);
-    socket.bind("inproc://#" + std::to_string(port));
+    std::cout << "Binding to : " << "ipc:///tmp/feeds/0" + std::to_string(port) << std::endl;
+    socket.bind("ipc:///tmp/test");
+
     ServerMessaging::runServer(socket, input_n, input_m);
+
+    std::cout << "Exiting" << std::endl;
 
     socket.close();
     context.close();
