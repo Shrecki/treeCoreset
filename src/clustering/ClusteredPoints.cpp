@@ -14,19 +14,19 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
     if(newPoint == nullptr){
         throw std::logic_error("Cannot add a nullptr as point");
     }
-    if(newPoint->getData().size() == 0){
+    if(newPoint->getDataRef()->size() == 0){
         throw std::logic_error("Cannot add a point of 0 dimension");
     }
     if(dimension == -1){
-        dimension = newPoint->getData().size();
+        dimension = newPoint->getDataRef()->size();
     }
-    if(newPoint->getData().size()!=dimension){
-        throw std::logic_error("Cannot add a point with this dimension ("+ std::to_string(newPoint->getData().size()) +
+    if(newPoint->getDataRef()->size()!=dimension){
+        throw std::logic_error("Cannot add a point with this dimension ("+ std::to_string(newPoint->getDataRef()->size()) +
         ") when the first point had a different dimension (" + std::to_string(dimension)+")");
     }
-    Eigen::VectorXd data = newPoint->getData();
+    //auto data = newPoint->getDataRef();
     for(int i=0; i < dimension; ++i){
-        assert(!std::isnan(data(i)));
+        assert(!std::isnan((*newPoint->getDataRef())(i)));
     }
     unsigned int curr_cap(0);
     if(buckets[0]->size()== buckets[0]->capacity()){
@@ -43,7 +43,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
         q.insert(buckets[0]->begin(), buckets[0]->end());
         // By construction, not point in here should be a nullptr, but we should check
         assert(q.find(nullptr) == q.end());
-
+        assert(q.size() == buckets[0]->size());
         // Start to look at next bucket to see if it is empty or not
         unsigned int bucket_i = 1;
         assert(bucket_i < bucketCapacities.size());
@@ -51,6 +51,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
         std::vector<Point*> tmp_vec;
         tmp_vec.reserve(bucketCapacity*4);
         while(curr_cap != 0 && bucket_i < nBuckets){
+            assert(curr_cap == bucketCapacity); // A non-empty bucket at position other than 0 should have EXACTLY m points
             // Copy all valid points from bucket_i in q (notice that, since these are sets, this is like taking the union)
             std::copy_if(buckets[bucket_i]->begin(), buckets[bucket_i]->end(),
                          std::inserter(q, q.end()), [](auto val){return val != nullptr;});
@@ -58,12 +59,17 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
             // Convert q to vector
             tmp_vec.insert(tmp_vec.begin(), q.begin(), q.end());
             // Reduce step
+            //std::cout << "Size: " << tmp_vec.size() << " for bucket " << bucket_i << std::endl;
+
             q=coreset::treeCoresetReduceOptim(&tmp_vec, bucketCapacity, nodes);
             ++bucket_i;
             if(bucket_i == nBuckets){
                 break; // Otherwise this would result in a segfault in our loop
             }
             curr_cap = bucketCapacities[bucket_i];
+
+            // RESET HERE tmp_vec !!!
+            tmp_vec.clear();
         }
 
         // There are 2 possibilities:
@@ -201,9 +207,9 @@ std::vector<Point *> ClusteredPoints::getUnionOfBuckets(int startBucket, int end
     // - Pointers point to valid memory location
     for(auto &p: vec){
         assert(p != nullptr);
-        Eigen::VectorXd v = p->getData();
-        for(int i = 0; i < v.size(); ++i){
-            assert(!std::isnan(v(i)));
+        //Eigen::VectorXd v = p->getDataRef()->size();
+        for(int i = 0; i < p->getDataRef()->size(); ++i){
+            assert(!std::isnan((*p->getDataRef())(i)));
         }
 
     }

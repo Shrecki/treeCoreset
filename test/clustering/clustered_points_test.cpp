@@ -123,6 +123,27 @@ TEST_F(ClusteredPointsTest, insertingExactlyMPointsCausesSecondBucketToBeFilledW
 
 }
 
+TEST_F(ClusteredPointsTest, stressTest){
+    ClusteredPoints clusteredPoints(10,10);
+
+    for(int i=0; i < 10e6; ++i){
+        Eigen::VectorXd vec = Eigen::VectorXd::Random(200000);
+
+        Point *p0 = Point::convertArrayToPoint(vec.data(), 200000);
+        //Point p1(std::make_unique<Eigen::VectorXd>(vec));
+
+        try{
+            clusteredPoints.insertPoint(p0);
+
+        } catch(std::exception &e){
+            std::cout << e.what() << std::endl,
+            std::cout << i << std::endl;
+            break;
+        }
+    }
+
+}
+
 TEST_F(ClusteredPointsTest, requestingZeroCentroidsThrowsException){
     ClusteredPoints clusteredPoints(10,2);
 

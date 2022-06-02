@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
                                  "\nShortly, the idea is to use a tree to partition space around representative points, which serve as proxy-centroids."
                                  "When one wishes to perform k-means, an approximate solution can be obtained using the representative points, thereby greatly reducing computational costs."
                                  "\nThe server allows to recover at any time either the representatives, or the centroids for a specified number of clusters (performing Kmeans++ in the latter case)."
-                                 " Server can also be stopped upon client request, and they communicate via a localhost TCP port."
+                                 " Server can also be stopped upon client request, and they communicate via a inter-thread communication."
                                  "\nAllowed options are");
     desc.add_options()
             ("help", "display this help message")
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
                     " Note that we expect 1KB = 1024B for example. If the algorithm, "
                     "because of the number of samples and number of representatives should fail to meet the RAM limit, "
                     "the program will raise an exception, indicating a sufficient number of representatives that would fulfill RAM requirement.")
-            ("port", po::value<unsigned int>(&port)->default_value(5555), "The port on which the server is listening for client requests.");
+            ("process_id", po::value<unsigned int>(&port)->default_value(5555), "The process ID to use to communicate. Exactly one client may communicate with the server at a time.");
             ;
 
     po::variables_map vm;
@@ -80,7 +80,6 @@ int main(int argc, char **argv) {
 
 
     // How many doubles should be stored?
-    //
     double number_of_doubles = compute_number_of_doubles(input_n, input_m, input_dimension);
     if(number_of_doubles > allowed_doubles){
         // Find a sufficient M such that the requirements can be satisfied.
@@ -102,18 +101,8 @@ int main(int argc, char **argv) {
         return 1;
     }
     zmq::context_t context(1);
-    zmq::socket_t socket(context, ZMQ_REP);
-    socket.bind("tcp://*:" + std::to_string(port));
-
-    // What if that is not the case ?
-    // In that case, let's simply decrease M until it becomes the case.
-    /*
-     * Means that 3 + log2(N) >= R/S
-     * Means that exp(3 + log2(N)) >= exp(R/S)
-     * N*exp(3) >= exp(R/S)
-     * N >= exp(R/S - 3)
-     * Absolutely unreasonable.
-     */
+    zmq::socket_t socket(context, ZMQ_PAIR);
+    socket.bind("inproc://#" + std::to_string(port));
     ServerMessaging::runServer(socket, input_n, input_m);
 
     socket.close();

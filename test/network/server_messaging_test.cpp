@@ -23,8 +23,8 @@ protected:
 
     ServerMessagingTest(){
         context = new zmq::context_t(2);
-        server_socket = new zmq::socket_t(*context, ZMQ_REP);
-        client_socket = new zmq::socket_t(*context, ZMQ_REQ);
+        server_socket = new zmq::socket_t(*context, ZMQ_PAIR);
+        client_socket = new zmq::socket_t(*context, ZMQ_PAIR);
 
     }
 
@@ -37,8 +37,8 @@ protected:
     void SetUp() override {
         //zmq::context_t ct(2);
         //zmq::socket_t server_socket(context, ZMQ_REP);
-        server_socket->bind("tcp://*:5555");
-        client_socket->connect("tcp://localhost:5555");
+        server_socket->bind("inproc://#1");
+        client_socket->connect("inproc://#1");
 
         //zmq::socket_t client_socket(context, ZMQ_REQ);
         t1 = new std::thread(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);
@@ -54,6 +54,8 @@ protected:
         delete t1;
     }
 };
+
+
 
 TEST_F(ServerMessagingTest, stoppingServerWorks) {
     //std::thread t1(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);

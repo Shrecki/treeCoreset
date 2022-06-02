@@ -38,6 +38,16 @@ public:
      * @return Distance between the two points
      */
     static double computeDistance(const Eigen::VectorXd &p1, const Eigen::VectorXd &p2, Distance distance);
+
+    /**
+     * Same as computeDistance but operating on pointers. The underlying distance functions are therefore minimizing copies.
+     * @param p1
+     * @param p2
+     * @param distance
+     * @return
+     */
+    static double computeDistance(const std::unique_ptr<Eigen::VectorXd> &p1, const std::unique_ptr<Eigen::VectorXd> &p2, Distance distance);
+
     explicit Point(std::unique_ptr<Eigen::VectorXd> newData);
     explicit Point(std::unique_ptr<Eigen::VectorXd> newData, bool wasConverted);
     void cleanupData();
@@ -63,9 +73,15 @@ public:
         return (v1-v2).norm();
     }
 
+    [[nodiscard]] static double computeEuclideanDistance(const std::unique_ptr<Eigen::VectorXd> &v1, const std::unique_ptr<Eigen::VectorXd> &v2){
+        return (*v1-*v2).norm();
+    }
+
     void setDistance(double newDist){ dist = newDist;}
 
     inline double getDistance() { return dist; }
+
+    [[nodiscard]] const std::unique_ptr<Eigen::VectorXd> & getDataRef() const;
 };
 
 

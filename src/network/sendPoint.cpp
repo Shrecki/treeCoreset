@@ -24,8 +24,8 @@ public:
     void operator()(ArgumentList outputs, ArgumentList inputs) {
         // Connect to port
         zmq::context_t context(1);
-        zmq::socket_t socket(context, ZMQ_REQ);
-        socket.connect("tcp://localhost:5555");
+        zmq::socket_t socket(context, ZMQ_PAIR);
+        socket.connect("inproc://#1");
 
         // Get data to pass from input
         int n  = inputs[0].getNumberOfElements();

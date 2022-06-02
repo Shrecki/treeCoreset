@@ -285,10 +285,10 @@ Point* Node::splitNode(Distance distance, Node* n1, Node* n2) {
     auto t3 = high_resolution_clock::now();
 
     // Compute centroid to centroid distance
-    Eigen::VectorXd repData = representative->getData();
-    Eigen::VectorXd newRepData = newRep->getData();
+    //Eigen::VectorXd repData = representative->getData();
+    //Eigen::VectorXd newRepData = newRep->getData();
     Eigen::VectorXd currData;
-    double lToRdist = Point::computeDistance(newRepData, repData, distance);
+    double lToRdist = Point::computeDistance(representative->getDataRef(), newRep->getDataRef(), distance);
 
     // Split points between the two array
     double leftD;
@@ -308,12 +308,12 @@ Point* Node::splitNode(Distance distance, Node* n1, Node* n2) {
             id++;
             continue;
         }
-        currData = p->getData();
+        //currData = p->getData();
         // This is a memoization-based optimization: distance that was computed in previous iterations should not be forgotten!
         if(p->getDistance()>=0.0){
             rightD = p->getDistance();
         } else {
-            rightD = Point::computeDistance(repData, currData, distance);
+            rightD = Point::computeDistance(representative->getDataRef(),  p->getDataRef(), distance);
         }
 
         // Now, we can leverage triangle ineq to prune away some distance computations
@@ -325,7 +325,7 @@ Point* Node::splitNode(Distance distance, Node* n1, Node* n2) {
             distances[id] = rightD;
         } else {
             // Otherwise we have to compute it
-            leftD = Point::computeDistance(newRepData, currData, distance);
+            leftD = Point::computeDistance(newRep->getDataRef(), p->getDataRef(), distance);
             if(leftD < rightD){
                 //left->addPoint(p, leftD, distance);
                 shouldBeLeft[id] = true;
@@ -421,11 +421,12 @@ void Node::addPoint(Point *newPoint, const double &distanceToCentroid, const Dis
     // Update cost
     double dist;
     if(newPoint != representative){
-        if(std::isnan(distanceToCentroid)){
+        dist = std::isnan(distanceToCentroid) ? Point::computeDistance(newPoint->getDataRef(), representative->getDataRef(), distance) : distanceToCentroid;
+        /*if(std::isnan(distanceToCentroid)){
             dist = Point::computeDistance(newPoint->getData(), representative->getData(), distance);
         } else {
             dist = distanceToCentroid;
-        }
+        }*/
         cost += dist*dist;
         newPoint->setDistance(dist);
     }

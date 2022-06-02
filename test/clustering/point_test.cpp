@@ -47,6 +47,7 @@ TEST_F(PointTest, CosineNormShouldWorkCorrectly) {
     v2 << 1, 2, 7,  4;
 
     Point point2(std::make_unique<Eigen::VectorXd>(v2));
+    std::cout << *point2.getDataRef() << std::endl;
 
     EXPECT_FLOAT_EQ(point.computeDistance(point2, Distance::Cosine),42/sqrt(30*70));
 }

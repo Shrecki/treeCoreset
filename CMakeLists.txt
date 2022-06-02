@@ -3,7 +3,7 @@ project(treeCoresetProj)
 
 set(CMAKE_CXX_STANDARD 17)
 
-
+# Ensures we use all optimizations.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -msse4.1 -march=native")
 
@@ -15,13 +15,6 @@ FetchContent_Declare(
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
-
-
-
-#set( boost_INSTALL "/usr/local/share/boost_1_77_0/build-boost")
-#set( boost_INCLUDE_DIR ${boost_INSTALL}/include )
-#set( boost_LIB_DIR ${boost_INSTALL}/lib )
-#set( Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost" )
 
 find_package(Boost COMPONENTS program_options REQUIRED PATHS)
 include_directories(${Boost_INCLUDE_DIR})
@@ -40,8 +33,6 @@ set(SOURCES
         src/network/ServerMessaging.h src/network/ServerMessaging.cpp
         src/Errors.h src/network/MessagingUtils.h src/network/MessagingUtils.cpp)
 
-find_package(PkgConfig)
-pkg_check_modules(PC_ZeroMQ QUIET zmq)
 find_path(ZeroMQ_INCLUDE_DIR
         NAMES zmq.hpp
         PATHS ${PC_ZeroMQ_INCLUDE_DIRS}
@@ -50,6 +41,7 @@ find_library(ZeroMQ_LIBRARY
         NAMES zmq
         PATHS ${PC_ZeroMQ_LIBRARY_DIRS}
         )
+
 # For main program
 add_executable(treeCoreset main.cpp ${SOURCES})
 target_include_directories(treeCoreset PRIVATE eigen)

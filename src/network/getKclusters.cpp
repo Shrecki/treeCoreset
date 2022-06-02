@@ -28,8 +28,8 @@ public:
         // Connect to port
         try{
             zmq::context_t context(1);
-            zmq::socket_t socket(context, ZMQ_REQ);
-            socket.connect("tcp://localhost:5555");
+            zmq::socket_t socket(context, ZMQ_PAIR);
+            socket.connect("inproc://#1");
 
             // Get centroids
             std::vector<std::vector<double>*>* received_centroids = ClientMessaging::requestCentroids(socket, inputs[0][0], 50000);

@@ -26,8 +26,8 @@ protected:
 
     ClientMessagingTest(){
         context = new zmq::context_t(2);
-        server_socket = new zmq::socket_t(*context, ZMQ_REP);
-        client_socket = new zmq::socket_t(*context, ZMQ_REQ);
+        server_socket = new zmq::socket_t(*context, ZMQ_PAIR);
+        client_socket = new zmq::socket_t(*context, ZMQ_PAIR);
 
     }
 
@@ -40,8 +40,8 @@ protected:
     void SetUp() override {
         //zmq::context_t ct(2);
         //zmq::socket_t server_socket(context, ZMQ_REP);
-        server_socket->bind("tcp://*:5555");
-        client_socket->connect("tcp://localhost:5555");
+        server_socket->bind("inproc://#1");
+        client_socket->connect("inproc://#1");
 
         //zmq::socket_t client_socket(context, ZMQ_REQ);
         t1 = new std::thread(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);
@@ -321,6 +321,31 @@ TEST_F(ClientMessagingTest, gettingCentroidsReturnValidCentroidsAfterPostingMany
     }
 
     ClientMessaging::free_vector(centroid_results);
+    ClientMessaging::requestStop(*client_socket);
+}
+
+
+TEST_F(ClientMessagingTest, stressTest){
+// We will request to put in a simple point
+
+    for(int i=0; i < 10e3; ++i){
+        Eigen::VectorXd vec = Eigen::VectorXd::Random(200000);
+        try{
+            ClientMessaging::requestPutPoint(*client_socket, vec.data(), 200000, 1000);
+        } catch(std::exception &e){
+            std::cout << e.what() << std::endl,
+                    std::cout << i << std::endl;
+            break;
+        }
+    }
+
+
+    auto reps = ClientMessaging::requestRepresentatives(*client_socket, 1000);
+    EXPECT_EQ(reps->size(), 10);
+    EXPECT_EQ(reps->at(0)->size(), 200000);
+
+    ClientMessaging::free_vector(reps);
+
     ClientMessaging::requestStop(*client_socket);
 }
 
