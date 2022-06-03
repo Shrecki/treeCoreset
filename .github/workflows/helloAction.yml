@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: install cppunit
         run: sudo apt install -y libcppunit-dev
+      - name: list dir
+        run: ls
       - name: make dir
         run: mkdir cmake-build-debug-coverage 
       - name: cd dir
