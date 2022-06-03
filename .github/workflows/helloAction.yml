@@ -1,0 +1,20 @@
+name: C/C++ CI
+
+on:
+  push:
+      branches: [ main ]
+  pull_request:
+      branches: [ main ]
+
+jobs:
+  build-and-test:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v2
+      - name: install cppunit
+      run: sudo apt install -y libcppunit-dev
+      - name: build tests
+      run: mkdir cmake-build-debug-coverage && cd cmake-build-debug-coverage
+cmake ../ -DCODE_COVERAGE=ON && cmake --build . --target unit_test --config Release -- -j
+      - name: test
+      run: ./unit_test && lcov --capture --directory . --output-file coverage.info && lcov --remove coverage.info '*/include/*' '*/eigen/*' '*test/*' -o coverage.info && COVERAGE=$(genhtml coverage.info --output-directory out | grep -Po 'lines......: \K[^%]*') && echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV

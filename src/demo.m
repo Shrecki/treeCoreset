@@ -135,7 +135,7 @@ representatives = cell2mat(cellfun(@(x) x', mycellreps, 'UniformOutput', false))
 
 k_range=2:10;
 n_folds=50;
-[Consensus] = CAP_ConsensusClustering({representatives}, k_range, 'items', 1.0, n_folds, 'correlation')
+[Consensus] = CAP_ConsensusClustering({representatives}, k_range, 'items', 0.9, n_folds, 'correlation')
 % Perform kmeans and consensus clustering, just like normally with CAPs!
 
 % MISSING NOW: - A proper build file. This build file should:

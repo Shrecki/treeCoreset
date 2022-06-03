@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(treeCoresetProj)
 
+include(cmake-scripts/code-coverage.cmake)
+
 set(CMAKE_CXX_STANDARD 17)
 
 # Ensures we use all optimizations.
@@ -29,9 +31,10 @@ set(SOURCES
         src/clustering/ClusteredPoints.cpp src/clustering/ClusteredPoints.h
         src/clustering/kmeansplusplus.cpp src/clustering/kmeansplusplus.h
         src/network/Requests.h
+        src/Errors.h
         src/network/ClientMessaging.h src/network/ClientMessaging.cpp
         src/network/ServerMessaging.h src/network/ServerMessaging.cpp
-        src/Errors.h src/network/MessagingUtils.h src/network/MessagingUtils.cpp)
+        src/network/MessagingUtils.h src/network/MessagingUtils.cpp)
 
 find_path(ZeroMQ_INCLUDE_DIR
         NAMES zmq.hpp
@@ -41,6 +44,7 @@ find_library(ZeroMQ_LIBRARY
         NAMES zmq
         PATHS ${PC_ZeroMQ_LIBRARY_DIRS}
         )
+
 
 # For main program
 add_executable(treeCoreset main.cpp ${SOURCES})
@@ -57,11 +61,12 @@ add_executable(unit_test ${SOURCES}
         test/clustering/kmeansplusplus_test.cpp test/clustering/utils.cpp test/utils.h
         test/network/client_messaging_test.cpp
         test/network/server_messaging_test.cpp)
-target_link_libraries(unit_test gtest_main)
-target_link_libraries(unit_test gmock_main)
-target_link_libraries(unit_test ${ZeroMQ_LIBRARY})
+target_link_libraries(unit_test PRIVATE gtest_main)
+target_link_libraries(unit_test PRIVATE gmock_main)
+target_link_libraries(unit_test PRIVATE ${ZeroMQ_LIBRARY})
 target_include_directories(unit_test PRIVATE src)
 target_include_directories(unit_test PRIVATE eigen)
+target_code_coverage(unit_test target_code_coverage_PUBLIC)
 
 include(GoogleTest)
 gtest_discover_tests(unit_test)
