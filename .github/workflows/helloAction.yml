@@ -27,7 +27,3 @@ jobs:
         run: lcov --capture --directory . --output-file coverage.info 
       - name: clean coverage
         run: lcov --remove coverage.info '*/include/*' '*/eigen/*' '*test/*' -o coverage.info 
-      - name: extract coverage
-        run: COVERAGE=$(genhtml coverage.info --output-directory out | grep -Po 'lines......: \K[^%]*')
-      - name: set env coverage
-        run: echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
