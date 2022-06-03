@@ -12,13 +12,16 @@ jobs:
       steps:
       - uses: actions/checkout@v2
       - name: install cppunit
-        run: sudo apt install -y libcppunit-dev
-      - name: list dir
-        run: ls
+        run: |
+          sudo apt install -y libcppunit-dev
+          sudo apt-get install software-properties-common
+          sudo add-apt-repository ppa:george-edison55/cmake-3.x
+          sudo apt-get update
+          sudo apt-get upgrade
       - name: make dir
-        run: mkdir cmake-build-debug-coverage 
-      - name: cd dir
-        run: cd cmake-build-debug-coverage
+        run: | 
+          mkdir cmake-build-debug-coverage 
+          cd cmake-build-debug-coverage
       - name: makefile
         run: cmake ../ -DCODE_COVERAGE=ON
       - name: build tests 
