@@ -16,4 +16,3 @@ jobs:
       - name: build tests
         run: mkdir cmake-build-debug-coverage 
         run: cd cmake-build-debug-coverage
-cmake ../ -DCODE_COVERAGE=ON 
