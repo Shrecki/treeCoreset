@@ -13,3 +13,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: install cppunit
         run: sudo apt install -y libcppunit-dev
+      - name: build tests
+        run: mkdir cmake-build-debug-coverage && cd cmake-build-debug-coverage
+cmake ../ -DCODE_COVERAGE=ON && cmake --build . --target unit_test --config Release -- -j
