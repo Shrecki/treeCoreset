@@ -133,10 +133,28 @@ stopServer()
 % Put representatives as a single matrix
 representatives = cell2mat(cellfun(@(x) x', mycellreps, 'UniformOutput', false));
 
+% Perform kmeans and consensus clustering, just like normally with CAPs!
 k_range=2:10;
 n_folds=50;
-[Consensus] = CAP_ConsensusClustering({representatives}, k_range, 'items', 0.9, n_folds, 'correlation')
-% Perform kmeans and consensus clustering, just like normally with CAPs!
+
+[Consensus] = CAP_ConsensusClustering({representatives}, k_range, 'items', 0.9, n_folds, 'correlation');
+% Assess the quality, and e.g plot the CDF of the different cluster
+% numbers:
+[CDF,PAC] = ComputeClusteringQuality(Consensus,[]);
+
+hold on
+for i=1:size(CDF,1)
+    plot(0:0.005:1, CDF(i,:), 'DisplayName', ['k=' int2str(clusters(i))]);
+end
+hold off
+legend();
+xlabel('Consensus index');
+ylabel('CDF');
+title('CDF of consensus index for different number of clusters');
+
+%%
+% Save the representatives, should it be desirable to use them later
+save('/some-save-path/CAPS-representatives.mat', 'representatives', '-double', '-tabs');
 
 % MISSING NOW: - A proper build file. This build file should:
 %  - install libzmq if it is not already installed
