@@ -9,6 +9,12 @@
 #include "../utils.h"
 #include "math_framework.h"
 
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+
+namespace fs = boost::filesystem;
+
 using ::testing::Return;
 
 class KMeansTest : public ::testing::Test {
@@ -93,8 +99,15 @@ TEST_F(KMeansTest, kmeansSimpleCaseAssignsClustersCorrectly) {
 }
 
 TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
 
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
     std::vector<Eigen::VectorXd> vectors;

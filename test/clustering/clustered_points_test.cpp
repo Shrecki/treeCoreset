@@ -9,6 +9,10 @@
 #include <chrono>
 #include <immintrin.h>
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+
+namespace fs = boost::filesystem;
 
 using ::testing::Return;
 
@@ -241,7 +245,15 @@ TEST_F(ClusteredPointsTest, insertingPointsDynamicallyAllocatedShouldNotCauseMem
 
 
 TEST_F(ClusteredPointsTest, pointsFromFile){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -287,7 +299,15 @@ TEST_F(ClusteredPointsTest, pointsFromFile){
 
 
 TEST_F(ClusteredPointsTest, runningOnReducedVersionIsNotTooFarFromActualClusters){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);

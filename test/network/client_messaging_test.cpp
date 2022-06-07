@@ -15,6 +15,11 @@
 #include "network/MessagingUtils.h"
 #include <thread>
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+
+namespace fs = boost::filesystem;
+
 using ::testing::Return;
 
 class ClientMessagingTest : public ::testing::Test {
@@ -163,7 +168,17 @@ TEST_F(ClientMessagingTest, postingAPointOf0DimensionShouldReturnAnErrorMessage)
 }
 
 TEST_F(ClientMessagingTest, postingMorePointsThanRepresentativesShouldNotTriggerException){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    //boost::filesystem::path p = boostdll::program_location();
+    //std::cout << p << std::endl;
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -198,7 +213,15 @@ TEST_F(ClientMessagingTest, zeroNumberOfCentroidsRaisesException){
 }
 
 TEST_F(ClientMessagingTest, tryingToGetNClustersWhenLessThanNPointsPostedShouldReturnAnErrorMessage){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -236,7 +259,15 @@ TEST_F(ClientMessagingTest, tryingToGetNClustersWhenLessThanNPointsPostedShouldR
 }
 
 TEST_F(ClientMessagingTest, tryingToGetMoreClustersThanAvailableRepresentativesShouldReturnAnErrorMessage){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -273,8 +304,26 @@ TEST_F(ClientMessagingTest, tryingToGetMoreClustersThanAvailableRepresentativesS
     ClientMessaging::requestStop(*client_socket);
 }
 
-TEST_F(ClientMessagingTest, gettingCentroidsReturnValidCentroidsAfterPostingManyPoints){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+TEST_F(ClientMessagingTest, boostPathTest) {
+    fs::path full_path(fs::current_path());
+
+    std::cout << full_path << std::endl;
+    ClientMessaging::requestStop(*client_socket);
+
+}
+
+TEST_F(ClientMessagingTest, gettingcentroidsReturnValidCentroidsAfterPostingManyPoints){
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
+
+    //std::cout << full_path.stem() << std::endl;
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);

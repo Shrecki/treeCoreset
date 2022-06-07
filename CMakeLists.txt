@@ -18,9 +18,12 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-find_package(Boost COMPONENTS program_options REQUIRED PATHS)
+find_package(Boost COMPONENTS program_options system filesystem REQUIRED PATHS)
 include_directories(${Boost_INCLUDE_DIR})
 message("boost lib: ${Boost_LIBRARIES}, inc:${Boost_INCLUDE_DIR}")
+
+link_libraries('boost_filesystem')
+link_libraries('boost_system')
 
 
 set(SOURCES
