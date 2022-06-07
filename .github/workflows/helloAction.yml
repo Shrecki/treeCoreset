@@ -15,6 +15,7 @@ jobs:
         run: |
           sudo apt install -y libcppunit-dev
           sudo apt-get install software-properties-common
+          sudo apt install -y lcov
       - name: cmake installation
         run: |
           wget https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5.tar.gz
