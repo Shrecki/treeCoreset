@@ -23,7 +23,8 @@
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
+[![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Shrecki/885611157/raw/treeCoreset__main.json)]
+[![Build Status](https://github.com/github/treeCorset/actions/workflows/helloAction.yml/badge.svg?event=push)]
 
 
 <!-- PROJECT LOGO -->
@@ -226,4 +227,3 @@ Project Link: [https://github.com/Shrecki/treeCoreset](https://github.com/Shreck
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/linkedin_username
 [product-screenshot]: images/screenshot.png
-
