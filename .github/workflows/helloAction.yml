@@ -21,7 +21,7 @@ jobs:
           tar -zxvf cmake-3.22.5.tar.gz
           cd cmake-3.22.5
           sudo ./bootstrap
-          sudo make -j 4
+          sudo make -j4
           sudo make -j install
           cmake --version
       - name: git submodule installation
@@ -34,7 +34,7 @@ jobs:
           tar xzvf boost_1_79_0.tar.gz
           cd boost_1_79_0/
           ./bootstrap.sh --prefix=/usr/
-          ./b2
+          ./b2 -j4
           sudo ./b2 install
       - name: make project
         run: |
