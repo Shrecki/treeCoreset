@@ -23,8 +23,9 @@
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
+
+[![Build Status](https://github.com/Shrecki/treeCoreset/actions/workflows/helloAction.yml/badge.svg?branch=main)](https://github.com/Shrecki/treeCoreset/actions/workflows/helloAction.yml)
 [![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Shrecki/885611157/raw/treeCoreset__main.json)]
-[![Build Status](https://github.com/github/treeCorset/actions/workflows/helloAction.yml/badge.svg?event=push)]
 
 
 <!-- PROJECT LOGO -->
