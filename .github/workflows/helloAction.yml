@@ -44,6 +44,7 @@ jobs:
           cmake --build . --target unit_test --config Release -- -j
       - name: run tests and get coverage
         run: |
+          cd cmake-build-debug-coverage
           ./unit_test
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '*/include/*' '*/eigen/*' '*test/*' -o coverage.info

@@ -112,22 +112,57 @@ To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
-Eigen, Boost and ØMQ are required for this project to work. Head to their respective pages for installation instruction depending on your platform.
+Eigen, Boost and ØMQ are required for this project to work. Eigen is already included as a submodule.
 
 
 ### Installation
 
-1. Make sure to fill the prerequisites
-2. Clone the repo
+0. Install prerequisite libraries:
+   ```sh
+   sudo apt-get install -y build-essential g++ python-dev autotools-dev libicu-dev libbz2-dev lcov libcppunit-dev software-properties-common
+   ```
+1. Clone the repo
    ```sh
    git clone https://github.com/Shrecki/treeCoreset.git
    ```
-3. In the repo, create build folder and navigate to it
+2. Install the submodules:
+  ```sh
+  git submodule init
+  git submodule update
+  ```
+3. If your cmake version is outdated, install a newer version, e.g:
+  ```sh
+  wget https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5.tar.gz
+  tar -zxvf cmake-3.22.5.tar.gz
+  cd cmake-3.22.5
+  sudo ./bootstrap
+  sudo make
+  sudo make install
+  cmake --version
+  ```
+
+4. Install ØMQ, either from source file or through apt:
+  ```sh
+  sudo apt-get install -y libzmq3-dev
+  ```
+
+5. Install Boost:
+  ```sh
+  sudo apt-get install -y libboost-all-dev 
+  wget -O boost_1_79_0.tar.gz https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.gz
+  tar xzvf boost_1_79_0.tar.gz
+  cd boost_1_79_0/
+  ./bootstrap.sh --prefix=/usr/
+  ./b2
+  sudo ./b2 install
+  ```
+6. Finally, make the project:
    ```sh
-   mkdir build && cd build
+   mkdir cmake-build-debug-coverage
+   cd cmake-build-debug-coverage
+   cmake ../ -DCODE_COVERAGE=ON
+   cmake --build . --target unit_test --config Release -- -j
    ```
-4. Build CMakeList for the project
-5. Build the project
 
 Note that in CMakeList, march=native is used. If you're on an unsupported platform, you can remove this flag or - better yet - replace it with the flag corresponding to your CPU architecture to benefit from Eigen's maximum performance.
 
