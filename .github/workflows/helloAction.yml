@@ -15,6 +15,8 @@ jobs:
         run: |
           sudo apt install -y libcppunit-dev
           sudo apt-get install software-properties-common
+      - name: cmake installation
+        run: |
           wget https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5.tar.gz
           tar -zxvf cmake-3.22.5.tar.gz
           cd cmake-3.22.5
@@ -22,17 +24,21 @@ jobs:
           sudo make
           sudo make install
           cmake --version
+      - name: git submodule installation
+        run: |
+          git submodule init
+          git submodule update
       - name: make project
         run: |
-          mkdir cmake-build-debug-coverage 
+          mkdir cmake-build-debug-coverage
           cd cmake-build-debug-coverage
           cmake ../ -DCODE_COVERAGE=ON
           cmake --build . --target unit_test --config Release -- -j
       - name: run tests and get coverage
-        run: | 
+        run: |
           ./unit_test
-          lcov --capture --directory . --output-file coverage.info 
-          lcov --remove coverage.info '*/include/*' '*/eigen/*' '*test/*' -o coverage.info 
+          lcov --capture --directory . --output-file coverage.info
+          lcov --remove coverage.info '*/include/*' '*/eigen/*' '*test/*' -o coverage.info
           COVERAGE=$(genhtml coverage.info --output-directory out | grep -Po 'lines......: \K[^%]*')
           echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
       - name: Create the Badge
