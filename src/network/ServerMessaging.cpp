@@ -44,7 +44,7 @@ namespace ServerMessaging{
     }
 
     void handlePostRequest(double *array, int nElems, ClusteredPoints &clusteredPoints, zmq::socket_t &socket){
-        std::cout << "Received a POST request." << std::endl;
+        //std::cout << "Received a POST request." << std::endl;
         // Convert to a point
         Requests response;
         Point* p = nullptr;
@@ -92,7 +92,7 @@ namespace ServerMessaging{
                 throw;
             }
 
-            std::cout << "Insert went ok" << std::endl;
+            //std::cout << "Insert went ok" << std::endl;
 
             // Send back response: all went well
                 //std::cout << "Response sent " << std::endl;

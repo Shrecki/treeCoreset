@@ -122,7 +122,7 @@ TEST_F(ClusteredPointsTest, insertingExactlyMPointsCausesSecondBucketToBeFilledW
     EXPECT_EQ(clusteredPoints.buckets.at(1)->size(), 2);
 
 }
-
+/*
 TEST_F(ClusteredPointsTest, stressTest){
     ClusteredPoints clusteredPoints(10,10);
 
@@ -142,7 +142,7 @@ TEST_F(ClusteredPointsTest, stressTest){
         }
     }
 
-}
+}*/
 
 TEST_F(ClusteredPointsTest, requestingZeroCentroidsThrowsException){
     ClusteredPoints clusteredPoints(10,2);

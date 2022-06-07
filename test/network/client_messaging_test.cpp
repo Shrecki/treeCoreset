@@ -324,7 +324,7 @@ TEST_F(ClientMessagingTest, gettingCentroidsReturnValidCentroidsAfterPostingMany
     ClientMessaging::requestStop(*client_socket);
 }
 
-
+/*
 TEST_F(ClientMessagingTest, stressTest){
 // We will request to put in a simple point
 
@@ -347,5 +347,5 @@ TEST_F(ClientMessagingTest, stressTest){
     ClientMessaging::free_vector(reps);
 
     ClientMessaging::requestStop(*client_socket);
-}
+}*/
 
