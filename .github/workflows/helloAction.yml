@@ -21,8 +21,8 @@ jobs:
           tar -zxvf cmake-3.22.5.tar.gz
           cd cmake-3.22.5
           sudo ./bootstrap
-          sudo make
-          sudo make install
+          sudo make -j 4
+          sudo make -j install
           cmake --version
       - name: git submodule installation
         run: |
