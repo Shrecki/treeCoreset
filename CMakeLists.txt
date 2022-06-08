@@ -29,12 +29,12 @@ link_libraries('boost_system')
 
 
 set(SOURCES
-        src/clustering/Node.cpp src/clustering/Node.h
-        src/clustering/Point.cpp src/clustering/Point.h
-        src/clustering/RandomGenerator.cpp src/clustering/RandomGenerator.h
+        src/clustering/Node.h src/clustering/Node.cpp
+        src/clustering/Point.h src/clustering/Point.cpp
+        src/clustering/RandomGenerator.h src/clustering/RandomGenerator.cpp
         src/clustering/coreset_algorithms.h src/clustering/coreset_algorithms.cpp
-        src/clustering/ClusteredPoints.cpp src/clustering/ClusteredPoints.h
-        src/clustering/kmeansplusplus.cpp src/clustering/kmeansplusplus.h
+        src/clustering/ClusteredPoints.h src/clustering/ClusteredPoints.cpp
+        src/clustering/kmeansplusplus.h src/clustering/kmeansplusplus.cpp
         src/network/Requests.h
         src/Errors.h
         src/network/ClientMessaging.h src/network/ClientMessaging.cpp

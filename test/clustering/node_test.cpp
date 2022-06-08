@@ -9,6 +9,7 @@
 #include "math_framework.h"
 #include <cmath>
 #include <boost/math/distributions/chi_squared.hpp>
+#include <chrono>
 
 using ::testing::Return;
 
