@@ -128,7 +128,16 @@ TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
     pointFile.close();
 
 
-    std::ifstream labelFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/expectedLabels.csv");
+    fs::path label_path(fs::current_path());
+    label_path = label_path.remove_leaf();
+    label_path /= "test";
+    label_path /= "clustering";
+    label_path /= "expectedLabels.csv";
+
+    std::cout << label_path << std::endl;
+
+
+    std::ifstream labelFile(label_path);
     int expectedLabels[inputPoints.size()];
     int i =0;
     std::string line;
