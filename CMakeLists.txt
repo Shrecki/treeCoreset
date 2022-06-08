@@ -4,6 +4,8 @@ project(treeCoresetProj)
 include(cmake-scripts/code-coverage.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Ensures we use all optimizations.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
@@ -54,6 +56,8 @@ add_executable(treeCoreset main.cpp ${SOURCES})
 target_include_directories(treeCoreset PRIVATE eigen)
 target_include_directories(treeCoreset PUBLIC ${ZeroMQ_INCLUDE_DIR})
 target_link_libraries(treeCoreset PUBLIC ${ZeroMQ_LIBRARY} ${Boost_LIBRARIES})
+#target_compile_features(treeCoreset, PUBLIC, cxx_std_17)
+
 
 
 # For unit tests
@@ -70,6 +74,7 @@ target_link_libraries(unit_test PRIVATE ${ZeroMQ_LIBRARY})
 target_include_directories(unit_test PRIVATE src)
 target_include_directories(unit_test PRIVATE eigen)
 target_code_coverage(unit_test target_code_coverage_PUBLIC)
+#target_compile_features(unit_test, PUBLIC, cxx_std_17)
 
 include(GoogleTest)
 gtest_discover_tests(unit_test)
