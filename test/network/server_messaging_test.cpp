@@ -12,6 +12,11 @@
 #include "network/MessagingUtils.h"
 
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+
+namespace fs = boost::filesystem;
+
 using ::testing::Return;
 
 class ServerMessagingTest : public ::testing::Test {
@@ -257,7 +262,15 @@ TEST_F(ServerMessagingTest, getCentroidsOfZeroPointsReturnsErrorMessageOnClientS
 
 TEST_F(ServerMessagingTest, getCentroidsOfKPointsWithLessThanKPointsInRepresentationReturnsAnErrorMessageOnClientSide){
     // Get many many points
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -556,7 +569,15 @@ TEST_F(ServerMessagingTest, getRepresentativeOfNPointsReturnsCorrectlyTheRepsOnC
 
 
 TEST_F(ServerMessagingTest, getCentroidsOfKPointsReturnsCorrectlyTheCentroidsOnClientSide){
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
@@ -644,7 +665,15 @@ TEST_F(ServerMessagingTest, getCentroidsOfKPointsReturnsCorrectlyTheCentroidsOnC
 
 TEST_F(ServerMessagingTest, gettingRepresentativesFollowedByGetCentroidsDoesNotAffectTheFollowingRepresentativesReturned){
     // Start by sending the points
-    std::ifstream pointFile("/home/guibertf/CLionProjects/treeCoreset/test/clustering/exampledata.csv");
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
 
     std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
     Eigen::VectorXd vectorTest(2);
