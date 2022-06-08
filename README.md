@@ -25,7 +25,7 @@
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 [![Build Status](https://github.com/Shrecki/treeCoreset/actions/workflows/helloAction.yml/badge.svg?branch=main)](https://github.com/Shrecki/treeCoreset/actions/workflows/helloAction.yml)
-[![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Shrecki/885611157/raw/treeCoreset__main.json)](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Shrecki/885611157/raw/treeCoreset__main.json)
+[![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Shrecki/fcde53f4e8d03ff100637910fc249bfc/raw/treeCoreset__main.json)](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Shrecki/fcde53f4e8d03ff100637910fc249bfc/raw/treeCoreset__main.json)
 
 
 <!-- PROJECT LOGO -->
