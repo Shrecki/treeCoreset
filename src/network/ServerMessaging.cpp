@@ -190,9 +190,9 @@ namespace ServerMessaging{
         socket.send(reply);
     }
 
-    void runServer(zmq::socket_t &socket, unsigned int N_SAMPLES, unsigned int M) {
+    void runServer(zmq::socket_t &socket, unsigned int N_SAMPLES, unsigned int M, Distance distance) {
         std::cout << "Started server!" << std::endl;
-        ClusteredPoints clusteredPoints(ceil(log2(N_SAMPLES/M)+2), M);
+        ClusteredPoints clusteredPoints(ceil(log2(N_SAMPLES / M) + 2), M, distance);
 
         bool mustContinue(true);
         double *array = nullptr;

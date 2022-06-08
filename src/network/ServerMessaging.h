@@ -19,7 +19,7 @@ namespace ServerMessaging {
 
     int getNumberOfDoublesInReq(zmq::message_t &msg);
 
-    void runServer(zmq::socket_t &socket, unsigned int N_SAMPLES, unsigned int M);
+    void runServer(zmq::socket_t &socket, unsigned int N_SAMPLES, unsigned int M, Distance distance);
 }
 
 

@@ -38,7 +38,8 @@ namespace coreset{
      * @param nodes
      * @return
      */
-    std::set<Point*> treeCoresetReduceOptim(std::vector<Point*>* points, unsigned int m, std::vector<Node*> &nodes);
+    std::set<Point *>
+    treeCoresetReduceOptim(std::vector<Point *> *points, unsigned int m, std::vector<Node *> &nodes, Distance distance);
 
 
 }

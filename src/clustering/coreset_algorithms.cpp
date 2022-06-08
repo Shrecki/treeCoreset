@@ -9,11 +9,13 @@
 
 std::set<Point*> coreset::treeCoresetReduce(std::vector<Point *> *points, unsigned int m) {
     std::vector<Node*> nodes;
-    return treeCoresetReduceOptim(points, m, nodes);
+    return treeCoresetReduceOptim(points, m, nodes, Distance::Euclidean);
 }
 
 
-std::set<Point*> coreset::treeCoresetReduceOptim(std::vector<Point *> *points, unsigned int m, std::vector<Node*> &nodes) {
+std::set<Point *>
+coreset::treeCoresetReduceOptim(std::vector<Point *> *points, unsigned int m, std::vector<Node *> &nodes,
+                                Distance distance) {
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::duration;
@@ -51,11 +53,11 @@ std::set<Point*> coreset::treeCoresetReduceOptim(std::vector<Point *> *points, u
             root = nodes.at(0);
         }
         unsigned int allocated_nodes = 1;
-        root->setRepresentative(q1, Distance::Euclidean);
+        root->setRepresentative(q1, distance);
 
         for (int i = 0; i < n; ++i) {
             if (i != index) {
-                root->addPoint(points->at(i), Distance::Euclidean);
+                root->addPoint(points->at(i), distance);
             }
         }
         auto t3 = high_resolution_clock::now();
@@ -78,9 +80,9 @@ std::set<Point*> coreset::treeCoresetReduceOptim(std::vector<Point *> *points, u
 
             // This step is incredibly expensive. Look to optimize it
             if (useOnlyRoot) {
-                newRep = electedChild->splitNode(Distance::Euclidean, nullptr, nullptr);
+                newRep = electedChild->splitNode(distance, nullptr, nullptr);
             } else {
-                newRep = electedChild->splitNode(Distance::Euclidean, nodes.at(allocated_nodes),
+                newRep = electedChild->splitNode(distance, nodes.at(allocated_nodes),
                                                  nodes.at(allocated_nodes + 1));
             }
             //uto tAft = high_resolution_clock::now();

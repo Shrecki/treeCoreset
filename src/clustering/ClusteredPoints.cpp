@@ -61,7 +61,7 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
             // Reduce step
             //std::cout << "Size: " << tmp_vec.size() << " for bucket " << bucket_i << std::endl;
 
-            q=coreset::treeCoresetReduceOptim(&tmp_vec, bucketCapacity, nodes);
+            q= coreset::treeCoresetReduceOptim(&tmp_vec, bucketCapacity, nodes, distance);
             ++bucket_i;
             if(bucket_i == nBuckets){
                 break; // Otherwise this would result in a segfault in our loop
@@ -126,8 +126,10 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
     }
 }
 
-ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity): nBuckets(nBuckets),
-bucketCapacity(bucketCapacity), nsplits((unsigned int)2*(bucketCapacity-1) + 1), dimension(-1), otherBucketsFull(false) {
+ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity, Distance distance)
+        : nBuckets(nBuckets),
+          bucketCapacity(bucketCapacity), nsplits((unsigned int)2*(bucketCapacity-1) + 1), dimension(-1), otherBucketsFull(false),
+          distance(distance){
     std::cout << "N_buckets : " << std::to_string(nBuckets) << " Bucket capacity: " << std::to_string(bucketCapacity) << std::endl;
     buckets.reserve(nBuckets);
     for(int i=0; i<nBuckets;++i){
@@ -184,7 +186,7 @@ std::vector<Point *> ClusteredPoints::getRepresentatives() {
     u.insert(u.begin(), q.begin(), q.end());
 
     // Reduce step
-    q=coreset::treeCoresetReduceOptim(&u, bucketCapacity, nodes);
+    q= coreset::treeCoresetReduceOptim(&u, bucketCapacity, nodes, distance);
 
     // Convert back to vector and return
     std::vector<Point*> results;
@@ -228,7 +230,8 @@ void ClusteredPoints::reduceBuckets(){
     // std::cout << "Starting reduce on buckets " << std::endl;
     if(otherBucketsFull){
         std::vector<Point *> currPoints = getUnionOfBuckets(0, buckets.size());
-        std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes);
+        std::set<Point *> representativeSet = coreset::treeCoresetReduceOptim(&currPoints, bucketCapacity, nodes,
+                                                                              distance);
 
         // Update all buckets: bucket 0 will get all representative sets, whereas other buckets will be emptied
         // Note here: we should check for all points if they are in the representative set, free them otherwise

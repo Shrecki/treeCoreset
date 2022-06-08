@@ -142,7 +142,7 @@ TEST_F(CoresetTest, optimizedCoresetWorksWithProvidedNodes){
     std::vector<Node *> nodes = {&n1, &n2, &n3, &n4, &n5};
 
     // Then, we will ask for m representatives, which should come up as our points
-    std::set<Point*> result = coreset::treeCoresetReduceOptim(&points, 2, nodes);
+    std::set<Point*> result = coreset::treeCoresetReduceOptim(&points, 2, nodes, Distance::Euclidean);
 
     // Because p5 is such a huge outlier, it must be into the clusters.
     // Furthermore, there should be two points in the cluster.
@@ -179,7 +179,7 @@ TEST_F(CoresetTest, coresetWhenMGreaterThanNumberOfPoints){
     std::vector<Node *> nodes = {&n1, &n2, &n3, &n4, &n5};
 
     // Then, we will ask for m representatives, which should come up as our points
-    std::set<Point*> result = coreset::treeCoresetReduceOptim(&points, 8, nodes);
+    std::set<Point*> result = coreset::treeCoresetReduceOptim(&points, 8, nodes, Distance::Euclidean);
 
     // In this case, we expect the set to have exactly the size of original data and to contain all data
     EXPECT_EQ(result.size(), points.size());

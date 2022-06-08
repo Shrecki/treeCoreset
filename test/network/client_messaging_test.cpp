@@ -49,7 +49,7 @@ protected:
         client_socket->connect("ipc:///tmp/test");
 
         //zmq::socket_t client_socket(context, ZMQ_REQ);
-        t1 = new std::thread(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);
+        t1 = new std::thread(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10, Distance::Euclidean);
     }
 
     void TearDown() override {

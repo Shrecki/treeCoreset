@@ -25,12 +25,13 @@ class ClusteredPoints {
     unsigned int nsplits;
     int dimension;
     bool otherBucketsFull;
+    Distance distance;
 public:
     std::vector<std::vector<Point*>*> buckets;
     std::vector<unsigned int> bucketCapacities;
     std::vector<Node*> nodes;
 
-    explicit ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity);
+    explicit ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity, Distance distance);
     ~ClusteredPoints();
 
     /**

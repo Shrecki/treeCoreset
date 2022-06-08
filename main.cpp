@@ -13,12 +13,53 @@ double compute_number_of_doubles(unsigned int n, unsigned int m, unsigned int di
     return 1.0*(ceil(log2(1.0*n/m))+1) * m * dim;
 }
 
+struct distance_type {
+    distance_type(std::string const& val):
+            value(val)
+    {
+        if(val== "euclidean"){
+            dist = Distance::Euclidean;
+        }
+        if(val == "cosine"){
+            dist = Distance::Cosine;
+        }
+        if(val == "correlation"){
+            dist = Distance::Correlation;
+        }
+
+    }
+    std::string value;
+    Distance dist;
+};
+
+void validate(boost::any& v,
+              std::vector<std::string> const& values,
+              distance_type* /* target_type */,
+              int)
+{
+    using namespace boost::program_options;
+
+    // Make sure no previous assignment to 'v' was made.
+    validators::check_first_occurrence(v);
+
+    // Extract the first string from 'values'. If there is more than
+    // one string, it's an error, and exception will be thrown.
+    std::string const& s = validators::get_single_string(values);
+
+    if (s == "euclidean" || s == "cosine" || s == "correlation") {
+        v = boost::any(distance_type(s));
+    } else {
+        throw validation_error(validation_error::invalid_option_value);
+    }
+}
+
 int main(int argc, char **argv) {
     unsigned int input_m;
     unsigned int input_n;
     unsigned int input_dimension;
     unsigned int port;
     double allowable_ram;
+    distance_type dist("euclidean");
 
     po::options_description desc("Launches a server to which it is possible to send a stream of points, maintaining the coreset representation described  in  Ackermann, Marcel R., et al. \"Streamkm++ a clustering algorithm for data streams.\" Journal of Experimental Algorithmics (JEA) 17 (2012): 2-1."
                                  "\nShortly, the idea is to use a tree to partition space around representative points, which serve as proxy-centroids."
@@ -42,12 +83,21 @@ int main(int argc, char **argv) {
                     " Note that we expect 1KB = 1024B for example. If the algorithm, "
                     "because of the number of samples and number of representatives should fail to meet the RAM limit, "
                     "the program will raise an exception, indicating a sufficient number of representatives that would fulfill RAM requirement.")
+            ("distance", po::value<distance_type>(&dist), "Distance to use in the coreset and in kmeans. Can be correlation, cosine or euclidean.")
             ("process_id", po::value<unsigned int>(&port)->default_value(1), "The process ID to use to communicate. Exactly one client may communicate with the server at a time.");
             ;
 
     po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+    try{
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+    } catch(boost::program_options::validation_error &e){
+        std::cout << "Invalid value for the distance. Valid values are euclidean, cosine or correlation" << std::endl;
+        return 1;
+    } catch(std::exception &e){
+        std::cout << desc << std::endl;
+        return 1;
+    }
 
     if (vm.count("help")) {
         std::cout << desc << "\n";
@@ -73,6 +123,9 @@ int main(int argc, char **argv) {
         std::cout << "Input dimension cannot be zero." << std::endl;
         return 1;
     }
+
+    //std::cout << dist.value << std::endl;
+    //std::cout << std::to_string(dist.dist == Distance::Euclidean) << std::to_string(dist.dist == Distance::Cosine)  << std::to_string(dist.dist == Distance::Correlation)  << std::endl;
 
     allowable_ram *= (1024*1024*1024); // convert to bytes from GB;
     double allowed_doubles = allowable_ram / sizeof(double); // sizeof gives results in B, so we now effectively know how many points we can accomodate for.
@@ -105,7 +158,7 @@ int main(int argc, char **argv) {
     std::cout << "Binding to : " << "ipc:///tmp/feeds/0" + std::to_string(port) << std::endl;
     socket.bind("ipc:///tmp/test");
 
-    ServerMessaging::runServer(socket, input_n, input_m);
+    ServerMessaging::runServer(socket, input_n, input_m, dist.dist);
 
     std::cout << "Exiting" << std::endl;
 

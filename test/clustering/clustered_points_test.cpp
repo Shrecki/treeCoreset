@@ -36,7 +36,7 @@ protected:
 };
 
 TEST_F(ClusteredPointsTest, clusteredPointsAllocatesProperlyExpectedCapacities) {
-    ClusteredPoints clusteredPoints(10,4);
+    ClusteredPoints clusteredPoints(10, 4, Distance::Euclidean);
     EXPECT_EQ(clusteredPoints.buckets.size(), 10);
     for(int i=0; i<10;++i){
         EXPECT_EQ(clusteredPoints.buckets.at(i)->capacity(),4);
@@ -56,7 +56,7 @@ TEST_F(ClusteredPointsTest, clustedPointsProperlyPerformsInsertionOfSinglePointW
     p2(std::make_unique<Eigen::VectorXd>(v2)), p3(std::make_unique<Eigen::VectorXd>(v3));
 
 
-    ClusteredPoints clusteredPoints(10,4);
+    ClusteredPoints clusteredPoints(10, 4, Distance::Euclidean);
     clusteredPoints.insertPoint(&p0);
     EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),1);
     EXPECT_EQ(clusteredPoints.buckets.at(0)->at(0), &p0);
@@ -76,7 +76,7 @@ TEST_F(ClusteredPointsTest, clustedPointsProperlyPerformsInsertionOfSinglePointW
     Point *p0 = Point::convertArrayToPoint(array, 3);
 
 
-    ClusteredPoints clusteredPoints(10,4);
+    ClusteredPoints clusteredPoints(10, 4, Distance::Euclidean);
     clusteredPoints.insertPoint(p0);
     EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),1);
     EXPECT_EQ(clusteredPoints.buckets.at(0)->at(0), p0);
@@ -96,7 +96,7 @@ TEST_F(ClusteredPointsTest, insertingBelowMPointsFillsOnlyFirstBucket){
     Point p1(std::make_unique<Eigen::VectorXd>(v1));
 
 
-    ClusteredPoints clusteredPoints(10,3);
+    ClusteredPoints clusteredPoints(10, 3, Distance::Euclidean);
     clusteredPoints.insertPoint(p0);
     clusteredPoints.insertPoint(&p1);
     EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),2);
@@ -119,7 +119,7 @@ TEST_F(ClusteredPointsTest, insertingExactlyMPointsCausesSecondBucketToBeFilledW
     Point p1(std::make_unique<Eigen::VectorXd>(v1));
 
 
-    ClusteredPoints clusteredPoints(10,2);
+    ClusteredPoints clusteredPoints(10, 2, Distance::Euclidean);
     clusteredPoints.insertPoint(p0);
     clusteredPoints.insertPoint(&p1);
     EXPECT_EQ(clusteredPoints.buckets.at(0)->size(),0);
@@ -149,7 +149,7 @@ TEST_F(ClusteredPointsTest, stressTest){
 }*/
 
 TEST_F(ClusteredPointsTest, requestingZeroCentroidsThrowsException){
-    ClusteredPoints clusteredPoints(10,2);
+    ClusteredPoints clusteredPoints(10, 2, Distance::Euclidean);
 
     std::vector<double> output;
 
@@ -176,7 +176,7 @@ TEST_F(ClusteredPointsTest, inserting2MPointsCausesThirdBucketToBeFilledWithExac
     p3(std::make_unique<Eigen::VectorXd>(v3)), p4(std::make_unique<Eigen::VectorXd>(v4));
 
 
-    ClusteredPoints clusteredPoints(10,2);
+    ClusteredPoints clusteredPoints(10, 2, Distance::Euclidean);
     clusteredPoints.insertPoint(p0);
     clusteredPoints.insertPoint(&p1);
     clusteredPoints.insertPoint(&p2);
@@ -187,12 +187,12 @@ TEST_F(ClusteredPointsTest, inserting2MPointsCausesThirdBucketToBeFilledWithExac
 }
 
 TEST_F(ClusteredPointsTest, insertingNullPtrRaisesException){
-    ClusteredPoints clusteredPoints(10,2);
+    ClusteredPoints clusteredPoints(10, 2, Distance::Euclidean);
     EXPECT_ANY_THROW(clusteredPoints.insertPoint(nullptr));
 }
 
 TEST_F(ClusteredPointsTest, insertingEmptyArrayRaisesException){
-    ClusteredPoints clusteredPoints(10, 2);
+    ClusteredPoints clusteredPoints(10, 2, Distance::Euclidean);
     Eigen::VectorXd v0(0);
     Point p0(std::make_unique<Eigen::VectorXd>(v0));
     EXPECT_ANY_THROW(clusteredPoints.insertPoint(&p0));
@@ -209,7 +209,7 @@ TEST_F(ClusteredPointsTest, insertingPointsShouldConformToDimensionalityOfFirstI
     p2(std::make_unique<Eigen::VectorXd>(v2));
 
 
-    ClusteredPoints clusteredPoints(10,4);
+    ClusteredPoints clusteredPoints(10, 4, Distance::Euclidean);
     clusteredPoints.insertPoint(&p0);
     clusteredPoints.insertPoint(&p1);
     EXPECT_ANY_THROW(clusteredPoints.insertPoint(&p2));
@@ -233,7 +233,7 @@ TEST_F(ClusteredPointsTest, insertingPointsDynamicallyAllocatedShouldNotCauseMem
     Point *p2 = Point::convertArrayToPoint(array2, 3);
     Point *p3 = Point::convertArrayToPoint(array3, 3);
 
-    ClusteredPoints clusteredPoints(10,2);
+    ClusteredPoints clusteredPoints(10, 2, Distance::Euclidean);
     clusteredPoints.insertPoint(p0);
     clusteredPoints.insertPoint(p1);
     clusteredPoints.insertPoint(p2);
@@ -276,7 +276,7 @@ TEST_F(ClusteredPointsTest, pointsFromFile){
 
     int m = 3;
     int l = ceil(log2(inputPoints.size()*1.0/m)+2);
-    ClusteredPoints clusteredPoints(l,m);
+    ClusteredPoints clusteredPoints(l, m, Distance::Euclidean);
     for(int i=0; i < vectors.size(); ++i){
         clusteredPoints.insertPoint(inputPoints.at(i));
     }
@@ -354,7 +354,7 @@ TEST_F(ClusteredPointsTest, runningOnReducedVersionIsNotTooFarFromActualClusters
 
     int m = 3;
     int l = ceil(log2(inputPoints.size()*1.0/m)+2);
-    ClusteredPoints clusteredPoints(l,m);
+    ClusteredPoints clusteredPoints(l, m, Distance::Euclidean);
     for(int i=0; i < vectors.size(); ++i){
         clusteredPoints.insertPoint(inputPoints.at(i));
     }
