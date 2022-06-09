@@ -357,7 +357,7 @@ TEST_F(ClusteredPointsTest, runningOnReducedVersionIsNotTooFarFromActualClusters
     startCentroids.push_back(v1);
     startCentroids.push_back(v2);
 
-    Threeple *t = kmeans::kMeans(inputPoints, &startCentroids, 3, 100);
+    Threeple *t = kmeans::kMeans(inputPoints, &startCentroids, 3, 100, Distance::Euclidean);
 
     int m = 3;
     int l = ceil(log2(inputPoints.size()*1.0/m)+2);

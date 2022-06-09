@@ -49,7 +49,7 @@ TEST_F(PointTest, CosineNormShouldWorkCorrectly) {
     Point point2(std::make_unique<Eigen::VectorXd>(v2));
     std::cout << *point2.getDataRef() << std::endl;
 
-    EXPECT_FLOAT_EQ(point.computeDistance(point2, Distance::Cosine),42/sqrt(30*70));
+    EXPECT_FLOAT_EQ(point.computeDistance(point2, Distance::Cosine),1. - 42/sqrt(30*70));
 }
 
 
@@ -61,9 +61,15 @@ TEST_F(PointTest, CorrelationDistanceWorksCorrectly) {
     Eigen::VectorXd v2(4);
     v2 << 1, 2, 7,  4;
 
+    // 10/4
+    // 14/4
+    // (1-10/4) + (2-10/4)(2-14/4) + (3-10/4)(7-14/4) + (4-10/4)(4-14/4)
+    // -9/4 + -2/4*-6/4 + 2/4*14/4 + 6/4*6/4
+    // 12 + 28
+
     Point point2(std::make_unique<Eigen::VectorXd>(v2));
 
-    EXPECT_FLOAT_EQ(point.computeDistance(point2, Distance::Correlation),7.0/sqrt(105));
+    EXPECT_FLOAT_EQ(point.computeDistance(point2, Distance::Correlation),1. - 7.0/sqrt(105));
 }
 
 

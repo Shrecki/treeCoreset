@@ -279,7 +279,7 @@ void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, uns
 
     // Get best clustering out of 5 attempts
     auto t1 = high_resolution_clock::now();
-    std::vector<Eigen::VectorXd> clusters = kmeans::getBestClusters(5, representatives, k, epochs);
+    std::vector<Eigen::VectorXd> clusters = kmeans::getBestClusters(5, representatives, k, epochs, distance);
     auto t2 = high_resolution_clock::now();
 
 

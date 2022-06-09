@@ -22,11 +22,11 @@ const std::unique_ptr<Eigen::VectorXd> & Point::getDataRef() const {
 }
 
 static double computeCosineDistance(const Eigen::VectorXd &v1, const Eigen::VectorXd &v2) {
-    return (v1.dot(v2)/(v1.norm()*v2.norm()));
+    return 1. - (v1.dot(v2)/(v1.norm()*v2.norm()));
 }
 
 static double computeCosineDistance(const std::unique_ptr<Eigen::VectorXd> &v1, const std::unique_ptr<Eigen::VectorXd> &v2) {
-    return ((*v1).dot(*v2)/((*v1).norm()*(*v2).norm()));
+    return 1. - ((*v1).dot(*v2)/((*v1).norm()*(*v2).norm()));
 }
 
 

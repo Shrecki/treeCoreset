@@ -45,7 +45,7 @@ TEST_F(CoresetTest, coresetReturnsExactlyNRepresentatives) {
     points.push_back(&p3);
 
     // Then, we will ask for m representatives, which should come up as our points
-    std::set<Point*> result = coreset::treeCoresetReduce(&points, points.size());
+    std::set<Point*> result = coreset::treeCoresetReduce(&points, points.size(), Distance::Euclidean);
     for(Point* p: points){
         EXPECT_TRUE(result.find(p) != result.end());
     }
@@ -71,7 +71,7 @@ TEST_F(CoresetTest, coresetReturnsSpecifiedNumberOfRepresentatives) {
     // Then, we will ask for m representatives, which should come up as our points
     std::set<Point*> result;
     for(int i=1; i<=points.size();++i){
-        result = coreset::treeCoresetReduce(&points, i);
+        result = coreset::treeCoresetReduce(&points, i, Distance::Euclidean);
         EXPECT_EQ(result.size(), i);
 
     }
@@ -106,7 +106,7 @@ TEST_F(CoresetTest, inTwoClusterCaseCoresetIdentifiesOutlyingPointAsCluster) {
     points.push_back(&p6);
 
     // Then, we will ask for m representatives, which should come up as our points
-    std::set<Point*> result = coreset::treeCoresetReduce(&points, 2);
+    std::set<Point*> result = coreset::treeCoresetReduce(&points, 2, Distance::Euclidean);
 
     // Because p5 is such a huge outlier, it must be into the clusters.
     // Furthermore, there should be two points in the cluster.

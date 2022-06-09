@@ -68,7 +68,7 @@ for i=1:size(patient_names,2)
         sig = std(V_vec, 0, 2);
         means{i} = mu;
         inv_stds{i} = 1./sig;
-        non_nan_mask = non_nan_mask & ~isnan(inv_stds{i}) & ~isinf(inv_stds{i});
+        non_nan_mask = non_nan_mask & ~isnan(inv_stds{i}) & ;
         clear V V_vec vol mu sig;
     else
        disp(['No file found for ' p_num]);
@@ -78,6 +78,7 @@ end
 %%
 disp('Done');
 n_non_zero_entries = sum(sum(sum(non_nan_mask)));
+brain_mask_non_nan = brain(non_nan_mask);
 %%
 % Start over
 for i=1:size(patient_names,2)
@@ -92,15 +93,14 @@ for i=1:size(patient_names,2)
         %V_vec = zeros(n_non_zero_entries,n_points, 'double');
 
         mu = means{i};
-        inv_sig = inv_stds{i};
+        sig = stds{i};
         
-        disp('Starting to send points for this session');
-
+        
         for j=1:n_points
             vol=V(:,:,:,j);
             vol = double(vol(non_nan_mask(:)));
             vol = vol -  mu(non_nan_mask(:));
-            vol = vol.*inv_sig(non_nan_mask(:));
+            vol = vol*1./(sig(non_nan_mask(:)));
             sendPoint(vol);
         end
         clear V vol;
@@ -109,6 +109,7 @@ for i=1:size(patient_names,2)
         %V_vec = V_vec*1./(sig(non_nan_mask(:)));
         
         % Now send all of these to the representation
+        disp('Starting to send points for this session');
 
         %for i=1:n_points
         %    sendPoint(V_vec(:, i));

@@ -7,9 +7,9 @@
 #include "Node.h"
 #include <chrono>
 
-std::set<Point*> coreset::treeCoresetReduce(std::vector<Point *> *points, unsigned int m) {
+std::set<Point *> coreset::treeCoresetReduce(std::vector<Point *> *points, unsigned int m, Distance measure) {
     std::vector<Node*> nodes;
-    return treeCoresetReduceOptim(points, m, nodes, Distance::Euclidean);
+    return treeCoresetReduceOptim(points, m, nodes, measure);
 }
 
 

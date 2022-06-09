@@ -9,7 +9,9 @@
 #include <iostream>
 
 
-std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(const Eigen::VectorXd &firstCentroid, const std::vector<Point *> &inputPoints, const unsigned int &k){
+std::vector<Eigen::VectorXd>
+kmeans::generateStartCentroids(const Eigen::VectorXd &firstCentroid, const std::vector<Point *> &inputPoints,
+                               const unsigned int &k, Distance measure) {
     // Compute initialization points according to the kMeans++ algorithm
     std::vector<Eigen::VectorXd> startCentroids;
     int nPoints = inputPoints.size();
@@ -39,7 +41,8 @@ std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(const Eigen::VectorX
             minDistance = __DBL_MAX__;
             double dist(0);
             for(int c=0; c<j; c++){
-                dist = Point::computeDistance(startCentroids.at(c), inputPoints.at(i)->getData(), Distance::Euclidean);
+                std::unique_ptr<Eigen::VectorXd> centroid_ptr = std::make_unique<Eigen::VectorXd>(startCentroids.at(c));
+                dist = Point::computeDistance(centroid_ptr, inputPoints.at(i)->getDataRef(), measure);
                 if(dist < minDistance){
                     minDistance = dist;
                 }
@@ -62,18 +65,24 @@ std::vector<Eigen::VectorXd> kmeans::generateStartCentroids(const Eigen::VectorX
     return startCentroids;
 }
 
-Threeple* kmeans::kMeansPlusPlus(const std::vector<Point *> &inputPoints, const unsigned int &k, const unsigned int &epochs) {
+Threeple * kmeans::kMeansPlusPlus(const std::vector<Point *> &inputPoints, const unsigned int &k,
+                                  const unsigned int &epochs,
+                                  Distance measure) {
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<int> distribution(0, inputPoints.size() - 1);
     int id = distribution(gen);
     // This part can be made faster, if we specify the startCentroids vector pre allocated already such that it doesn't have to be at every call
-    std::vector<Eigen::VectorXd> startCentroids = generateStartCentroids(inputPoints.at(id)->getData(),inputPoints, k);
+    std::vector<Eigen::VectorXd> startCentroids = generateStartCentroids(inputPoints.at(id)->getData(), inputPoints, k,
+                                                                         measure);
     // Apply kMeans with these initializations
-    return kMeans(inputPoints, &startCentroids, k, epochs);
+    return kMeans(inputPoints, &startCentroids, k, epochs, measure);
 }
 
-std::vector<Eigen::VectorXd> kmeans::getBestClusters(int nTries, const std::vector<Point *> &inputPoints, const unsigned int &k, const unsigned int &epochs){
+std::vector<Eigen::VectorXd>
+kmeans::getBestClusters(int nTries, const std::vector<Point *> &inputPoints, const unsigned int &k,
+                        const unsigned int &epochs,
+                        Distance measure) {
     if(inputPoints.size() < k){
         throw std::invalid_argument("Asking for " + std::to_string(k) + " centroids with only " +
         std::to_string(inputPoints.size()) + " representative points available. Please add more points or consider increasing number of representatives.");
@@ -85,7 +94,7 @@ std::vector<Eigen::VectorXd> kmeans::getBestClusters(int nTries, const std::vect
     double bestCost(__DBL_MAX__);
 
     for(int r=0; r < nTries; ++r){
-        Threeple *results = kmeans::kMeansPlusPlus(inputPoints, k, epochs);
+        Threeple *results = kmeans::kMeansPlusPlus(inputPoints, k, epochs, measure);
         if(results->totalCost < bestCost){
             bestCost = results->totalCost;
             bestCentroids.clear();
@@ -97,23 +106,24 @@ std::vector<Eigen::VectorXd> kmeans::getBestClusters(int nTries, const std::vect
     return bestCentroids;
 }
 
-int kmeans::findNearestClusterIndex(const std::vector<Eigen::VectorXd> &centroids, const Eigen::VectorXd &point){
+int kmeans::findNearestClusterIndex(const std::vector<Eigen::VectorXd> &centroids, const Eigen::VectorXd &point,
+                                    Distance measure) {
     int assignment = 0;
     int k = centroids.size();
     double centroidToCentroidDistance[k][k];
     double dist(0);
     for(int i=0; i < k; ++i){
         for(int j=i; j < k; ++j){
-            dist = Point::computeDistance(centroids.at(i), centroids.at(j), Distance::Euclidean);
+            dist = Point::computeDistance(centroids.at(i), centroids.at(j), measure);
             centroidToCentroidDistance[i][j] = dist;
             centroidToCentroidDistance[j][i] = dist;
         }
         centroidToCentroidDistance[i][i] = 0.0;
     }
-    double currDistance = Point::computeDistance(centroids.at(assignment), point, Distance::Euclidean);
+    double currDistance = Point::computeDistance(centroids.at(assignment), point, measure);
     for(int i=1; i < centroids.size(); ++i){
         if(i == assignment || centroidToCentroidDistance[assignment][i] >= 2.0*currDistance) continue;
-        dist = Point::computeDistance(centroids.at(i), point, Distance::Euclidean);
+        dist = Point::computeDistance(centroids.at(i), point, measure);
         if(dist < currDistance){
             currDistance = dist;
             assignment = i;
@@ -125,9 +135,10 @@ int kmeans::findNearestClusterIndex(const std::vector<Eigen::VectorXd> &centroid
 
 // Maybe for now just implement the easy version. This way, it can be tested properly.
 // We can always return to a more advanced version later down the line
-Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vector<Eigen::VectorXd> *startCentroids, const unsigned int &k, const unsigned int &epochs){
+Threeple * kmeans::kMeans(const std::vector<Point *> &inputPoints, const std::vector<Eigen::VectorXd> *startCentroids,
+                          const unsigned int &k, const unsigned int &epochs, Distance measure) {
 
-    Distance measure = Distance::Euclidean;
+    //Distance measure = Distance::Euclidean;
     double THRESHOLD = 10e-6;
     if(inputPoints.empty()){
         throw std::invalid_argument("Cannot run this algorithm without points");
@@ -202,7 +213,7 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
         int nearest;
         double dist(0);
         for (int i = 0; i < nPoints; ++i) {
-            nearest = findNearestClusterIndex(centroids, inputPoints.at(i)->getData());
+            nearest = findNearestClusterIndex(centroids, inputPoints.at(i)->getData(), measure);
             assignments[i] = nearest;
 
             centroidMeans.at(nearest) += inputPoints.at(i)->getData();
@@ -366,7 +377,8 @@ Threeple* kmeans::kMeans(const std::vector<Point*> &inputPoints, const std::vect
     std::vector<unsigned int> finalAssignments;
     finalAssignments.reserve(nPoints);
     for(int i=0; i < nPoints; ++i){
-        totalDist += Point::computeDistance(centroids.at(assignments[i]), inputPoints.at(i)->getData(), measure);
+        std::unique_ptr<Eigen::VectorXd> centroid_i = std::make_unique<Eigen::VectorXd>(centroids.at(assignments[i]));
+        totalDist += Point::computeDistance(centroid_i, inputPoints.at(i)->getDataRef(), measure);
         finalAssignments.push_back(assignments[i]);
     }
 

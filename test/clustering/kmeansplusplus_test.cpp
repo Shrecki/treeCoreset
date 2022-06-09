@@ -76,7 +76,7 @@ TEST_F(KMeansTest, kmeansSimpleCaseAssignsClustersCorrectly) {
     startCentroids.push_back(v0);
     startCentroids.push_back(v9);
     startCentroids.push_back(v4);
-    Threeple *t = kmeans::kMeans(inputPoints, &startCentroids, 3, 100);
+    Threeple *t = kmeans::kMeans(inputPoints, &startCentroids, 3, 100, Distance::Euclidean);
     Eigen::VectorXd c1 = t->points.at(0);
     Eigen::VectorXd c2 = t->points.at(1);
     Eigen::VectorXd c3 = t->points.at(2);
@@ -159,7 +159,7 @@ TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
     startCentroids.push_back(v1);
     startCentroids.push_back(v2);
 
-    Threeple *t = kmeans::kMeans(inputPoints, &startCentroids, 3, 100);
+    Threeple *t = kmeans::kMeans(inputPoints, &startCentroids, 3, 100, Distance::Euclidean);
 
     std::map<int, int> clusterKeysCorresp;
     for(int key=0; key<3;++key){
@@ -170,6 +170,100 @@ TEST_F(KMeansTest, resultsAlignWithExternallyRanClustering){
             }
         }
     }
+
+    int nPosEqs=0;
+    for(int m=0; m < inputPoints.size(); ++m){
+        if(clusterKeysCorresp[expectedLabels[m]] == t->assignments[m]){
+            nPosEqs++;
+        }
+    }
+    // We are willing to allow for some tolerance, because of floating point differences,
+    // tie breaks and other implementation details between SKLearn and our results.
+    std::cout << 1.0- (1.0*nPosEqs/inputPoints.size()) << std::endl;
+    EXPECT_TRUE(1.0- (1.0*nPosEqs/inputPoints.size()) < 0.01);
+
+    // Free memory once we're done :)
+    for(int i=0; i < inputPoints.size(); ++i){
+        delete inputPoints.at(i);
+    }
+
+    delete t;
+}
+
+TEST_F(KMeansTest, resultsAlignWithExternallyRanClusteringCosine){
+    fs::path full_path(fs::current_path());
+    full_path = full_path.remove_leaf();
+    full_path /= "test";
+    full_path /= "clustering";
+    full_path /= "exampledata.csv";
+
+    std::cout << full_path << std::endl;
+
+    std::ifstream pointFile(full_path.string());
+    std::vector<std::string> results = getNextLineAndSplitIntoTokens(pointFile);
+    Eigen::VectorXd vectorTest(2);
+    std::vector<Eigen::VectorXd> vectors;
+    std::vector<Point*> inputPoints;
+    while(!results.at(results.size()-1).empty()){
+        for(int i=0; i < 2; ++i){
+            std::string s = results.at(i);
+            vectorTest(i) = std::stod(s);
+        }
+        vectors.push_back(vectorTest);
+        results = getNextLineAndSplitIntoTokens(pointFile);
+    }
+
+    for(int i=0; i < vectors.size(); ++i) {
+        inputPoints.push_back(new Point(std::make_unique<Eigen::VectorXd>(vectors.at(i))));
+    }
+
+    pointFile.close();
+
+
+    fs::path label_path(fs::current_path());
+    label_path = label_path.remove_leaf();
+    label_path /= "test";
+    label_path /= "clustering";
+    label_path /= "expectedLabels.csv";
+
+    std::cout << label_path << std::endl;
+
+
+    std::ifstream labelFile(label_path);
+    int expectedLabels[inputPoints.size()];
+    int i =0;
+    std::string line;
+    while(std::getline(labelFile, line)){
+        expectedLabels[i] = std::stoi(line);
+        i = i+1;
+    }
+
+    labelFile.close();
+
+    std::vector<Eigen::VectorXd> startCentroids;
+    Eigen::VectorXd v0(2), v1(2), v2(2);
+    v0 << 0,0;
+    v1 << 5,0;
+    v2 << 0,5;
+    Point p0(std::make_unique<Eigen::VectorXd>(v0)), p1(std::make_unique<Eigen::VectorXd>(v1)),
+            p2(std::make_unique<Eigen::VectorXd>(v2));
+    startCentroids.push_back(v0);
+    startCentroids.push_back(v1);
+    startCentroids.push_back(v2);
+
+    Threeple *t = kmeans::kMeans(inputPoints, &startCentroids, 3, 100, Distance::Cosine);
+
+    std::map<int, int> clusterKeysCorresp;
+    for(int key=0; key<3;++key){
+        for(int m=0; m < inputPoints.size(); ++m){
+            if(expectedLabels[m] == key){
+                clusterKeysCorresp.insert({key, t->assignments[m]});
+                break;
+            }
+        }
+    }
+
+    std::cout << "Ok with " << inputPoints.size() << " points" << std::endl;
 
     int nPosEqs=0;
     for(int m=0; m < inputPoints.size(); ++m){
@@ -288,20 +382,20 @@ TEST_F(KMeansTest, closestPointsOptimizedYieldsExpectedShortestPoint){
     for(int i=0; i < 5; ++i){
         centroids.push_back(vectors[i]);
     }
-    int index = kmeans::findNearestClusterIndex(centroids, v5);
+    int index = kmeans::findNearestClusterIndex(centroids, v5, Distance::Euclidean);
     EXPECT_EQ(index, 1);
 
-    index = kmeans::findNearestClusterIndex(centroids, v6);
+    index = kmeans::findNearestClusterIndex(centroids, v6, Distance::Euclidean);
     EXPECT_EQ(index, 0);
 
-    index = kmeans::findNearestClusterIndex(centroids, v7);
+    index = kmeans::findNearestClusterIndex(centroids, v7, Distance::Euclidean);
     EXPECT_EQ(index, 4);
 
 
-    index = kmeans::findNearestClusterIndex(centroids, v8);
+    index = kmeans::findNearestClusterIndex(centroids, v8, Distance::Euclidean);
     EXPECT_EQ(index, 0);
 
-    index = kmeans::findNearestClusterIndex(centroids, v9);
+    index = kmeans::findNearestClusterIndex(centroids, v9, Distance::Euclidean);
     EXPECT_EQ(index, 3);
 }
 
@@ -331,7 +425,7 @@ TEST_F(KMeansTest, getBestClusterReturnsExpectedClusters) {
 
     std::vector<Eigen::VectorXd> centroids;
 
-    std::vector<Eigen::VectorXd> bestCenters = kmeans::getBestClusters(100, inputPoints, 3, 100);
+    std::vector<Eigen::VectorXd> bestCenters = kmeans::getBestClusters(100, inputPoints, 3, 100, Distance::Euclidean);
     std::vector<Eigen::VectorXd> expectedCenters;
     Eigen::VectorXd ve0(2), ve1(2), ve2(2);
     ve0 << 1.0/3.0, -0.5;

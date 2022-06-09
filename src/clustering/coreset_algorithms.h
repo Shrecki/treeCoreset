@@ -22,9 +22,10 @@ namespace coreset{
      * @cite Ackermann, Marcel R., et al. "Streamkm++ a clustering algorithm for data streams." Journal of Experimental Algorithmics (JEA) 17 (2012): 2-1.
      * @param points
      * @param m
+     * @param measure distance measure to use
      * @return
      */
-    std::set<Point*> treeCoresetReduce(std::vector<Point*>* points, unsigned int m);
+    std::set<Point *> treeCoresetReduce(std::vector<Point *> *points, unsigned int m, Distance measure);
 
     /**
      * Optimized version of the TreeCoreset algorithm from the perspective of memory management, this method expects to be passed already initialized nodes.
