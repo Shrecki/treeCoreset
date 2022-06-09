@@ -2,3 +2,5 @@
 .idea/*
 *.mexa64
 cmake-build*
+src/nilearn_cache/*
+*.m~*
