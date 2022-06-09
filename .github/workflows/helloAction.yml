@@ -48,15 +48,27 @@ jobs:
           ./unit_test
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '*/include/*' '*/eigen/*' '*test/*' '*/googletest-src/*' -o coverage.info
-          COVERAGE=$(genhtml coverage.info --output-directory out | grep -Po 'lines......: \K[^%]*')
-          echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
-      - name: Create the Badge
+          COVERAGE_LINE=$(genhtml coverage.info --output-directory out | grep -Po 'lines......: \K[^%]*')
+          COVERAGE_FUNCTIONS=$(genhtml coverage.info --output-directory out | grep -Po 'functions..: \K[^%]*')
+          echo "COVERAGE_LINE=$COVERAGE_LINE" >> $GITHUB_ENV
+          echo "COVERAGE_FUNCTIONS=$COVERAGE_FUNCTIONS" >> $GITHUB_ENV
+      - name: Line coverage badge
         uses: schneegans/dynamic-badges-action@v1.0.0
         with:
           auth: ${{ secrets.GIST_SECRET }}
           gistID: fcde53f4e8d03ff100637910fc249bfc
-          filename: treeCoreset__main.json
-          label: Test Coverage
-          message: ${{ env.COVERAGE }}
+          filename: treeCoreset_line__main.json
+          label: Line Coverage
+          message: ${{ env.COVERAGE_LINE }}
+          color: green
+          namedLogo: jest
+      - name: Branch coverage badge
+        uses: schneegans/dynamic-badges-action@v1.0.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: fcde53f4e8d03ff100637910fc249bfc
+          filename: treeCoreset_branch__main.json
+          label: Function Coverage
+          message: ${{ env.COVERAGE_FUNCTIONS }}
           color: green
           namedLogo: jest
