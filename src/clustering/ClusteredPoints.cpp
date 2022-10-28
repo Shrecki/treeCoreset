@@ -10,6 +10,72 @@
 #include <iostream>
 #include <algorithm>
 
+
+
+#if PYTHON_BIND == 1
+/*#include <boost/python/module.hpp>
+#include <boost/python/def.hpp>
+#include <boost/python.hpp>*/
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/eigen.h>
+#endif
+
+
+
+ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity, Distance distance)
+        : nBuckets(nBuckets),
+          bucketCapacity(bucketCapacity), nsplits((unsigned int)2*(bucketCapacity-1) + 1), dimension(-1), otherBucketsFull(false),
+          distance(distance){
+    std::cout << "N_buckets : " << std::to_string(nBuckets) << " Bucket capacity: " << std::to_string(bucketCapacity) << std::endl;
+    buckets.reserve(nBuckets);
+    for(int i=0; i<nBuckets;++i){
+        auto *tmpVec = new std::vector<Point*>();
+        tmpVec->reserve(bucketCapacity);
+        buckets.push_back(tmpVec);
+        bucketCapacities.push_back(0);
+    }
+
+
+    // We will allocate exactly 2*(m-1)+1 nodes
+    for(int i=0; i < nsplits; ++i){
+        nodes.push_back(new Node(10));
+    }
+}
+
+
+ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity)
+        : ClusteredPoints(nBuckets, bucketCapacity, Distance::Euclidean) {
+
+}
+
+
+void ClusteredPoints::insertVectors(Eigen::MatrixXd &vectors, unsigned int n_points){
+    // Assumption: we receive someting that is row major.
+    // To simplify these assumptions, we require the number of points to be passed along. This way we can always transpose
+    // the incoming matrix to manipulate precisely what we want (ie operate by rows or by cols)
+    bool operate_by_rows = vectors.rows() == n_points;
+
+    std::cout << "Matrix is " << vectors.rows() << " by " << vectors.cols() << std::endl;
+
+    if(!operate_by_rows && vectors.cols() != n_points){
+        throw std::logic_error("The provided matrix has no dimension agreeing with the provided number of points.");
+    }
+
+    if(!operate_by_rows){
+        vectors = vectors.transpose();
+    }
+    // Allocate a new point to be created. We make the vector pointer a unique_ptr and are on our way
+    for(int i=0; i < n_points; ++i){
+        Point *p;
+        auto* vec = new Eigen::VectorXd(vectors.row(i));
+        p = new Point(std::unique_ptr<Eigen::VectorXd>(vec));
+        std::cout << p->getData() << std::endl;
+        insertPoint(p);
+        std::cout << "Inserted a point "<< std::endl;
+    }
+}
+
 void ClusteredPoints::insertPoint(Point *newPoint) {
     if(newPoint == nullptr){
         throw std::logic_error("Cannot add a nullptr as point");
@@ -126,25 +192,6 @@ void ClusteredPoints::insertPoint(Point *newPoint) {
     }
 }
 
-ClusteredPoints::ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity, Distance distance)
-        : nBuckets(nBuckets),
-          bucketCapacity(bucketCapacity), nsplits((unsigned int)2*(bucketCapacity-1) + 1), dimension(-1), otherBucketsFull(false),
-          distance(distance){
-    std::cout << "N_buckets : " << std::to_string(nBuckets) << " Bucket capacity: " << std::to_string(bucketCapacity) << std::endl;
-    buckets.reserve(nBuckets);
-    for(int i=0; i<nBuckets;++i){
-        auto *tmpVec = new std::vector<Point*>();
-        tmpVec->reserve(bucketCapacity);
-        buckets.push_back(tmpVec);
-        bucketCapacities.push_back(0);
-    }
-
-
-    // We will allocate exactly 2*(m-1)+1 nodes
-    for(int i=0; i < nsplits; ++i){
-        nodes.push_back(new Node(10));
-    }
-}
 
 ClusteredPoints::~ClusteredPoints() {
     for(int i=0; i < buckets.size(); ++i){
@@ -167,6 +214,17 @@ ClusteredPoints::~ClusteredPoints() {
     nodes.clear();
     buckets.clear();
     bucketCapacities.clear();
+}
+
+
+Eigen::MatrixXd ClusteredPoints::getRepresentativesAsMatrix() {
+    std::vector<Point *> reps = getRepresentatives();
+    unsigned int n_points = reps.size();
+    Eigen::MatrixXd mat(n_points, dimension);
+    for(int i=0; i < n_points; ++i){
+        mat.row(i) = reps.at(i)->getData();
+    }
+    return mat;
 }
 
 std::vector<Point *> ClusteredPoints::getRepresentatives() {
@@ -290,5 +348,19 @@ void ClusteredPoints::getClustersAsFlattenedArray(std::vector<double> &data, uns
 }
 
 
+
+#if PYTHON_BIND == 1
+/*
+ * In this specific case, we want to include the boost binding!
+ */
+//using namespace boost::python;
+namespace py = pybind11;
+
+PYBIND11_MODULE(client_coreset, m) {
+    py::class_<ClusteredPoints>(m, "ClusteredPoints").def(py::init<unsigned int, unsigned int>())
+             .def("insertVectors", &ClusteredPoints::insertVectors)
+             .def("getRepresentatives", &ClusteredPoints::getRepresentativesAsMatrix);
+}
+#endif
 
 

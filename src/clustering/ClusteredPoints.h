@@ -32,15 +32,20 @@ public:
     std::vector<Node*> nodes;
 
     explicit ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity, Distance distance);
+    explicit ClusteredPoints(unsigned int nBuckets, unsigned int bucketCapacity);
+
     ~ClusteredPoints();
 
     /**
-     * @brief insertPoint algorithm, as described in the StreamKM++ method.
+     * @brief insertVectors algorithm, as described in the StreamKM++ method.
      * @cite Ackermann, Marcel R., et al. "Streamkm++ a clustering algorithm for data streams." Journal of Experimental Algorithmics (JEA) 17 (2012): 2-1.
      * @see treeCoresetReduceOptim
      * @param newPoint the point to insert
      */
     void insertPoint(Point *newPoint);
+
+
+    void insertVectors(Eigen::MatrixXd &vectors, unsigned int n_points);
 
     /**
      * @brief Given the buckets, perform the tree coreset reduction on the union of points of all buckets and return the m resulting points, as described in the StreamKM++ algorithm.
@@ -48,6 +53,8 @@ public:
      * @return m representative points
      */
     std::vector<Point*> getRepresentatives();
+
+    Eigen::MatrixXd getRepresentativesAsMatrix();
 
     void setAllToNullPtr();
 

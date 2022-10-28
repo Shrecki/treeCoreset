@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
                     "because of the number of samples and number of representatives should fail to meet the RAM limit, "
                     "the program will raise an exception, indicating a sufficient number of representatives that would fulfill RAM requirement.")
             ("distance", po::value<distance_type>(&dist), "Distance to use in the coreset and in kmeans. Can be correlation, cosine or euclidean.")
-            ("process_id", po::value<unsigned int>(&port)->default_value(1), "The process ID to use to communicate. Exactly one client may communicate with the server at a time.");
+            ("process_id", po::value<unsigned int>(&port)->default_value(0), "The process ID to use to communicate. Exactly one client may communicate with the server at a time.");
             ;
 
     po::variables_map vm;
@@ -155,8 +155,29 @@ int main(int argc, char **argv) {
     }
     zmq::context_t context(1);
     zmq::socket_t socket(context, ZMQ_PAIR);
-    std::cout << "Binding to : " << "ipc:///tmp/feeds/0" + std::to_string(port) << std::endl;
-    socket.bind("ipc:///tmp/test");
+    std::string port_bind = "ipc:///tmp/" + std::to_string(port);
+    std::cout << port_bind << std::endl;
+
+    // Is there a way to check if this address is already used?
+    try{
+        socket.connect(port_bind.c_str());
+        //std::cout << "Another server is already using this port, choose another port." << std::endl;
+        //socket.close();
+        //return 1;
+    } catch(std::exception &e){
+        std::cout << e.what() << std::endl;
+    }
+    try{
+        socket.bind(port_bind);
+    } catch(std::exception &e){
+        if(strcmp(e.what(), "Address already in use") == 0){
+            std::cout << e.what() << ", another server is already using this port." << std::endl;
+            return 1;
+        } else {
+            std::cout << e.what() << ", you should create a /tmp/ directory." << std::endl;
+            return 1;
+        }
+    }
 
     ServerMessaging::runServer(socket, input_n, input_m, dist.dist);
 

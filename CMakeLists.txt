@@ -11,6 +11,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -msse4.1 -march=native")
 
+# Required to link python lib
+SET(GCC_COVERAGE_COMPILE_FLAGS "-Wl, --no-undefined")
+#SET(GCC_COVERAGE_LINK_FLAGS    "-lboost_numpy38 -lboost_python38")
+SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+
+
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -21,6 +27,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 find_package(Boost COMPONENTS program_options system filesystem REQUIRED PATHS)
+find_package(PythonLibs 3.10 REQUIRED)
+find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 message("boost lib: ${Boost_LIBRARIES}, inc:${Boost_INCLUDE_DIR}")
 
@@ -71,6 +79,8 @@ add_executable(unit_test ${SOURCES}
 target_link_libraries(unit_test PRIVATE gtest_main)
 target_link_libraries(unit_test PRIVATE gmock_main)
 target_link_libraries(unit_test PRIVATE ${ZeroMQ_LIBRARY})
+target_link_libraries(unit_test PRIVATE ${Boost_LIBRARIES})
+
 target_include_directories(unit_test PRIVATE src)
 target_include_directories(unit_test PRIVATE eigen)
 target_code_coverage(unit_test target_code_coverage_PUBLIC)
@@ -79,3 +89,27 @@ target_code_coverage(unit_test target_code_coverage_PUBLIC)
 include(GoogleTest)
 gtest_discover_tests(unit_test)
 
+
+
+# Without this, any build libraries automatically have names "lib{x}.so"
+set(CMAKE_SHARED_MODULE_PREFIX "")
+
+#add_compile_definitions(PYTHON_BIND=1)
+
+
+# Add a shared module - modules are intended to be imported at runtime.
+# - This is where you add the source files
+set(SOURCE_CLIENT src/network/ClientMessaging.cpp src/network/ClientMessaging.h
+                  src/network/MessagingUtils.h src/network/MessagingUtils.cpp
+                  src/network/Requests.h src/Errors.h)
+add_library(client_coreset MODULE src/clustering/Node.h src/clustering/Node.cpp
+        src/clustering/Point.h src/clustering/Point.cpp
+        src/clustering/RandomGenerator.h src/clustering/RandomGenerator.cpp
+        src/clustering/coreset_algorithms.h src/clustering/coreset_algorithms.cpp
+        src/clustering/ClusteredPoints.h src/clustering/ClusteredPoints.cpp
+        src/clustering/kmeansplusplus.h src/clustering/kmeansplusplus.cpp
+        src/Errors.h)
+target_compile_definitions(client_coreset PUBLIC PYTHON_BIND=1)
+target_link_libraries(client_coreset ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${ZeroMQ_LIBRARY})
+set(PYBIND11_PYTHON_VERSION 3.10 CACHE STRING "")
+target_include_directories(client_coreset PRIVATE ${PYTHON_INCLUDE_DIRS} eigen pybind11)

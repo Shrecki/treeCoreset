@@ -60,7 +60,7 @@ public:
      * @param arraySz
      * @return Resulting point vector
      */
-    static Point* convertArrayToPoint(const double* array, int arraySz);
+    static Point* convertArrayToPoint(const double* array, unsigned int arraySz);
     /**
      * @brief Convert an input array to an eigen vectorXd and return unique pointer to said vector Xd.
      * @param array

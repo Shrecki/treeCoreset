@@ -105,7 +105,7 @@ void Point::cleanupData() {
     }
 }
 
-Point* Point::convertArrayToPoint(const double* array, const int arraySz){
+Point* Point::convertArrayToPoint(const double* array, unsigned int arraySz){
     if(arraySz ==0) throw std::logic_error("Cannot convert an array with size 0");
     Point *p = nullptr;
     try{
