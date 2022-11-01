@@ -63,16 +63,21 @@ void ClusteredPoints::insertVectors(Eigen::MatrixXd &vectors, unsigned int n_poi
     }
 
     if(!operate_by_rows){
-        vectors = vectors.transpose();
+        vectors.transposeInPlace();
     }
     // Allocate a new point to be created. We make the vector pointer a unique_ptr and are on our way
     for(int i=0; i < n_points; ++i){
         Point *p;
         auto* vec = new Eigen::VectorXd(vectors.row(i));
         p = new Point(std::unique_ptr<Eigen::VectorXd>(vec));
-        std::cout << p->getData() << std::endl;
+        //std::cout << p->getData() << std::endl;
         insertPoint(p);
-        std::cout << "Inserted a point "<< std::endl;
+        std::cout << "Inserted a point !" << std::endl; //<< p->getData() << std::endl;
+    }
+
+    // Restore original matrix afterwards
+    if(!operate_by_rows){
+        vectors.transposeInPlace();
     }
 }
 

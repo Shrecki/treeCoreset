@@ -205,5 +205,4 @@ namespace ClientMessaging {
                               Requests::GET_OK,Requests::GET_READY, Requests::GET_DONE,
                               REQUEST_TIMEOUT,&centroid_multipart);
     }
-
 }

@@ -174,6 +174,125 @@ Note that in CMakeList, march=native is used. If you're on an unsupported platfo
 <!-- USAGE EXAMPLES -->
 ## Usage
 
+### Direct usage method
+
+There are two main ways to use this program. The first is to directly initialize the coreset object and send it points. This is the recommended way, as it is faster. There are three main steps:
+- Initialize the coreset object, by specifying a number of buckets and of representatives. The number of buckets is given as ceil(log2(n/n_representatives)), where n is the number of points you expect to pass in total to the algorithm (ie: number of samples in your original dataset). The number of representatives should be at least 200*k, k the number of centroids to find later, for decent performance.
+- Send the points to the coreset object
+- Recover the representatives
+
+Doing these three steps can be done as follows:
+```Python
+# Makes the client_coreset.so shared library visible to Python by adding it to the path
+import sys
+sys.path.insert(1, 'treeCoreset/cmake-build-debug-coverage')
+
+# Import the shared library
+import client_coreset
+
+k=3 # For the sake of the example, we let k, the number of clusters, be 3
+n_reps = 200*k
+n_buckets = int(np.ceil(np.log2(n/ n_reps)))
+
+
+# Initialize the coreset object
+cluster_rep = client_coreset.ClusteredPoints(n_buckets, n_reps)
+```
+
+Assuming your data is a numpy array, you can pass it directly with only a single function call to the cluster object. You should also specify how many "points" have been passed, so that the function can figure out which axis is features and which axis is samples:
+
+```python
+cluster_rep.insertVectors(X.astype(np.double, order='C').T, X.shape[0])
+```
+
+Lastly, representatives can be recovered as simply as:
+
+```python
+reps = cluster_rep.getRepresentatives()
+```
+
+### A complete Python example
+
+To make clear the purpose of this library, let's walk through a minimal example.
+Assume the following code and data:
+```Python
+import numpy as np
+import matplotlib.pyplot as plt
+
+n_per_cluster = 10000
+X1 = np.random.multivariate_normal([0, 0],[[1, 0], [0, 10]], n_per_cluster)
+X2 = np.random.multivariate_normal([10, 0],[[1, 0], [0, 10]], n_per_cluster)
+X3 = np.random.multivariate_normal([2, 50],[[1, 0], [0, 10]], n_per_cluster)
+X4 = np.random.multivariate_normal([10, 30],[[1, 0], [0, 10]], n_per_cluster)
+
+
+plt.scatter(X1[:,0], X1[:,1], label='X1')
+plt.scatter(X2[:,0], X2[:,1], label='X2')
+plt.scatter(X3[:,0], X3[:,1], label= 'X3')
+plt.scatter(X4[:,0], X4[:,1], label= 'X4')
+
+plt.legend()
+
+X = np.concatenate((X1, X2, X3, X4))
+```
+<img src="imgs/ground_truth_data.png"/>
+
+We've created in particular four clusters here, in effect. We will therefore perform clustering with k=4. Let's now extract representatives:
+
+```python
+k = 4
+n_reps = 200*k
+n_buckets = int(np.ceil(np.log2(n_per_cluster*3 / n_reps)))
+
+# Initialize and insert all points in the clusterer
+cluster_rep = client_coreset.ClusteredPoints(n_buckets, n_reps)
+cluster_rep.insertVectors(X.astype(np.double, order='C'), X.shape[0])
+
+# Recover the representatives
+reps = cluster_rep.getRepresentatives()
+
+# Let's visualize the representatives
+plt.scatter(X1[:,0], X1[:,1])
+plt.scatter(X2[:,0], X2[:,1])
+plt.scatter(X3[:,0], X3[:,1])
+plt.scatter(X4[:,0], X4[:,1])
+
+plt.scatter(reps[:,0], reps[:, 1], label='Extracted representatives')
+plt.legend()
+```
+<img src="imgs/extracted_reps.png"/>
+
+Now, we will apply KMeans and compare the results when computing the centroids on the entire dataset and on the representatives only:
+```python
+def perform_clustering_and_plot(data,reps, use_reps, title, k):
+    kmeans = KMeans(n_clusters=k)
+    if use_reps:
+        kmeans.fit(reps)
+        assignements = kmeans.predict(data)
+    else:
+        kmeans.fit(data)
+        assignements = kmeans.labels_
+    clusters = [data[assignements == k,:] for k in np.unique(assignements)]
+
+    for c in clusters:
+        plt.scatter(c[:,0], c[:, 1])
+
+    plt.title(title)
+    return assignements
+
+_ = perform_clustering_and_plot(X, reps, False, 'Ground truth clustering using all points', 4)
+_ = perform_clustering_and_plot(X, reps, True, 'Clustering using {} representatives ({} % of points)'.format(n_reps, 100*n_reps/(n_per_cluster*4)), 4)
+```
+<img src="imgs/ground_truth_cluster.png"/>
+<img src="imgs/reps_cluster.png"/>
+
+One can see that the extracted clusters were indeed well matched. We can finally state the advantage of this method: we are applying kmeans to the representatives only, which reduces the number of points to consider.
+Notice that the number of representatives is **independent** of the number of samples in the original data! It is conditioned by the number of centroids to choose.
+
+### Remote server method
+
+A MATLAB binding is also available to pass data between the coreset object and MATLAB. In such a case, the MATLAB program acts as a client and the coreset object as a server.
+
 The server expecting the stream can be started by running the main program:
    ```sh
    ./treeCoreset
@@ -185,7 +304,7 @@ For the complete set of instructions, type
    ```
 
 Once the server is launched, any other process can send points to the server, as if part of a stream, request representatives, centroids or even stop the server.
-For convenience, functions in MATLAB are already provided for the client-side. Equivalent functions in Python are planned for future release.
+For convenience, functions in MATLAB are already provided for the client-side.
 
 
 Should you wish to implement a communication in an unsupported language, here are relevant details to consider. For any transmission to happen between client and server, the client must fulfill the following conditions:

@@ -25,7 +25,7 @@ public:
         // Connect to port
         zmq::context_t context(1);
         zmq::socket_t socket(context, ZMQ_PAIR);
-        socket.connect("ipc:///tmp/test");
+        socket.connect("ipc:///tmp/0");
 
         // Get data to pass from input
         int n  = inputs[0].getNumberOfElements();

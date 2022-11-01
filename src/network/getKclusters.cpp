@@ -29,7 +29,7 @@ public:
         try{
             zmq::context_t context(1);
             zmq::socket_t socket(context, ZMQ_PAIR);
-            socket.connect("ipc:///tmp/test");
+            socket.connect("ipc:///tmp/0");
 
             // Get centroids
             std::vector<std::vector<double>*>* received_centroids = ClientMessaging::requestCentroids(socket, inputs[0][0], 50000);

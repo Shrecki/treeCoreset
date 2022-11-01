@@ -188,7 +188,7 @@ TEST_F(ClusteredPointsTest, inserting2MPointsCausesThirdBucketToBeFilledWithExac
 
 TEST_F(ClusteredPointsTest, insertingNullPtrRaisesException){
     ClusteredPoints clusteredPoints(10, 2, Distance::Euclidean);
-    EXPECT_ANY_THROW(clusteredPoints.insertPoint(nullptr));
+    EXPECT_ANY_THROW(clusteredPoints.insertVectors(nullptr));
 }
 
 TEST_F(ClusteredPointsTest, insertingEmptyArrayRaisesException){

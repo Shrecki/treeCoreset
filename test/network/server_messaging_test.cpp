@@ -42,8 +42,8 @@ protected:
     void SetUp() override {
         //zmq::context_t ct(2);
         //zmq::socket_t server_socket(context, ZMQ_REP);
-        server_socket->bind("inproc://#1");
-        client_socket->connect("inproc://#1");
+        server_socket->bind("ipc://#1");
+        client_socket->connect("ipc://#1");
 
         //zmq::socket_t client_socket(context, ZMQ_REQ);
         t1 = new std::thread(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10, Distance::Euclidean);
@@ -61,6 +61,25 @@ protected:
 };
 
 
+TEST_F(ServerMessagingTest, bindingSecondTimeToSameSocketShouldThrowException){
+    zmq::context_t second_context(2);
+    zmq::socket_t second_server(*context, ZMQ_PAIR);
+
+    EXPECT_ANY_THROW(second_server.connect("ipc://#1"));
+    try{
+        second_server.connect("ipc://#1");
+    } catch(std::exception &e){
+        EXPECT_STREQ(e.what(), "Address already in use");
+        second_server.close();
+        second_context.close();
+    }
+
+    double stop = Requests::STOP_REQ;
+    zmq::message_t request(1*sizeof(double));
+    memcpy((void *) request.data(), (void*)(&stop), 1 * sizeof(double));
+    client_socket->send(request);
+
+}
 
 TEST_F(ServerMessagingTest, stoppingServerWorks) {
     //std::thread t1(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);
