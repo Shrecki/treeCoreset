@@ -15,6 +15,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential g++ python-dev autotools-dev libicu-dev libbz2-dev libboost-all-dev lcov libcppunit-dev software-properties-common libzmq3-dev
+          sudo apt-get -y --purge remove libboost*
+          sudo rm -rf /usr/include/boost
+          sudo rm -rf /usr/lib/libboost_*
       - name: cmake installation
         run: |
           wget https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5.tar.gz
