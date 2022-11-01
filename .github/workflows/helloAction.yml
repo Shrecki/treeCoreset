@@ -14,7 +14,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential g++ python-dev autotools-dev libicu-dev libbz2-dev libboost-all-dev lcov libcppunit-dev software-properties-common libzmq3-dev
+          sudo apt-get install -y build-essential g++ python-dev autotools-dev libicu-dev libbz2-dev lcov libcppunit-dev software-properties-common libzmq3-dev
           sudo apt-get -y --purge remove libboost*
           sudo rm -rf /usr/include/boost
           sudo rm -rf /usr/lib/libboost_*
