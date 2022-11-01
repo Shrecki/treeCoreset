@@ -60,6 +60,8 @@ protected:
     }
 };
 
+/*
+ * ZMQ unfortunately does not provide any security towards multiple port binding :(
 
 TEST_F(ServerMessagingTest, bindingSecondTimeToSameSocketShouldThrowException){
     zmq::context_t second_context(2);
@@ -80,6 +82,7 @@ TEST_F(ServerMessagingTest, bindingSecondTimeToSameSocketShouldThrowException){
     client_socket->send(request);
 
 }
+ */
 
 TEST_F(ServerMessagingTest, stoppingServerWorks) {
     //std::thread t1(ServerMessaging::runServer, std::ref(*server_socket), 1000, 10);

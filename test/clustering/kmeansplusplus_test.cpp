@@ -12,6 +12,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/system/system_error.hpp>
 
 namespace fs = boost::filesystem;
 

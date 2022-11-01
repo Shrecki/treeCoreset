@@ -13,7 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -msse4.1 -march=native")
 
 # Required to link python lib
 SET(GCC_COVERAGE_COMPILE_FLAGS "-Wl, --no-undefined")
-#SET(GCC_COVERAGE_LINK_FLAGS    "-lboost_numpy38 -lboost_python38")
+#SET(GCC_COVERAGE_LINK_FLAGS    "-lboost_numpy -lboost_python")
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
 
 
@@ -26,7 +26,9 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-find_package(Boost COMPONENTS program_options system filesystem REQUIRED PATHS)
+#set(Boost_DEBUG ON)
+find_package(Boost 1.79 COMPONENTS ALL)
+#find_package(Boost 1.79 COMPONENTS program_options system filesystem REQUIRED PATHS)
 find_package(PythonLibs 3.10 REQUIRED)
 find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
@@ -78,8 +80,7 @@ add_executable(unit_test ${SOURCES}
         test/network/server_messaging_test.cpp)
 target_link_libraries(unit_test PRIVATE gtest_main)
 target_link_libraries(unit_test PRIVATE gmock_main)
-target_link_libraries(unit_test PRIVATE ${ZeroMQ_LIBRARY})
-target_link_libraries(unit_test PRIVATE ${Boost_LIBRARIES})
+target_link_libraries(unit_test PRIVATE ${ZeroMQ_LIBRARY} ${Boost_LIBRARIES})
 
 target_include_directories(unit_test PRIVATE src)
 target_include_directories(unit_test PRIVATE eigen)
