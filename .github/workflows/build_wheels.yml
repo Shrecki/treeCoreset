@@ -32,8 +32,13 @@ jobs:
       - name: Build wheels with cibuildwheel
         env:
           CIBW_BEFORE_BUILD: |
-            yum install -y wget gcc gcc-c++ make            
+            yum install -y wget gcc gcc-c++ make python3-devel
             python -m pip install wheel scikit-build cmake ninja setuptools
+            #Python installations
+            export PYTHON_EXECUTABLE=$(which python)
+            export PYTHON_LIBRARIES=$(find /opt/python -name "libpython*.so" | grep -v "debug" | head -n 1)
+            export PYTHON_INCLUDE_DIRS=$(find /opt/python -name "Python.h" | head -n 1 | xargs dirname)
+  
             # Build and install pybind11 from the submodule
             cd pybind11
             mkdir -p build && cd build
