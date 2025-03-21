@@ -35,11 +35,20 @@ jobs:
             yum install -y wget gcc gcc-c++ make python3-devel
             python -m pip install wheel scikit-build cmake ninja setuptools
             #Python installations
-            export PYTHON_EXECUTABLE=$(which python)
-            export PYTHON_LIBRARIES=$(find /opt/python -name "libpython*.so" | grep -v "debug" | head -n 1)
-            export PYTHON_INCLUDE_DIRS=$(find /opt/python -name "Python.h" | head -n 1 | xargs dirname)
-  
-            # Build and install pybind11 from the submodule
+            PYBIN=$(which python)
+            PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+            PYTHON_ROOT=$(cd $(dirname $PYBIN)/..; pwd)
+            PYTHON_INCLUDE=$PYTHON_ROOT/include/python${PYTHON_VERSION}*
+            PYTHON_LIB=$PYTHON_ROOT/lib*/libpython${PYTHON_VERSION}*.so
+            
+            echo "Using Python at: $PYBIN"
+            echo "Python version: $PYTHON_VERSION"
+            echo "Python root: $PYTHON_ROOT"
+            echo "Python include: $PYTHON_INCLUDE"
+            echo "Python lib: $PYTHON_LIB"
+              
+
+    # Build and install pybind11 from the submodule
             cd pybind11
             mkdir -p build && cd build
             cmake .. && make && make install
