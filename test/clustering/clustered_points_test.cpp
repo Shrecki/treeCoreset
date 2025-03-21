@@ -159,7 +159,7 @@ TEST_F(ClusteredPointsTest, requestingZeroCentroidsThrowsException){
         EXPECT_STREQ(e.what(), "Number of centroids cannot be zero.");
     }
 
-    EXPECT_THROW(clusteredPoints.getClustersAsFlattenedArray(output, 0, 20), std::invalid_argument);
+        EXPECT_THROW(clusteredPoints.getClustersAsFlattenedArray(output, 0, 20), std::invalid_argument);
 }
 
 TEST_F(ClusteredPointsTest, inserting2MPointsCausesThirdBucketToBeFilledWithExactlyMPoints){
