@@ -47,8 +47,7 @@ jobs:
             echo "Python include: $PYTHON_INCLUDE"
             echo "Python lib: $PYTHON_LIB"
               
-
-    # Build and install pybind11 from the submodule
+            # Build and install pybind11 from the submodule
             cd pybind11
             mkdir -p build && cd build
             cmake .. && make && make install
