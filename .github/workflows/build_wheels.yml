@@ -8,90 +8,62 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
-        python-version: ['3.10', '3.11']
-
+    name: Build wheels (manylinux)
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Initialize submodules
-        run: |
-          git submodule sync
-          git submodule update --init --recursive
-
+      # Set up Python (this step is optional; cibuildwheel will use containerized Pythons)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.10'
 
-      # Install system dependencies for building (not for end users)
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libboost-all-dev libzmq3-dev
-          python -m pip install wheel scikit-build cmake ninja setuptools
-          python -m pip install cibuildwheel
+      # Install cibuildwheel so we can build manylinux wheels
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel
 
-      - name: Install pybind11 from submodule
-        run: |
-          cd pybind11
-          mkdir -p build && cd build
-          cmake .. && make && sudo make install
-
-      # Download and extract static Boost
-      - name: Prepare static Boost
-        run: |
-          mkdir -p /tmp/deps
-          cd /tmp/deps
-          wget -q https://archives.boost.io/release/1.79.0/source/boost_1_79_0.tar.gz
-          tar xf boost_1_79_0.tar.gz
-          cd boost_1_79_0
-          ./bootstrap.sh --with-libraries=system,filesystem --prefix=/tmp/local
-          ./b2 link=static install
-
-      # Download and build static ZeroMQ
-      - name: Prepare static ZeroMQ
-        run: |
-          cd /tmp/deps
-          wget -q https://github.com/zeromq/libzmq/releases/download/v4.3.4/zeromq-4.3.4.tar.gz
-          tar xf zeromq-4.3.4.tar.gz
-          cd zeromq-4.3.4
-          ./configure --enable-static --disable-shared --prefix=/tmp/local
-          make -j4
-          make install
-
-      # Build the wheel using our local static dependencies
-      - name: Build wheel
+      # Build wheels using cibuildwheel in a manylinux container.
+      # The CIBW_BEFORE_BUILD script runs inside the container and installs pybind11 from the submodule,
+      # builds Boost, and builds ZeroMQ, installing them into /tmp/local.
+      - name: Build wheels with cibuildwheel
         env:
+          CIBW_BEFORE_BUILD: |
+            # Build and install pybind11 from the submodule
+            cd pybind11
+            mkdir -p build && cd build
+            cmake .. && make && make install
+            cd ../..
+            # Download, build, and install static Boost
+            mkdir -p /tmp/deps
+            cd /tmp/deps
+            wget -q https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.gz
+            tar xf boost_1_79_0.tar.gz
+            cd boost_1_79_0
+            ./bootstrap.sh --with-libraries=system,filesystem --prefix=/tmp/local
+            ./b2 link=static install
+            cd ..
+            # Download, build, and install static ZeroMQ
+            wget -q https://github.com/zeromq/libzmq/releases/download/v4.3.4/zeromq-4.3.4.tar.gz
+            tar xf zeromq-4.3.4.tar.gz
+            cd zeromq-4.3.4
+            ./configure --enable-static --disable-shared --prefix=/tmp/local
+            make -j4
+            make install
+          # Use a manylinux image with an older toolchain
+          CIBW_BASE_IMAGE: quay.io/pypa/manylinux2010_x86_64
+          # Pass the dependency install prefix to CMake
           CMAKE_PREFIX_PATH: /tmp/local
           BOOST_ROOT: /tmp/local
           ZeroMQ_ROOT: /tmp/local
-        run: |
-          python -m pip install -e .
-          python setup.py bdist_wheel
-          cp dist/*.whl ./wheelhouse/
+        run: python -m cibuildwheel --output-dir wheelhouse
 
-      # Use auditwheel to make the wheel compatible with manylinux
-      - name: Repair wheel with auditwheel
-        run: |
-          python -m pip install auditwheel
-          # Print the content of dist directory for debugging
-          ls -la dist/
-          ls -la wheelhouse/
-          # Repair wheel with a specific target platform
-          auditwheel repair wheelhouse/treeCoreset*.whl -w ./dist/ --plat manylinux2014_x86_64
-
-
-      # Updated to the latest version
+      # Upload the resulting wheels as artifacts
       - name: Upload wheels as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: wheels
-          path: ./dist/*.whl
+          path: wheelhouse/*.whl
