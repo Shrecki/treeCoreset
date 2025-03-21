@@ -39,6 +39,12 @@ jobs:
           python -m pip install wheel scikit-build cmake ninja setuptools
           python -m pip install cibuildwheel
 
+      - name: Install pybind11 from submodule
+        run: |
+          cd pybind11
+          mkdir -p build && cd build
+          cmake .. && make && sudo make install
+
       # Download and extract static Boost
       - name: Prepare static Boost
         run: |
