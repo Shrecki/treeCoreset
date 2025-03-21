@@ -100,6 +100,7 @@
 * [Boost](https://www.boost.org/)
 * [ØMQ](https://zeromq.org/)
 * [cmake 3.20 or higher](https://cmake.org/)
+* [Pybind11](https://github.com/pybind/pybind11)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -113,10 +114,19 @@ To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
-Eigen, Boost and ØMQ are required for this project to work. Eigen is already included as a submodule.
+Eigen, Boost and ØMQ are required for this project to work. Eigen, Pybind and cmake are already included as submodules. Pybind and cmake still need to be built before the project can be built as well.
+Python 3.10 is required for this project's compilation as well.
+If you are using a Python environment, make sure to activate an environment with Python 3.10 when compiling.
 
 
 ### Installation
+
+There are two main ways the project can be built. You can either use the provided Docker image or build the project from source.
+
+#### Using the Docker image
+
+
+#### Building from source
 
 0. Install prerequisite libraries:
    ```sh
@@ -156,6 +166,12 @@ Eigen, Boost and ØMQ are required for this project to work. Eigen is already in
   ./bootstrap.sh --prefix=/usr/
   ./b2
   sudo ./b2 install
+  ```
+6. Install Pybind11:
+  ```sh
+  cd pybind11
+  mkdir build && cd build
+  cmake .. && make && sudo make install
   ```
 6. Finally, make the project:
    ```sh
@@ -268,17 +284,17 @@ def perform_clustering_and_plot(data,reps, use_reps, title, k):
     kmeans = KMeans(n_clusters=k)
     if use_reps:
         kmeans.fit(reps)
-        assignements = kmeans.predict(data)
+        assignments = kmeans.predict(data)
     else:
         kmeans.fit(data)
-        assignements = kmeans.labels_
-    clusters = [data[assignements == k,:] for k in np.unique(assignements)]
+        assignments = kmeans.labels_
+    clusters = [data[assignements == k,:] for k in np.unique(assignments)]
 
     for c in clusters:
         plt.scatter(c[:,0], c[:, 1])
 
     plt.title(title)
-    return assignements
+    return assignments
 
 _ = perform_clustering_and_plot(X, reps, False, 'Ground truth clustering using all points', 4)
 _ = perform_clustering_and_plot(X, reps, True, 'Clustering using {} representatives ({} % of points)'.format(n_reps, 100*n_reps/(n_per_cluster*4)), 4)
@@ -359,7 +375,7 @@ Project Link: [https://github.com/Shrecki/treeCoreset](https://github.com/Shreck
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* []()
+* [Ackermann, Marcel R., et al. "Streamkm++ a clustering algorithm for data streams." Journal of Experimental Algorithmics (JEA) 17 (2012): 2-1.](https://dl.acm.org/doi/abs/10.1145/2133803.2184450), original algorithm of stream kmeans++ of which this codebase is an implementation.
 * []()
 * []()
 
