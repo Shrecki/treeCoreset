@@ -35,8 +35,6 @@ jobs:
             # Install system dependencies
             yum install -y wget gcc gcc-c++ make python3-devel python3-libs
             
-            # Install Python build tools
-            python -m pip install wheel scikit-build cmake ninja setuptools
             
             # Debug: show Python information
             echo "Python executable: $(which python)"
@@ -54,11 +52,19 @@ jobs:
             export PYTHON_EXECUTABLE="$PYBIN"
             export CMAKE_ARGS="-DPython_EXECUTABLE=$PYBIN -DPython_ROOT_DIR=$PYTHON_ROOT -DPython_INCLUDE_DIR=$PYTHON_INCLUDE -DPython_LIBRARY=$PYTHON_LIB"
             
+            
+            # Install Python build tools
+            python -m pip install --upgrade pip
+            python -m pip install wheel scikit-build cmake ninja setuptools
+            
+            
             echo "Using Python at: $PYBIN"
             echo "Python version: $PYTHON_VERSION"
             echo "Python root: $PYTHON_ROOT"
             echo "Python include: $PYTHON_INCLUDE"
             echo "Python lib: $PYTHON_LIB"
+            
+            cmake -DPython_EXECUTABLE=$PYBIN -DPython_ROOT_DIR=$PYTHON_ROOT -DPython_INCLUDE_DIRS=$PYTHON_INCLUDE -DPython_LIBRARY=$PYTHON_LIB ..
             
              # Debug: Find Python headers and libraries
             echo "Searching for Python headers..."
