@@ -32,15 +32,24 @@ jobs:
       - name: Build wheels with cibuildwheel
         env:
           CIBW_BEFORE_BUILD: |
+            # Install system dependencies
             yum install -y wget gcc gcc-c++ make python3-devel python3-libs
+            
+            ä Install Python build tools
             python -m pip install wheel scikit-build cmake ninja setuptools
-            #Python installations
+            
+            # Debug: show Python information
+            echo "Python executable: $(which python)"
+            python --version
+            
+            #Python path detection
             PYBIN=$(which python)
             PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
             PYTHON_ROOT=$(cd $(dirname $PYBIN)/..; pwd)
             PYTHON_INCLUDE=$PYTHON_ROOT/include/python${PYTHON_VERSION}*
             PYTHON_LIB=$PYTHON_ROOT/lib*/libpython${PYTHON_VERSION}*.so
-            # After your existing Python path detection code:
+            
+            # Set CMake arguments for Python
             export CMAKE_ARGS="-DPython_EXECUTABLE=$PYBIN -DPython_ROOT_DIR=$PYTHON_ROOT -DPython_INCLUDE_DIR=$PYTHON_INCLUDE -DPython_LIBRARY=$PYTHON_LIB"
             
             echo "Using Python at: $PYBIN"
@@ -48,12 +57,19 @@ jobs:
             echo "Python root: $PYTHON_ROOT"
             echo "Python include: $PYTHON_INCLUDE"
             echo "Python lib: $PYTHON_LIB"
+            
+             # Debug: Find Python headers and libraries
+            echo "Searching for Python headers..."
+            find $PYTHON_ROOT -name "Python.h" || echo "Python.h not found in $PYTHON_ROOT"
+            echo "Searching for Python libraries..."
+            find $PYTHON_ROOT -name "libpython*.so*" || echo "libpython*.so not found in $PYTHON_ROOT"
               
             # Build and install pybind11 from the submodule
             cd pybind11
             mkdir -p build && cd build
             cmake .. && make && make install
             cd ../..
+            
             # Download, build, and install static Boost
             mkdir -p /tmp/deps
             cd /tmp/deps
@@ -63,6 +79,7 @@ jobs:
             ./bootstrap.sh --with-libraries=system,filesystem --prefix=/tmp/local
             ./b2 link=static install
             cd ..
+            
             # Download, build, and install static ZeroMQ
             wget https://github.com/zeromq/libzmq/releases/download/v4.3.4/zeromq-4.3.4.tar.gz
             if [ $? -ne 0 ]; then echo "ZeroMQ download failed"; exit 1; fi
@@ -74,10 +91,20 @@ jobs:
             make install
           # Use a manylinux image with an older toolchain
           CIBW_BASE_IMAGE: quay.io/pypa/manylinux2010_x86_64
+
           # Pass the dependency install prefix to CMake
-          CMAKE_PREFIX_PATH: /tmp/local
-          BOOST_ROOT: /tmp/local
-          ZeroMQ_ROOT: /tmp/local
+          CIBW_ENVIRONMENT: >
+            CMAKE_PREFIX_PATH=/tmp/local
+            BOOST_ROOT=/tmp/local
+            ZeroMQ_ROOT=/tmp/local
+            CMAKE_ARGS="-DBUNDLE_DEPENDENCIES=ON -DSKBUILD=ON"
+
+          # Specify which Python versions to build for
+          CIBW_BUILD: "cp310-* cp311-*"
+
+          # Skip tests during wheel building
+          CIBW_TEST_SKIP: "*"
+
         run: python -m cibuildwheel --output-dir wheelhouse
 
       # Upload the resulting wheels as artifacts
