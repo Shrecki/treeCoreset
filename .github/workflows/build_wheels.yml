@@ -35,7 +35,7 @@ jobs:
             # Install system dependencies
             yum install -y wget gcc gcc-c++ make python3-devel python3-libs
             
-            ä Install Python build tools
+            # Install Python build tools
             python -m pip install wheel scikit-build cmake ninja setuptools
             
             # Debug: show Python information
@@ -50,6 +50,8 @@ jobs:
             PYTHON_LIB=$PYTHON_ROOT/lib*/libpython${PYTHON_VERSION}*.so
             
             # Set CMake arguments for Python
+            export PATH="$PYTHON_ROOT/bin:$PATH"
+            export PYTHON_EXECUTABLE="$PYBIN"
             export CMAKE_ARGS="-DPython_EXECUTABLE=$PYBIN -DPython_ROOT_DIR=$PYTHON_ROOT -DPython_INCLUDE_DIR=$PYTHON_INCLUDE -DPython_LIBRARY=$PYTHON_LIB"
             
             echo "Using Python at: $PYBIN"
