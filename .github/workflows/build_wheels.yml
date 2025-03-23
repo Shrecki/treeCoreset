@@ -91,6 +91,13 @@ jobs:
             ./configure --enable-static --disable-shared --prefix=/tmp/local
             make -j4
             make install
+            
+            # Create symlinks if needed
+            ln -sf $PYTHON_LIB $PYTHON_ROOT/lib/$(basename $PYTHON_LIB)
+
+            # Make a simple Python test file to verify we're using the right Python
+            echo "import sys; print(f'Building for Python {sys.version}')" > /tmp/test.py
+            $PYBIN /tmp/test.py
           # Use a manylinux image with an older toolchain
           CIBW_BASE_IMAGE: quay.io/pypa/manylinux2010_x86_64
 
