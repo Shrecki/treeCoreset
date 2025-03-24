@@ -75,7 +75,11 @@ jobs:
             # Build and install pybind11 from the submodule
             cd pybind11
             mkdir -p build && cd build
-            cmake .. && make && make install
+            cmake .. -DPython_EXECUTABLE=$PYBIN \
+                     -DPython_ROOT_DIR=$PYTHON_ROOT \
+                     -DPython_INCLUDE_DIR=$PYTHON_INCLUDE \
+                     -DPython_LIBRARY=$PYTHON_LIB
+            make && make install
             cd ../..
             
             # Download, build, and install static Boost
