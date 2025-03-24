@@ -37,9 +37,10 @@ jobs:
             
             # Install system dependencies
             yum install -y wget gcc gcc-c++ make python3-devel python3-libs autoconf automake libtool nasm 
-            yum install -y pkg-config 
             yum install -y pkgconfig
             yum install -y m4
+            
+            cp /usr/share/aclocal/pkg.m4 /usr/local/share/aclocal-1.16/
 
             # Debug: show Python information
             echo "Python executable: $(which python)"
