@@ -72,7 +72,7 @@ void ClusteredPoints::insertVectors(Eigen::MatrixXd &vectors, unsigned int n_poi
         p = new Point(std::unique_ptr<Eigen::VectorXd>(vec));
         //std::cout << p->getData() << std::endl;
         insertPoint(p);
-        std::cout << "Inserted a point !" << std::endl; //<< p->getData() << std::endl;
+        //std::cout << "Inserted a point !" << std::endl; //<< p->getData() << std::endl;
     }
 
     // Restore original matrix afterwards
