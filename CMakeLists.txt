@@ -20,7 +20,7 @@ SET(GCC_COVERAGE_COMPILE_FLAGS "-Wl, --no-undefined")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
 
 # Find Python
-find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
+find_package(Python 3.10 COMPONENTS Interpreter Development.Module REQUIRED)
 
 
 # Static linking for wheel builds
