@@ -181,6 +181,8 @@ jobs:
           # Specify which Python versions to build for
           CIBW_BUILD: "cp310-*"
 
+          CIBW_ARCHS: "x86_64"
+
           # Debug build process
           CIBW_BUILD_VERBOSITY: 1
 
