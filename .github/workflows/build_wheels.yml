@@ -101,14 +101,26 @@ jobs:
             cd ..
             
             # Download, build, and install static ZeroMQ
-            wget https://github.com/zeromq/libzmq/releases/download/v4.3.4/zeromq-4.3.4.tar.gz
-            if [ $? -ne 0 ]; then echo "ZeroMQ download failed"; exit 1; fi
-            ls -la
-            tar xf zeromq-4.3.4.tar.gz
-            cd zeromq-4.3.4
+            git clone https://github.com/zeromq/libzmq.git
+            cd libzmq
             ./configure --enable-static --disable-shared --prefix=/tmp/local
-            make -j4
-            make install
+            mkdir build && cd build
+            cmake .. && sudo make -j4 install
+            cd ../..
+            
+            git clone https://github.com/zeromq/cppzmq.git
+            cd cppzmq && mkdir build && cd build
+            cmake -DCPPZMQ_BUILD_TESTS=OFF .. && sudo make -j4 install
+            cd ../../
+            
+            #wget https://github.com/zeromq/libzmq/releases/download/v4.3.4/zeromq-4.3.4.tar.gz
+            #if [ $? -ne 0 ]; then echo "ZeroMQ download failed"; exit 1; fi
+            #ls -la
+            tar xf zeromq-4.3.4.tar.gz
+            #cd zeromq-4.3.4
+            #./configure --enable-static --disable-shared --prefix=/tmp/local
+            #make -j4
+            #make install
             
             echo "Installing ZeroMQ C++ bindings..."
             cd /tmp/deps
