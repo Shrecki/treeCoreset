@@ -102,7 +102,7 @@ jobs:
             
             
             # Build and install pybind11 from the submodule
-            cd /home/runner/work/treeCoreset/treeCoreset/pybind11
+            cd /project/.git/modules/pybind11
             mkdir -p build && cd build
             cmake .. -DPYBIND11_PYTHON_VERSION=3.10 \
                      -DPython_EXECUTABLE=$PYBIN \
