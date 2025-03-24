@@ -3,7 +3,6 @@ name: Build wheels
 on:
   push:
     tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -101,6 +100,7 @@ jobs:
             cd ../../
             
             
+            echho "Installing Pybind11"
             # Build and install pybind11 from the submodule
             cd /project/pybind11
             mkdir -p build && cd build
