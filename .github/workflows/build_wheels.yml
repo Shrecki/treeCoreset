@@ -86,11 +86,15 @@ jobs:
             cd /tmp/deps
             git clone https://github.com/zeromq/libzmq.git
             cd libzmq
-            mkdir build && cd build
+            ./autogen.sh
+            ./configure --prefix=/tmp/local --enable-static --disable-shared
+            make -j4
+            make install
+            #mkdir build && cd build
             # Use correct CMake options for static build of ZeroMQ
-            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DBUILD_STATIC=ON -DBUILD_SHARED=OFF -DZMQ_BUILD_TESTS=OFF
-            make -j4 && make install
-            if [ $? -ne 0 ]; then echo "ZeroMQ build failed"; exit 1; fi
+            #cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DBUILD_STATIC=ON -DBUILD_SHARED=OFF -DZMQ_BUILD_TESTS=OFF
+            #make -j4 && make install
+            #if [ $? -ne 0 ]; then echo "ZeroMQ build failed"; exit 1; fi
             
             # Verify ZeroMQ was built correctly and installed to the right location
             echo "Checking ZeroMQ installation..."
