@@ -20,6 +20,11 @@ SET(GCC_COVERAGE_COMPILE_FLAGS "-Wl, --no-undefined")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
 
 # Find Python
+set(Python_ROOT_DIR "$ENV{PYTHON_ROOT}" CACHE PATH "Python root directory")
+set(Python_EXECUTABLE "$ENV{PYBIN}" CACHE FILEPATH "Python executable")
+set(Python_INCLUDE_DIR "$ENV{PYTHON_INCLUDE}" CACHE PATH "Python include directory")
+set(Python_LIBRARY "$ENV{PYTHON_LIB}" CACHE FILEPATH "Python library")
+
 find_package(Python 3.10 COMPONENTS Interpreter Development.Module REQUIRED)
 
 
