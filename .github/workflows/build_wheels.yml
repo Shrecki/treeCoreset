@@ -145,6 +145,7 @@ jobs:
             CMAKE_PREFIX_PATH=/tmp/local
             BOOST_ROOT=/tmp/local
             ZeroMQ_ROOT=/tmp/local
+            ZeroMQ_DIR=/tmp/local/lib/cmake/ZeroMQ
             CMAKE_ARGS="-DBUNDLE_DEPENDENCIES=ON -DSKBUILD=ON -DPython_FIND_COMPONENTS=Interpreter;Development -DPython_LIBRARIES=$PYTHON_LIB -DPython_LIBRARY=$PYTHON_LIB"
 
           # Specify which Python versions to build for
