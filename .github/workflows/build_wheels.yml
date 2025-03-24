@@ -135,7 +135,7 @@ jobs:
           CIBW_BUILD: "cp310-* cp311-*"
 
           # Debug build process
-          CIBW_BUILD_VERBOSITY: 3
+          CIBW_BUILD_VERBOSITY: 1
 
           # Skip tests during wheel building
           CIBW_TEST_SKIP: "*"
