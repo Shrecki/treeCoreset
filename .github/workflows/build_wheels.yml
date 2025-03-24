@@ -101,12 +101,13 @@ jobs:
             cd ..
             
             # Download, build, and install static ZeroMQ
+            cd /tmp/deps
             git clone https://github.com/zeromq/libzmq.git
             cd libzmq
-            #./configure --enable-static --disable-shared --prefix=/tmp/local
             mkdir build && cd build
-            cmake -DCMAKE_INSTALL_PREFIX=/tmp/local -DENABLE_STATIC=ON -DDISABLE_SHARED=ON
-            sudo make -j4 install
+            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DENABLE_STATIC=ON -DBUILD_SHARED=OFF
+            make -j4 && make install
+            if [ $? -ne 0 ]; then echo "ZeroMQ build failed"; exit 1; fi
             cd ../..
             
             #git clone https://github.com/zeromq/cppzmq.git
@@ -128,7 +129,7 @@ jobs:
             git clone https://github.com/zeromq/cppzmq.git
             cd cppzmq
             mkdir build && cd build
-            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local
+            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DCPPZMQ_BUILD_TESTS=OFF
             make -j4 && make install
             
             # Create symlinks if needed
@@ -146,7 +147,7 @@ jobs:
             BOOST_ROOT=/tmp/local
             ZeroMQ_ROOT=/tmp/local
             ZeroMQ_DIR=/tmp/local/lib/cmake/ZeroMQ
-            CMAKE_ARGS="-DBUNDLE_DEPENDENCIES=ON -DSKBUILD=ON -DPython_FIND_COMPONENTS=Interpreter;Development -DPython_LIBRARIES=$PYTHON_LIB -DPython_LIBRARY=$PYTHON_LIB"
+            CMAKE_ARGS="-DBUNDLE_DEPENDENCIES=ON -DSKBUILD=ON -DPython_FIND_COMPONENTS=Interpreter;Development -DPython_LIBRARIES=$PYTHON_LIB -DPython_LIBRARY=$PYTHON_LIB -DZeroMQ_INCLUDE_DIR=/tmp/local/include -DZeroMQ_LIBRARY=/tmp/local/lib/libzmq.a"
 
           # Specify which Python versions to build for
           CIBW_BUILD: "cp310-* cp311-*"
