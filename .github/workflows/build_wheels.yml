@@ -95,14 +95,14 @@ jobs:
             wget -q https://archives.boost.io/release/1.79.0/source/boost_1_79_0.tar.gz
             tar xf boost_1_79_0.tar.gz
             cd boost_1_79_0
-            ./bootstrap.sh --with-libraries=system,filesystem --prefix=/tmp/local
+            ./bootstrap.sh --with-libraries=system,filesystem
             ./b2 link=static install
             cd ..
             cd ../../
             
             
             # Build and install pybind11 from the submodule
-            cd /project/.git/modules/pybind11
+            cd /project/pybind11
             mkdir -p build && cd build
             cmake .. -DPYBIND11_PYTHON_VERSION=3.10 \
                      -DPython_EXECUTABLE=$PYBIN \
