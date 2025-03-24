@@ -55,17 +55,48 @@ include_directories(${Boost_INCLUDE_DIR})
 message("boost lib: ${Boost_LIBRARIES}, inc:${Boost_INCLUDE_DIR}")
 
 # Find ZeroMQ - prefer static libs for wheels
+# Find ZeroMQ - prefer static libs for wheels
 if(BUNDLE_DEPENDENCIES)
     set(ZeroMQ_USE_STATIC_LIBS ON)
 endif()
-find_path(ZeroMQ_INCLUDE_DIR
-        NAMES zmq.hpp
-        PATHS ${PC_ZeroMQ_INCLUDE_DIRS}
-)
-find_library(ZeroMQ_LIBRARY
-        NAMES zmq
-        PATHS ${PC_ZeroMQ_LIBRARY_DIRS}
-)
+
+# Add hints for ZeroMQ location
+set(ZeroMQ_ROOT_DIR "${ZeroMQ_ROOT}" CACHE PATH "ZeroMQ root directory")
+
+# Try to find ZeroMQ with a config file first
+find_package(ZeroMQ CONFIG QUIET)
+
+# If not found with config, try the manual approach
+if(NOT ZeroMQ_FOUND)
+    find_path(ZeroMQ_INCLUDE_DIR
+            NAMES zmq.hpp
+            PATHS ${ZeroMQ_ROOT_DIR}/include ${PC_ZeroMQ_INCLUDE_DIRS}
+            PATH_SUFFIXES include
+    )
+    find_library(ZeroMQ_LIBRARY
+            NAMES zmq libzmq
+            PATHS ${ZeroMQ_ROOT_DIR}/lib ${PC_ZeroMQ_LIBRARY_DIRS}
+            PATH_SUFFIXES lib
+    )
+
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(ZeroMQ DEFAULT_MSG ZeroMQ_LIBRARY ZeroMQ_INCLUDE_DIR)
+
+    if(ZeroMQ_FOUND AND NOT TARGET ZeroMQ::ZeroMQ)
+        add_library(ZeroMQ::ZeroMQ UNKNOWN IMPORTED)
+        set_target_properties(ZeroMQ::ZeroMQ PROPERTIES
+                IMPORTED_LOCATION "${ZeroMQ_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${ZeroMQ_INCLUDE_DIR}"
+        )
+    endif()
+endif()
+
+# Print diagnostic info
+message(STATUS "ZeroMQ include dir: ${ZeroMQ_INCLUDE_DIR}")
+message(STATUS "ZeroMQ library: ${ZeroMQ_LIBRARY}")
+if(NOT ZeroMQ_FOUND)
+    message(FATAL_ERROR "ZeroMQ not found")
+endif()
 
 set(SOURCES
         src/clustering/Node.h src/clustering/Node.cpp

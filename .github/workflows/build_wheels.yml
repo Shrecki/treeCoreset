@@ -110,6 +110,14 @@ jobs:
             make -j4
             make install
             
+            echo "Installing ZeroMQ C++ bindings..."
+            cd /tmp/deps
+            git clone https://github.com/zeromq/cppzmq.git
+            cd cppzmq
+            mkdir build && cd build
+            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local
+            make -j4 && make install
+            
             # Create symlinks if needed
             ln -sf $PYTHON_LIB $PYTHON_ROOT/lib/$(basename $PYTHON_LIB)
 
