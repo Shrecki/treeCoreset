@@ -36,7 +36,7 @@ jobs:
             yum remove -y python36 python3.6 python36-devel python3.6-devel || true
             
             # Install system dependencies
-            yum install -y wget gcc gcc-c++ make python3-devel python3-libs autoconf automake libtool nasm pkgconf pkg-config
+            yum install -y wget gcc gcc-c++ make python3-devel python3-libs autoconf automake libtool nasm pkgconf pkg-config m4
 
             # Debug: show Python information
             echo "Python executable: $(which python)"
