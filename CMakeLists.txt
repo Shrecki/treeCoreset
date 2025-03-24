@@ -170,5 +170,5 @@ set_target_properties(client_coreset PROPERTIES
 
 # Installation for skbuild
 if(SKBUILD)
-    install(TARGETS client_coreset DESTINATION treeCoreset)
+    install(TARGETS client_coreset DESTINATION .)
 endif()

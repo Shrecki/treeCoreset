@@ -1,21 +1,22 @@
 """
-treeCoreset package
+treeCoreset package - a C++ tree-based coreset library with Python bindings
 """
-import os
-import sys
+from .client_coreset import *
 
-# First locate the actual module file
-package_dir = os.path.dirname(os.path.abspath(__file__))
+# Also make the module available as an attribute
+import sys as _sys
+import os as _os
 
-# Directly import the module using an absolute import rather than a relative one
-sys.path.insert(0, package_dir)  # Add package dir to path if needed
+# Get the directory of this file
+_current_dir = _os.path.dirname(_os.path.abspath(__file__))
 
-# Import the client_coreset directly (not as a relative import)
-# This avoids the circular import issue
-import client_coreset
+# Make client_coreset available as an attribute for backward compatibility
+try:
+    from . import client_coreset
+except ImportError:
+    # Fall back to absolute import if relative import fails
+    _sys.path.insert(0, _current_dir)
+    import client_coreset
 
-# Export the module
-__all__ = ["client_coreset"]
-
-# Make it available in the package namespace
-globals()["client_coreset"] = client_coreset
+# Export the module namespace
+__all__ = ['client_coreset']
