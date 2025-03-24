@@ -163,6 +163,11 @@ target_link_libraries(client_coreset ${Boost_LIBRARIES} ${Python_LIBRARIES} ${Ze
 set(PYBIND11_PYTHON_VERSION 3.10 CACHE STRING "")
 target_include_directories(client_coreset PRIVATE ${Python_INCLUDE_DIRS} eigen pybind11 ${ZeroMQ_INCLUDE_DIR})
 
+set_target_properties(client_coreset PROPERTIES
+        PREFIX ""  # No 'lib' prefix
+        OUTPUT_NAME "client_coreset"
+        SUFFIX ${PYTHON_MODULE_EXTENSION})
+
 # Installation for skbuild
 if(SKBUILD)
     install(TARGETS client_coreset DESTINATION treeCoreset)
