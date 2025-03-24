@@ -166,7 +166,7 @@ target_include_directories(client_coreset PRIVATE ${Python_INCLUDE_DIRS} eigen p
 set_target_properties(client_coreset PROPERTIES
         PREFIX ""  # No 'lib' prefix
         OUTPUT_NAME "client_coreset"
-        SUFFIX ${PYTHON_MODULE_EXTENSION})
+        SUFFIX ".so")
 
 # Installation for skbuild
 if(SKBUILD)
