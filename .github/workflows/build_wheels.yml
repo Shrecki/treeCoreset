@@ -47,8 +47,13 @@ jobs:
             PYBIN=$(which python)
             PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
             PYTHON_ROOT=$(cd $(dirname $PYBIN)/..; pwd)
-            PYTHON_INCLUDE=$PYTHON_ROOT/include/python${PYTHON_VERSION}*
-            PYTHON_LIB=$PYTHON_ROOT/lib*/libpython${PYTHON_VERSION}*.so
+            PYTHON_INCLUDE="$PYTHON_ROOT/include/python${PYTHON_VERSION}"
+            PYTHON_LIB=$(find $PYTHON_ROOT/lib -name "libpython${PYTHON_VERSION}*.so" | head -1)
+            # Export these for CMake to use
+            export PYTHON_ROOT
+            export PYBIN
+            export PYTHON_INCLUDE
+            export PYTHON_LIB
             
             # Set CMake arguments for Python
             export PATH="$PYTHON_ROOT/bin:$PATH"
