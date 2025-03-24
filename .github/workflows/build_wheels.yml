@@ -32,6 +32,9 @@ jobs:
       - name: Build wheels with cibuildwheel
         env:
           CIBW_BEFORE_BUILD: |
+            # Remove Python 3.6 if it exists
+            yum remove -y python36 python3.6 python36-devel python3.6-devel || true
+            
             # Install system dependencies
             yum install -y wget gcc gcc-c++ make python3-devel python3-libs
             
@@ -51,7 +54,7 @@ jobs:
             export PATH="$PYTHON_ROOT/bin:$PATH"
             export PYTHON_EXECUTABLE="$PYBIN"
             export CMAKE_ARGS="-DPython_EXECUTABLE=$PYBIN -DPython_ROOT_DIR=$PYTHON_ROOT -DPython_INCLUDE_DIR=$PYTHON_INCLUDE -DPython_LIBRARY=$PYTHON_LIB"
-            
+            export PYTHONPATH=$PYTHON_ROOT/lib/python${PYTHON_VERSION}/site-packages
             
             # Install Python build tools
             python -m pip install --upgrade pip
@@ -64,6 +67,10 @@ jobs:
             echo "Python include: $PYTHON_INCLUDE"
             echo "Python lib: $PYTHON_LIB"
             
+            # Debug Python installations
+            echo "Available Python installations:"
+            find / -name "python*" -type f -executable 2>/dev/null | grep -v "config\|/site-packages/" | sort
+            
             cmake -DPython_EXECUTABLE=$PYBIN -DPython_ROOT_DIR=$PYTHON_ROOT -DPython_INCLUDE_DIRS=$PYTHON_INCLUDE -DPython_LIBRARY=$PYTHON_LIB ..
             
              # Debug: Find Python headers and libraries
@@ -75,7 +82,8 @@ jobs:
             # Build and install pybind11 from the submodule
             cd pybind11
             mkdir -p build && cd build
-            cmake .. -DPython_EXECUTABLE=$PYBIN \
+            cmake .. -DPYBIND11_PYTHON_VERSION=3.10 \ 
+                     -DPython_EXECUTABLE=$PYBIN \
                      -DPython_ROOT_DIR=$PYTHON_ROOT \
                      -DPython_INCLUDE_DIR=$PYTHON_INCLUDE \
                      -DPython_LIBRARY=$PYTHON_LIB
