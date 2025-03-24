@@ -39,9 +39,6 @@ jobs:
             yum install -y wget gcc gcc-c++ make python3-devel python3-libs autoconf automake libtool nasm 
             yum install -y pkgconfig
             yum install -y m4
-            
-            ls /usr/local/share/alocal*/
-            cp /usr/share/aclocal/pkg.m4 /usr/local/share/aclocal-1.16/
 
             # Debug: show Python information
             echo "Python executable: $(which python)"
@@ -68,9 +65,9 @@ jobs:
             
             # Download, build, and install static ZeroMQ
             cd /tmp/deps
-            git clone https://github.com/zeromq/libzmq.git
-            cd libzmq
-            ./autogen.sh
+            wget https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.tar.gz
+            tar xvf zeromq-4.3.5.tar.gz
+            cd zeromq-4.3.5/
             ./configure --prefix=/tmp/local
             make -j4
             make install
