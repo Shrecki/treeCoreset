@@ -19,6 +19,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -msse4.1 -march=native")
 SET(GCC_COVERAGE_COMPILE_FLAGS "-Wl, --no-undefined")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
 
+# Find Python
+find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
+
+
 # Static linking for wheel builds
 if(BUNDLE_DEPENDENCIES AND UNIX AND NOT APPLE)
     # Force static linking for bundled wheels
@@ -41,8 +45,6 @@ if(NOT SKBUILD)
     FetchContent_MakeAvailable(googletest)
 endif()
 
-# Find Python
-find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
 
 # Find Boost - prefer static libs for wheels
 if(BUNDLE_DEPENDENCIES)
