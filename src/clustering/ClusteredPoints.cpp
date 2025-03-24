@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 
 #if PYTHON_BIND == 1

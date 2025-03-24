@@ -15,6 +15,7 @@
 
 #include "iostream"
 #include "MessagingUtils.h"
+#include <cassert>
 
 namespace ServerMessaging{
 

@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include "Point.h"
+#include <cassert>
 
 Point::Point(std::unique_ptr<Eigen::VectorXd> newData, bool wasConverted): wasConverted(wasConverted), dist(-1.0) {
     data = std::move(newData);
