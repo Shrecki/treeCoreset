@@ -40,6 +40,7 @@ jobs:
             yum install -y pkgconfig
             yum install -y m4
             
+            ls /usr/local/share/alocal*/
             cp /usr/share/aclocal/pkg.m4 /usr/local/share/aclocal-1.16/
 
             # Debug: show Python information
