@@ -102,6 +102,7 @@ jobs:
             
             
             # Build and install pybind11 from the submodule
+            find . -type d # Print whole structure to understand where pybind is
             cd /github/workspace/pybind11
             mkdir -p build && cd build
             cmake .. -DPYBIND11_PYTHON_VERSION=3.10 \
