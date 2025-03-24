@@ -155,7 +155,7 @@ add_library(client_coreset MODULE src/clustering/Node.h src/clustering/Node.cpp
 target_compile_definitions(client_coreset PUBLIC PYTHON_BIND=1)
 target_link_libraries(client_coreset ${Boost_LIBRARIES} ${Python_LIBRARIES} ${ZeroMQ_LIBRARY})
 set(PYBIND11_PYTHON_VERSION 3.10 CACHE STRING "")
-target_include_directories(client_coreset PRIVATE ${Python_INCLUDE_DIRS} eigen pybind11)
+target_include_directories(client_coreset PRIVATE ${Python_INCLUDE_DIRS} eigen pybind11 ${ZeroMQ_INCLUDE_DIR})
 
 # Installation for skbuild
 if(SKBUILD)
