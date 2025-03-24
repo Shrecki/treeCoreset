@@ -101,6 +101,48 @@ jobs:
             
             
             echo "Installing Pybind11"
+            # Diagnose Python development files
+            echo "Diagnosing Python development setup..."
+            echo "Python executable path: $PYBIN"
+            PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+            PYTHON_ROOT=$(cd $(dirname $PYBIN)/..; pwd)
+            
+            # Check what Python itself thinks about its include paths
+            echo "Python include paths according to Python:"
+            python -c "import sysconfig; print('Include dir:', sysconfig.get_path('include')); print('Platinclude dir:', sysconfig.get_path('platinclude')); print('Module include dirs:', [p for p in sysconfig.get_config_vars().keys() if 'include' in p])"
+            
+            # Check what files actually exist
+            echo "Python include directory structure:"
+            find $PYTHON_ROOT/include -type f -name "Python.h" | xargs ls -la
+            echo "Python library files:"
+            find $PYTHON_ROOT/lib -name "libpython${PYTHON_VERSION}*.so*" | xargs ls -la
+            
+            # Check for header files that Development.Module needs
+            echo "Checking for specific Development.Module header files:"
+            find $PYTHON_ROOT -name "Python.h" -o -name "pyconfig.h" | xargs ls -la
+            
+            # Check for the Python development package
+            echo "Checking if Python development package is installed:"
+            yum list installed | grep -i python | grep -i devel || echo "No Python development package found"
+            
+            # Show where CMake is likely to look for Python.h
+            echo "CMake will look for Python.h in paths like:"
+            echo "- $PYTHON_ROOT/include/python${PYTHON_VERSION}"
+            echo "- $PYTHON_ROOT/include/python${PYTHON_VERSION}m"
+            echo "- $PYTHON_ROOT/include/python${PYTHON_VERSION}d"
+            
+            # Check if there are multiple Python installations
+            echo "All python binaries in the system:"
+            find / -name python3 -o -name python3.10 2>/dev/null
+            
+            # Check which Python development packages are available
+            echo "Available Python development packages:"
+            yum list available | grep -i python | grep -i devel
+            
+            # Explicitly install the Python development packages for 3.10
+            echo "Installing Python 3.10 development packages:"
+            yum install -y python3.10-devel || echo "Failed to install Python 3.10 development package"
+            
             # Build and install pybind11 from the submodule
             cd /project/pybind11
             mkdir -p build && cd build
