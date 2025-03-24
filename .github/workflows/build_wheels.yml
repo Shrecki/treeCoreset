@@ -38,12 +38,11 @@ jobs:
             # Install system dependencies
             yum install -y wget gcc gcc-c++ make python3-devel python3-libs
             
-            
             # Debug: show Python information
             echo "Python executable: $(which python)"
             python --version
             
-            #Python path detection
+            # Python path detection
             PYBIN=$(which python)
             PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
             PYTHON_ROOT=$(cd $(dirname $PYBIN)/..; pwd)
@@ -56,33 +55,16 @@ jobs:
             export CMAKE_ARGS="-DPython_EXECUTABLE=$PYBIN -DPython_ROOT_DIR=$PYTHON_ROOT -DPython_INCLUDE_DIR=$PYTHON_INCLUDE -DPython_LIBRARY=$PYTHON_LIB"
             export PYTHONPATH=$PYTHON_ROOT/lib/python${PYTHON_VERSION}/site-packages
             
-            # Install Python build tools
-            python -m pip install --upgrade pip
-            python -m pip install wheel scikit-build cmake ninja setuptools
-            
-            
             echo "Using Python at: $PYBIN"
             echo "Python version: $PYTHON_VERSION"
             echo "Python root: $PYTHON_ROOT"
             echo "Python include: $PYTHON_INCLUDE"
             echo "Python lib: $PYTHON_LIB"
             
-            # Debug Python installations
-            #echo "Available Python installations:"
-            #find / -name "python*" -type f -executable 2>/dev/null | grep -v "config\|/site-packages/" | sort
-            
-            cmake -DPython_EXECUTABLE=$PYBIN -DPython_ROOT_DIR=$PYTHON_ROOT -DPython_INCLUDE_DIRS=$PYTHON_INCLUDE -DPython_LIBRARY=$PYTHON_LIB ..
-            
-             # Debug: Find Python headers and libraries
-            echo "Searching for Python headers..."
-            find $PYTHON_ROOT -name "Python.h" || echo "Python.h not found in $PYTHON_ROOT"
-            echo "Searching for Python libraries..."
-            find $PYTHON_ROOT -name "libpython*.so*" || echo "libpython*.so not found in $PYTHON_ROOT"
-              
             # Build and install pybind11 from the submodule
             cd pybind11
             mkdir -p build && cd build
-            cmake .. -DPYBIND11_PYTHON_VERSION=3.10 \ 
+            cmake .. -DPYBIND11_PYTHON_VERSION=3.10 \
                      -DPython_EXECUTABLE=$PYBIN \
                      -DPython_ROOT_DIR=$PYTHON_ROOT \
                      -DPython_INCLUDE_DIR=$PYTHON_INCLUDE \
@@ -105,24 +87,15 @@ jobs:
             git clone https://github.com/zeromq/libzmq.git
             cd libzmq
             mkdir build && cd build
-            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DENABLE_STATIC=ON -DBUILD_SHARED=OFF
+            # Use correct CMake options for static build of ZeroMQ
+            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DBUILD_STATIC=ON -DBUILD_SHARED=OFF -DZMQ_BUILD_TESTS=OFF
             make -j4 && make install
             if [ $? -ne 0 ]; then echo "ZeroMQ build failed"; exit 1; fi
-            cd ../..
             
-            #git clone https://github.com/zeromq/cppzmq.git
-            #cd cppzmq && mkdir build && cd build
-            #cmake -DCPPZMQ_BUILD_TESTS=OFF .. && sudo make -j4 install
-            #cd ../../
-            
-            #wget https://github.com/zeromq/libzmq/releases/download/v4.3.4/zeromq-4.3.4.tar.gz
-            #if [ $? -ne 0 ]; then echo "ZeroMQ download failed"; exit 1; fi
-            #ls -la
-            #tar xf zeromq-4.3.4.tar.gz
-            #cd zeromq-4.3.4
-            #./configure --enable-static --disable-shared --prefix=/tmp/local
-            #make -j4
-            #make install
+            # Verify ZeroMQ was built correctly and installed to the right location
+            echo "Checking ZeroMQ installation..."
+            ls -la /tmp/local/lib/
+            file /tmp/local/lib/libzmq.a || echo "libzmq.a not found"
             
             echo "Installing ZeroMQ C++ bindings..."
             cd /tmp/deps
@@ -148,9 +121,13 @@ jobs:
             ZeroMQ_ROOT=/tmp/local
             ZeroMQ_DIR=/tmp/local/lib/cmake/ZeroMQ
             CMAKE_ARGS="-DBUNDLE_DEPENDENCIES=ON -DSKBUILD=ON -DPython_FIND_COMPONENTS=Interpreter;Development -DPython_LIBRARIES=$PYTHON_LIB -DPython_LIBRARY=$PYTHON_LIB -DZeroMQ_INCLUDE_DIR=/tmp/local/include -DZeroMQ_LIBRARY=/tmp/local/lib/libzmq.a"
+            VERBOSE=1
 
           # Specify which Python versions to build for
           CIBW_BUILD: "cp310-* cp311-*"
+
+          # Debug build process
+          CIBW_BUILD_VERBOSITY: 3
 
           # Skip tests during wheel building
           CIBW_TEST_SKIP: "*"
