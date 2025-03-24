@@ -64,7 +64,7 @@ jobs:
             echo "Python lib: $PYTHON_LIB"
             
             # Download, build, and install static ZeroMQ
-            mkdir /tmp/deps
+            mkdir -p /tmp/deps
             cd /tmp/deps
             wget https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.tar.gz
             tar xvf zeromq-4.3.5.tar.gz
@@ -87,6 +87,7 @@ jobs:
             cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DCPPZMQ_BUILD_TESTS=OFF
             make -j4 && make install
             cd ../../
+            cd ../../
             
             # Download, build, and install static Boost
             mkdir -p /tmp/deps
@@ -97,10 +98,10 @@ jobs:
             ./bootstrap.sh --with-libraries=system,filesystem --prefix=/tmp/local
             ./b2 link=static install
             cd ..
+            cd ../../
             
             
             # Build and install pybind11 from the submodule
-            cd # Return to base path
             cd pybind11
             mkdir -p build && cd build
             cmake .. -DPYBIND11_PYTHON_VERSION=3.10 \
