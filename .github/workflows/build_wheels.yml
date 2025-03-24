@@ -36,8 +36,8 @@ jobs:
             yum remove -y python36 python3.6 python36-devel python3.6-devel || true
             
             # Install system dependencies
-            yum install -y wget gcc gcc-c++ make python3-devel python3-libs
-            
+            yum install -y wget gcc gcc-c++ make python3-devel python3-libs autoconf automake libtool
+
             # Debug: show Python information
             echo "Python executable: $(which python)"
             python --version
@@ -61,6 +61,30 @@ jobs:
             echo "Python include: $PYTHON_INCLUDE"
             echo "Python lib: $PYTHON_LIB"
             
+            # Download, build, and install static ZeroMQ
+            cd /tmp/deps
+            git clone https://github.com/zeromq/libzmq.git
+            cd libzmq
+            ./autogen.sh
+            ./configure --prefix=/tmp/local
+            make -j4
+            make install
+            cd ../
+            
+            # Verify ZeroMQ was built correctly and installed to the right location
+            echo "Checking ZeroMQ installation..."
+            ls -la /tmp/local/lib/
+            file /tmp/local/lib/libzmq.a || echo "libzmq.a not found"
+            
+            echo "Installing ZeroMQ C++ bindings..."
+            cd /tmp/deps
+            git clone https://github.com/zeromq/cppzmq.git
+            cd cppzmq
+            mkdir build && cd build
+            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DCPPZMQ_BUILD_TESTS=OFF
+            make -j4 && make install
+            
+            
             # Build and install pybind11 from the submodule
             cd pybind11
             mkdir -p build && cd build
@@ -81,33 +105,6 @@ jobs:
             ./bootstrap.sh --with-libraries=system,filesystem --prefix=/tmp/local
             ./b2 link=static install
             cd ..
-            
-            # Download, build, and install static ZeroMQ
-            cd /tmp/deps
-            git clone https://github.com/zeromq/libzmq.git
-            cd libzmq
-            ./autogen.sh
-            ./configure --prefix=/tmp/local --enable-static --disable-shared
-            make -j4
-            make install
-            #mkdir build && cd build
-            # Use correct CMake options for static build of ZeroMQ
-            #cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DBUILD_STATIC=ON -DBUILD_SHARED=OFF -DZMQ_BUILD_TESTS=OFF
-            #make -j4 && make install
-            #if [ $? -ne 0 ]; then echo "ZeroMQ build failed"; exit 1; fi
-            
-            # Verify ZeroMQ was built correctly and installed to the right location
-            echo "Checking ZeroMQ installation..."
-            ls -la /tmp/local/lib/
-            file /tmp/local/lib/libzmq.a || echo "libzmq.a not found"
-            
-            echo "Installing ZeroMQ C++ bindings..."
-            cd /tmp/deps
-            git clone https://github.com/zeromq/cppzmq.git
-            cd cppzmq
-            mkdir build && cd build
-            cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/local -DCPPZMQ_BUILD_TESTS=OFF
-            make -j4 && make install
             
             # Create symlinks if needed
             ln -sf $PYTHON_LIB $PYTHON_ROOT/lib/$(basename $PYTHON_LIB)
