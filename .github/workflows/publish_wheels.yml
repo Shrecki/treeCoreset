@@ -104,13 +104,38 @@ jobs:
         run: |
           twine check dist_filtered/*.whl
 
+      # Check version before uploading
+      - name: Check package version
+        run: |
+          echo "Checking wheel version information..."
+          for wheel in dist_filtered/*.whl; do
+            echo "Wheel: $wheel"
+            # Extract version from wheel filename
+            filename=$(basename "$wheel")
+            version=$(echo "$filename" | sed -E 's/.*-([0-9]+\.[0-9]+\.[0-9]+.*)-py.*/\1/')
+            echo "Detected version: $version"
+          
+            # Check if this version exists on TestPyPI
+            response=$(curl -s "https://test.pypi.org/pypi/${filename%%%-*}/json" || echo '{"releases":{}}')
+            if echo "$response" | grep -q "\"$version\""; then
+              echo "WARNING: Version $version appears to already exist on TestPyPI"
+              echo "Wheel $wheel may be rejected if version is not unique"
+            else
+              echo "Version $version appears to be new on TestPyPI"
+            fi
+          done
+          
+          # Proceed with warning
+          echo "Note: If you're uploading an update, make sure the version number is incremented"
+          echo "Otherwise, your upload will be rejected with a 403 Forbidden error"
+
       # First deploy to TestPyPI
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository-url: https://test.pypi.org/simple/
+          repository-url: https://test.pypi.org/legacy/
           packages-dir: dist_filtered/
 
       # If TestPyPI deployment succeeds, deploy to PyPI
