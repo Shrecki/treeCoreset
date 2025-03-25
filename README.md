@@ -121,7 +121,16 @@ If you are using a Python environment, make sure to activate an environment with
 
 ### Installation
 
-There are two main ways the project can be built. You can either use the provided Docker image or build the project from source.
+There are three main ways the project can be built. Using pip (the recommended way), Docker, or from source.
+
+#### Using Pip
+
+Simply run:
+``` 
+pip install treeCoreset
+```
+
+Make sure you have Python 3.10 installed and active (if using venv, mamba, anaconda for instance) when calling pip like so.
 
 #### Using the Docker image
 
@@ -199,12 +208,7 @@ There are two main ways to use this program. The first is to directly initialize
 
 Doing these three steps can be done as follows:
 ```Python
-# Makes the client_coreset.so shared library visible to Python by adding it to the path
-import sys
-sys.path.insert(1, 'treeCoreset/cmake-build-debug-coverage')
-
-# Import the shared library
-import client_coreset
+import treeCoreset
 
 k=3 # For the sake of the example, we let k, the number of clusters, be 3
 n_reps = 200*k
@@ -212,7 +216,7 @@ n_buckets = int(np.ceil(np.log2(n/ n_reps)))
 
 
 # Initialize the coreset object
-cluster_rep = client_coreset.ClusteredPoints(n_buckets, n_reps)
+cluster_rep = treeCoreset.ClusteredPoints(n_buckets, n_reps)
 ```
 
 Assuming your data is a numpy array, you can pass it directly with only a single function call to the cluster object. You should also specify how many "points" have been passed, so that the function can figure out which axis is features and which axis is samples:
@@ -261,7 +265,7 @@ n_reps = 200*k
 n_buckets = int(np.ceil(np.log2(n_per_cluster*3 / n_reps)))
 
 # Initialize and insert all points in the clusterer
-cluster_rep = client_coreset.ClusteredPoints(n_buckets, n_reps)
+cluster_rep = treeCoreset.ClusteredPoints(n_buckets, n_reps)
 cluster_rep.insertVectors(X.astype(np.double, order='C'), X.shape[0])
 
 # Recover the representatives
