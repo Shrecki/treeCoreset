@@ -13,17 +13,6 @@ build-verbosity = 1
 
 [project]
 dynamic = ["version"]
-requires-python = ">= 3.10"
-dependencies = [
-    "numpy"
-]
-
-authors = [
-    {name = "Fabrice Guibert", email = "fabrice.guibert@epfl.ch"}
-]
-maintainers = [
-    {name = "Fabrice Guibert", email = "fabrice.guibert@epfl.ch"}
-]
 
 description = "C++ and Python implementation of coreset for k-means"
 readme = "README.md"
