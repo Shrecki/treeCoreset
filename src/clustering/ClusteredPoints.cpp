@@ -56,7 +56,7 @@ void ClusteredPoints::insertVectors(Eigen::MatrixXd &vectors, unsigned int n_poi
     // the incoming matrix to manipulate precisely what we want (ie operate by rows or by cols)
     bool operate_by_rows = vectors.rows() == n_points;
 
-    std::cout << "Matrix is " << vectors.rows() << " by " << vectors.cols() << std::endl;
+    //std::cout << "Matrix is " << vectors.rows() << " by " << vectors.cols() << std::endl;
 
     if(!operate_by_rows && vectors.cols() != n_points){
         throw std::logic_error("The provided matrix has no dimension agreeing with the provided number of points.");
