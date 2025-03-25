@@ -25,4 +25,6 @@ setup(
         "Programming Language :: C++",
         "Topic :: Scientific/Engineering",
     ],
+    license="GPL-3.0",
+    readme="README.md"
 )
