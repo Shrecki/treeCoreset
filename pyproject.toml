@@ -13,7 +13,7 @@ build-verbosity = 1
 
 [project]
 dynamic = ["version"]
-
+name = "treeCoreset"
 description = "C++ and Python implementation of coreset for k-means"
 readme = "README.md"
 license = "GNU GENERAL PUBLIC LICENSE"
