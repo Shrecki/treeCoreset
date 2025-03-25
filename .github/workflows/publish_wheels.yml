@@ -1,4 +1,4 @@
-# .github/workflows/publish.yml
+# .github/workflows/publish_wheels.yml
 name: Publish to PyPI
 
 on:
@@ -6,24 +6,31 @@ on:
     workflows: ["Build wheels"]  # Make sure this matches your build workflow name
     types:
       - completed
-    branches:
-      - main
-    tags:
-      - 'v*'
-  # Also allow manual triggering
+  # Allow manual triggering
   workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Build workflow run ID to publish (required for manual trigger)'
+        required: false
+        type: string
+      use_latest_successful:
+        description: 'Use latest successful build workflow run'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   publish:
     name: Publish to PyPI
-    # Only run if the build workflow succeeded
+    # Handle both automatic workflow_run and manual workflow_dispatch
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      (startsWith(github.event.workflow_run.head_branch, 'refs/tags/v') || 
-       github.event_name == 'workflow_dispatch')
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history and tags
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -38,11 +45,50 @@ jobs:
       - name: Create dist directory
         run: mkdir -p dist
 
+      # Find the build workflow run ID to use
+      - name: Determine workflow run ID
+        id: get_run_id
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            echo "run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+            echo "Using triggering workflow run ID: ${{ github.event.workflow_run.id }}"
+          elif [[ -n "${{ inputs.build_run_id }}" ]]; then
+            echo "run_id=${{ inputs.build_run_id }}" >> $GITHUB_OUTPUT
+            echo "Using manually specified run ID: ${{ inputs.build_run_id }}"
+          elif [[ "${{ inputs.use_latest_successful }}" == "true" ]]; then
+            # Get the latest successful run of the build workflow
+            echo "Finding latest successful build workflow run..."
+          
+            # Install GitHub CLI
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh
+          
+            # Authenticate with GitHub token
+            echo "${{ github.token }}" | gh auth login --with-token
+          
+            # Get the latest successful run ID
+            LATEST_RUN_ID=$(gh run list --workflow build_wheels.yml --status completed --json databaseId,conclusion --jq '.[] | select(.conclusion=="success") | .databaseId' | head -n 1)
+          
+            if [[ -n "$LATEST_RUN_ID" ]]; then
+              echo "run_id=$LATEST_RUN_ID" >> $GITHUB_OUTPUT
+              echo "Using latest successful build run ID: $LATEST_RUN_ID"
+            else
+              echo "No successful build workflow runs found!"
+              exit 1
+            fi
+          else
+            echo "Error: No run ID specified and not using latest successful run."
+            exit 1
+          fi
+
       # Download the artifact from the build workflow
       - name: Download wheel artifacts
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: build_wheels.yml  # Name of your build workflow file
+          run_id: ${{ steps.get_run_id.outputs.run_id }}  # Use the determined run ID
           name: wheels  # Matches the name in your upload-artifact step
           path: dist/
 
