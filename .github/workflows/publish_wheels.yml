@@ -1,0 +1,76 @@
+# .github/workflows/publish.yml
+name: Publish to PyPI
+
+on:
+  workflow_run:
+    workflows: ["Build wheels"]  # Make sure this matches your build workflow name
+    types:
+      - completed
+    branches:
+      - main
+    tags:
+      - 'v*'
+  # Also allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to PyPI
+    # Only run if the build workflow succeeded
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      (startsWith(github.event.workflow_run.head_branch, 'refs/tags/v') || 
+       github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install 'twine<6.1.0'
+
+      - name: Create dist directory
+        run: mkdir -p dist
+
+      # Download the artifact from the build workflow
+      - name: Download wheel artifacts
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build_wheels.yml  # Name of your build workflow file
+          name: wheels  # Matches the name in your upload-artifact step
+          path: dist/
+
+      # Filter to keep only manylinux wheels
+      - name: Filter manylinux wheels
+        run: |
+          mkdir -p dist_filtered
+          find dist -name "*manylinux*.whl" -exec cp {} dist_filtered/ \;
+          echo "Available wheels for publishing:"
+          ls -la dist_filtered/
+
+      - name: Check distributions
+        run: |
+          twine check dist_filtered/*.whl
+
+      # First deploy to TestPyPI
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist_filtered/
+
+      # If TestPyPI deployment succeeds, deploy to PyPI
+      #- name: Publish to PyPI
+      #  uses: pypa/gh-action-pypi-publish@release/v1
+      # with:
+      #    user: __token__
+      #    password: ${{ secrets.PYPI_API_TOKEN }}
+      #    packages-dir: dist_filtered/
