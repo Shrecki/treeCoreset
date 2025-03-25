@@ -238,6 +238,7 @@ Assume the following code and data:
 ```Python
 import numpy as np
 import matplotlib.pyplot as plt
+import treeCoreset
 
 n_per_cluster = 10000
 X1 = np.random.multivariate_normal([0, 0],[[1, 0], [0, 10]], n_per_cluster)
